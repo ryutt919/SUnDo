@@ -46,3 +46,8 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Work notes
+Agent_handoff/
+mds/
+ref_app.md
