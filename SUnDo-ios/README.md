@@ -1,0 +1,42 @@
+# 루티닝 iOS
+
+`SUnDo`(Android) 앱의 Dart 코드를 그대로 쓰는 iOS 버전. 화면, 저장소, 캘린더 동기화, 알림 로직이 같고, 플랫폼마다 다른 부분만 따로 둠.
+
+## 현재 상태
+
+- Dart 코드: `flutter analyze` 오류 없음, 단위 테스트 84건 통과(Windows에서 확인)
+- iOS 빌드와 실행: **macOS와 Xcode가 필요해서 아직 확인하지 못함**
+- 위젯: WidgetKit 소스는 작성했지만 Xcode 타깃 추가는 아직 안 됨
+
+## Android와 달라지는 부분
+
+- 알림은 예약 개수가 64개까지라서 상한을 60개로 둠(`AlarmPlanUseCase.maxAlarms`)
+- 알림 권한은 설정 화면 버튼에서 요청함(시작할 때 묻지 않음)
+- 위젯은 앱에서 추가할 수 없고, 홈 화면을 길게 눌러 추가함
+- iOS 위젯은 읽기 전용이며 누르면 앱이 열림. Android처럼 앱을 열지 않고 체크하는 동작은 iOS 17의 App Intents가 필요해서 아직 없음
+- 캘린더, 카메라, 사진 접근 문구는 `ios/Runner/Info.plist`에 있음
+
+## 빌드 순서 (Mac)
+
+1. Xcode와 Flutter를 설치함
+2. `flutter pub get`
+3. `open ios/Runner.xcworkspace`로 Xcode를 열고 Runner 타깃의 Signing에서 Team을 고름(무료 Apple ID도 가능, 7일마다 재설치)
+4. Signing & Capabilities에서 `App Groups`를 추가하고 `group.com.sundo.myRoutine`을 입력함
+5. 시뮬레이터나 연결한 iPhone으로 `flutter run`
+
+## 위젯 추가 (Xcode)
+
+1. File, New, Target, Widget Extension을 고르고 이름을 `RoutiningWidget`으로 함(Include Live Activity와 Configuration App Intent는 끔)
+2. 생성된 Swift 파일을 `ios/RoutiningWidget/RoutiningWidget.swift`의 내용으로 교체함
+3. `RoutiningWidget` 타깃에도 같은 App Group(`group.com.sundo.myRoutine`)을 추가함
+4. 앱을 한 번 실행해 데이터를 저장한 뒤 홈 화면에서 위젯을 추가함
+
+## Mac이 없을 때
+
+- Windows에서는 iOS 시뮬레이터를 쓸 수 없고 빌드도 안 됨. Android 에뮬레이터와 별개임.
+- 저장소 루트의 `.github/workflows/ios-build.yml`을 GitHub Actions에서 수동 실행하면 macOS 러너에서 분석, 테스트, 서명 없는 빌드까지 확인함. 실행 화면은 볼 수 없음.
+- 실제 기기에 설치하려면 Mac과 Apple 계정이 필요하고, 배포(TestFlight, App Store)는 유료 Apple Developer Program(연 99달러)이 필요함.
+
+## Android 코드와 맞추기
+
+이 폴더의 `lib`와 `test`는 Android 쪽에서 복사한 것임. 달라진 파일은 `lib/data/services/notification_service.dart`, `lib/data/services/home_widget_service.dart`, `lib/domain/use_cases/alarm_plan_use_case.dart`, `lib/main.dart`, `lib/app/widget_background.dart`임. Android 쪽을 고친 뒤 이 폴더에 반영할 때는 이 파일들을 덮어쓰지 않게 주의함.

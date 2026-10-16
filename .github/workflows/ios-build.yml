@@ -1,0 +1,23 @@
+name: iOS build (수동 실행)
+
+# SUnDo-ios를 macOS 러너에서 서명 없이 빌드해 컴파일이 되는지 확인한다.
+# 비공개 저장소는 macOS 분을 많이 쓰므로 Actions 탭에서 직접 실행할 때만 돈다.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: SUnDo-ios
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build ios --release --no-codesign

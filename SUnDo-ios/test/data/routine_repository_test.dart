@@ -1,0 +1,422 @@
+import 'dart:convert';
+
+import 'package:fake_async/fake_async.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:my_routine/ui/core/habit_timer_manager.dart';
+import 'package:my_routine/data/repositories/backup_repository.dart';
+import 'package:my_routine/data/repositories/journal_repository.dart';
+import 'package:my_routine/data/repositories/routine_repository.dart';
+import 'package:my_routine/data/repositories/settings_repository.dart';
+import 'package:my_routine/data/services/backup_service.dart';
+import 'package:my_routine/data/services/photo_service.dart';
+import 'package:my_routine/data/services/storage_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../test_helpers.dart';
+
+/// 웹앱에서 내보낸 백업과 같은 형식의 샘플.
+const _webBackup = {
+  'habits': [
+    {
+      'id': 'h1', 'emoji': '💧', 'name': '물 마시기', 'time': '07:00', 'context': '', 'color': '#DDF1FF',
+      'repeat': {'type': 'weekdays', 'days': [1, 2, 3], 'times': 3, 'every': 2, 'monthDays': [1]},
+      'levels': {'mini': '', 'plus': '컵 하나', 'max': ''}, 'alts': ['차'], 'alarm': '07:00', 'unit': '', 'timerMin': 0,
+      'modes': [], 'archived': false, 'start': '2026-10-01',
+    },
+  ],
+  'modes': [{'id': 'm1', 'name': '기본'}],
+  'activeMode': 'm1',
+  'logs': {
+    '2026-10-13': {'h1': {'done': true, 'level': 'plus', 'alt': '차', 'value': 2}},
+  },
+  'rest': {'2026-10-12': true},
+};
+
+/// 특정 키를 저장할 때 실패하는 저장소(디스크 오류를 흉내 낸다).
+class _FlakyStorage extends StorageService {
+  _FlakyStorage(super.prefs);
+  String? failKey;
+
+  @override
+  Future<void> writeJson(String key, Object value) {
+    if (key == failKey) throw StorageWriteException(key);
+    return super.writeJson(key, value);
+  }
+}
+
+/// 파일 선택 없이 정해진 JSON을 돌려주는 가짜 백업 서비스.
+class _FakeBackupService extends BackupService {
+  _FakeBackupService(this._data);
+  final Map<String, dynamic> _data;
+
+  @override
+  Future<Map<String, dynamic>?> pick() async => _data;
+}
+
+/// 파일 시스템 없이 메모리에서 사진 파일을 흉내 내는 가짜 사진 서비스.
+class _FakePhotoService extends PhotoService {
+  final Map<String, List<int>> files = {};
+
+  @override
+  Future<String?> readBase64(String path) async {
+    final b = files[path];
+    return b == null ? null : base64Encode(b);
+  }
+
+  @override
+  Future<String> restore(String name, List<int> bytes) async {
+    final path = '/restored/$name';
+    files[path] = bytes;
+    return path;
+  }
+
+  @override
+  Future<void> delete(String path) async => files.remove(path);
+}
+
+void main() {
+  test('인증 사진은 백업에 담겼다가 불러올 때 파일로 복원된다', () async {
+    final routine = await emptyRoutine();
+    final store = await StorageService.create();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+    final photos = _FakePhotoService()..files['/data/proofs/111.jpg'] = [1, 2, 3, 4];
+
+    await routine.addHabit(habit('a'));
+    await routine.updateLog('a', '2026-10-13', (l) => l.copyWith(done: true, photo: '/data/proofs/111.jpg'));
+    await routine.updateLog('a', '2026-10-12', (l) => l.copyWith(done: true, photo: '/data/proofs/missing.jpg'));
+
+    // 내보내기: 사진은 photoFiles에 담기고, 사라진 파일의 연결은 빠진다
+    final exporter = BackupRepository(_FakeBackupService({}), photos, routine, journal, settings);
+    final exported = await exporter.buildExport();
+    expect((exported['photoFiles'] as Map).keys, ['111.jpg']);
+    final logs = exported['logs'] as Map;
+    expect(((logs['2026-10-13'] as Map)['a'] as Map)['photo'], 'photos/111.jpg');
+    expect(((logs['2026-10-12'] as Map)['a'] as Map).containsKey('photo'), isFalse);
+
+    // 불러오기: 다른 기기처럼 빈 저장소에 복원
+    final other = await emptyRoutine();
+    final restoredPhotos = _FakePhotoService();
+    final importer = BackupRepository(
+      _FakeBackupService(jsonDecode(jsonEncode(exported)) as Map<String, dynamic>),
+      restoredPhotos,
+      other,
+      journal,
+      settings,
+    );
+    expect(await importer.importFromFile(), isTrue);
+    final path = other.logOf('a', '2026-10-13')!.photo!;
+    expect(path, '/restored/111.jpg');
+    expect(restoredPhotos.files[path], [1, 2, 3, 4]);
+  });
+
+  test('체크는 저장소를 거쳐 디스크에 남고 다시 읽으면 복원된다', () async {
+    SharedPreferences.setMockInitialValues({});
+    final store = await StorageService.create();
+    final repo = RoutineRepository(store);
+    await repo.load();
+    expect(repo.habits, isNotEmpty, reason: '처음 실행하면 예시 루틴이 생긴다');
+
+    final id = repo.habits.first.id;
+    await repo.toggle(id, '2026-10-13');
+    expect(repo.isDone(id, '2026-10-13'), isTrue);
+
+    final again = RoutineRepository(store);
+    await again.load();
+    expect(again.isDone(id, '2026-10-13'), isTrue);
+  });
+
+  test('웹앱 백업 JSON을 불러올 수 있다', () async {
+    final repo = await emptyRoutine();
+    await repo.importJson(jsonDecode(jsonEncode(_webBackup)) as Map<String, dynamic>);
+    final h = repo.habitById('h1')!;
+    expect(h.name, '물 마시기');
+    expect(h.repeat.days, [1, 2, 3]);
+    expect(h.alts, ['차']);
+    expect(repo.logOf('h1', '2026-10-13')!.alt, '차');
+    expect(repo.logOf('h1', '2026-10-13')!.value, 2.0);
+    expect(repo.isRest('2026-10-12'), isTrue);
+  });
+
+  test('내보낸 데이터를 다시 불러오면 같다', () async {
+    final repo = await emptyRoutine();
+    await repo.importJson(jsonDecode(jsonEncode(_webBackup)) as Map<String, dynamic>);
+    final exported = jsonDecode(jsonEncode(repo.exportJson())) as Map<String, dynamic>;
+    final other = await emptyRoutine();
+    await other.importJson(exported);
+    expect(jsonEncode(other.exportJson()), jsonEncode(repo.exportJson()));
+  });
+
+  test('모드 개수에 제한이 없다', () async {
+    final repo = await emptyRoutine();
+    for (var i = 0; i < 20; i++) {
+      expect(await repo.addMode('모드$i'), isTrue);
+    }
+    expect(repo.modes.length, 21); // 기본 모드 1개 + 20개
+  });
+
+  test('삭제한 루틴의 기록은 새로 만들어지지 않는다', () async {
+    final repo = await emptyRoutine();
+    await repo.addHabit(habit('a'));
+    await repo.deleteHabit('a');
+    await repo.setDone('a', '2026-10-13', true);
+    expect(repo.isDone('a', '2026-10-13'), isFalse);
+    expect(repo.totalChecks, 0);
+  });
+
+  test('루틴 삭제 중 타이머가 끝나도 유령 기록이 생기지 않는다', () async {
+    final repo = await emptyRoutine();
+    await repo.addHabit(habit('a'));
+    final timers = HabitTimerManager(repo);
+    fakeAsync((async) {
+      timers.start('a', '2026-10-14', 1);
+      async.elapse(const Duration(seconds: 10));
+      repo.deleteHabit('a');
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 25));
+      async.flushMicrotasks();
+      expect(timers.secondsLeft('a', '2026-10-14'), 50, reason: '루틴이 없는 동안은 시간이 줄지 않고 기다린다');
+      async.elapse(const Duration(seconds: 10)); // 30초를 넘겨 계속 없으면 정리한다
+      async.flushMicrotasks();
+      expect(timers.secondsLeft('a', '2026-10-14'), isNull, reason: '삭제가 확정되면 타이머도 멈춘다');
+      async.elapse(const Duration(seconds: 70));
+      async.flushMicrotasks();
+    });
+    await Future<void>.delayed(Duration.zero);
+    expect(repo.totalChecks, 0);
+  });
+
+  test('루틴이 잠깐 사라졌다 돌아와도(틱이 그 사이에 와도) 타이머는 사라지지 않고 남은 시간이 유지된다', () async {
+    final repo = await emptyRoutine();
+    await repo.addHabit(habit('a'));
+    final habitA = repo.habitById('a')!;
+    final timers = HabitTimerManager(repo);
+    fakeAsync((async) {
+      timers.start('a', '2026-10-14', 1);
+      async.elapse(const Duration(seconds: 10));
+      expect(timers.secondsLeft('a', '2026-10-14'), 50);
+      repo.deleteHabit('a'); // 가져오기 중 루틴이 잠깐 사라진 상황
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 3)); // 사라진 동안 틱이 지나간다
+      repo.addHabit(habitA); // 롤백으로 루틴이 돌아온다
+      async.flushMicrotasks();
+      expect(timers.secondsLeft('a', '2026-10-14'), 50, reason: '없는 동안은 시간이 줄지 않았다');
+      async.elapse(const Duration(seconds: 5));
+      expect(timers.isRunning('a', '2026-10-14'), isTrue);
+      expect(timers.secondsLeft('a', '2026-10-14'), 45, reason: '돌아온 뒤 다시 흐른다');
+    });
+  });
+
+  test('백업 가져오기가 실패해 되돌려져도 실행 중이던 타이머는 이어진다', () async {
+    SharedPreferences.setMockInitialValues({'habits': '[]'});
+    final store = _FlakyStorage(await SharedPreferences.getInstance());
+    final routine = RoutineRepository(store);
+    await routine.load();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+    await routine.addHabit(habit('running'));
+    final timers = HabitTimerManager(routine);
+    final backup = BackupRepository(
+      _FakeBackupService({
+        'habits': <dynamic>[], // 가져오면 실행 중이던 루틴이 사라진다
+        'logs': <String, dynamic>{},
+        'todos': [
+          {'id': 't', 'text': 'x', 'date': '2026-10-13'}
+        ],
+      }),
+      _FakePhotoService(),
+      routine,
+      journal,
+      settings,
+    );
+
+    var failure = false;
+    fakeAsync((async) {
+      timers.start('running', '2026-10-14', 1);
+      async.elapse(const Duration(seconds: 5));
+      store.failKey = 'todos';
+      backup.importFromFile().catchError((Object _) {
+        failure = true;
+        return false;
+      });
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 5));
+      async.flushMicrotasks();
+      store.failKey = null;
+      expect(failure, isTrue);
+      expect(routine.habitById('running'), isNotNull, reason: '실패하면 루틴이 돌아온다');
+      expect(timers.isRunning('running', '2026-10-14'), isTrue, reason: '타이머도 이어진다');
+      expect(timers.secondsLeft('running', '2026-10-14'), lessThan(55));
+    });
+  });
+
+  test('앱 사진 폴더 밖을 가리키는 백업 사진 경로는 연결을 끊고 설정 타입이 틀린 백업은 거부한다', () async {
+    final routine = await emptyRoutine();
+    final store = await StorageService.create();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+
+    // 설정 최상위 타입이 틀린 백업은 아무것도 바꾸지 않고 거부
+    await routine.addHabit(habit('keep'));
+    final bad = BackupRepository(
+      _FakeBackupService({'habits': <dynamic>[], 'logs': <String, dynamic>{}, 'settings': 'broken'}),
+      _FakePhotoService(),
+      routine,
+      journal,
+      settings,
+    );
+    await expectLater(bad.importFromFile(), throwsFormatException);
+    expect(routine.habits.map((h) => h.id), ['keep']);
+
+    // 임의 경로(photos/ 표시가 아님)를 가진 사진 연결은 가져오지 않는다
+    final evil = BackupRepository(
+      _FakeBackupService({
+        'habits': [
+          {'id': 'h', 'name': 'x', 'start': '2026-10-01'}
+        ],
+        'logs': {
+          '2026-10-13': {
+            'h': {'done': true, 'photo': '/data/data/other_app/secret.db'}
+          }
+        },
+      }),
+      _FakePhotoService(),
+      routine,
+      journal,
+      settings,
+    );
+    expect(await evil.importFromFile(), isTrue);
+    expect(routine.logOf('h', '2026-10-13')!.photo, isNull);
+    expect(routine.isDone('h', '2026-10-13'), isTrue, reason: '체크 자체는 가져온다');
+  });
+
+  test('보이는 루틴만 재정렬해도 숨은 루틴의 자리는 그대로다', () async {
+    final repo = await emptyRoutine();
+    for (final id in ['a', 'b', 'c', 'd']) {
+      await repo.addHabit(habit(id));
+    }
+    await repo.reorderVisible(['c', 'a', 'd']); // b는 화면에 없음
+    expect(repo.habits.map((h) => h.id), ['c', 'b', 'a', 'd']);
+  });
+
+  test('형식이 틀린 백업을 불러오면 기존 데이터는 그대로 남는다', () async {
+    final repo = await emptyRoutine();
+    await repo.addHabit(habit('keep', name: '지키기'));
+    await repo.setDone('keep', '2026-10-13', true);
+    // id가 없는 루틴이 섞인 잘못된 백업
+    expect(
+      () => repo.importJson({
+        'habits': [{'name': 'id 없음', 'start': '2026-10-01'}],
+        'logs': <String, dynamic>{},
+      }),
+      throwsFormatException,
+    );
+    expect(repo.habits.map((h) => h.id), ['keep']);
+    expect(repo.isDone('keep', '2026-10-13'), isTrue);
+    final again = RoutineRepository(await StorageService.create());
+    await again.load();
+    expect(again.habits.map((h) => h.id), ['keep'], reason: '디스크도 그대로');
+  });
+
+  test('설정 부분이 틀린 전체 백업도 아무것도 바꾸지 않는다', () async {
+    final routine = await emptyRoutine();
+    final store = await StorageService.create();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+    await routine.addHabit(habit('keep'));
+    final backup = BackupRepository(_FakeBackupService({
+      'habits': <dynamic>[],
+      'logs': <String, dynamic>{},
+      'settings': {'doneToBottom': 'bad'}, // bool이어야 하는 값이 문자열
+    }), _FakePhotoService(), routine, journal, settings);
+    await expectLater(backup.importFromFile(), throwsFormatException);
+    expect(routine.habits.map((h) => h.id), ['keep'], reason: '루틴 데이터는 그대로');
+  });
+
+  test('백업을 적용하다 저장이 실패하면 이전 데이터로 되돌리고 복원하던 사진도 지운다', () async {
+    SharedPreferences.setMockInitialValues({'habits': '[]'});
+    final prefs = await SharedPreferences.getInstance();
+    final store = _FlakyStorage(prefs);
+    final routine = RoutineRepository(store);
+    await routine.load();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+    await routine.addHabit(habit('keep'));
+    await journal.addTodo('남아야 하는 투두', '2026-10-13');
+
+    final photos = _FakePhotoService();
+    final backup = BackupRepository(
+      _FakeBackupService({
+        'habits': [
+          {'id': 'new', 'name': '가져올 루틴', 'start': '2026-10-01'}
+        ],
+        'logs': {
+          '2026-10-13': {
+            'new': {'done': true, 'photo': 'photos/p.jpg'}
+          }
+        },
+        'photoFiles': {'p.jpg': base64Encode([9, 9])},
+        'todos': [
+          {'id': 't', 'text': '가져올 투두', 'date': '2026-10-13'}
+        ],
+      }),
+      photos,
+      routine,
+      journal,
+      settings,
+    );
+
+    store.failKey = 'todos'; // 루틴은 적용된 뒤, 회고(투두) 저장에서 실패
+    await expectLater(backup.importFromFile(), throwsA(isA<StorageWriteException>()));
+
+    store.failKey = null;
+    expect(routine.habits.map((h) => h.id), ['keep'], reason: '루틴도 원래대로');
+    expect(journal.todos.map((t) => t.text), ['남아야 하는 투두']);
+    expect(photos.files, isEmpty, reason: '복원하다 만 사진은 지운다');
+  });
+
+  test('루틴이나 모드를 삭제해도 위젯이 방금 한 체크는 남는다', () async {
+    final app = await emptyRoutine();
+    await app.addHabit(habit('a'));
+    await app.addHabit(habit('b'));
+    await app.addMode('두번째');
+    final widget = RoutineRepository(await StorageService.create());
+    await widget.load();
+    await widget.toggle('b', '2026-10-13'); // 위젯이 체크 (앱은 아직 모름)
+    await app.deleteMode(app.modes.last.id);
+    await app.deleteHabit('a');
+    final check = RoutineRepository(await StorageService.create());
+    await check.load();
+    expect(check.isDone('b', '2026-10-13'), isTrue);
+  });
+
+  test('앱과 위젯(다른 인스턴스)이 번갈아 체크해도 서로의 기록을 덮어쓰지 않는다', () async {
+    final app = await emptyRoutine();
+    await app.addHabit(habit('a'));
+    await app.addHabit(habit('b'));
+    final widget = RoutineRepository(await StorageService.create());
+    await widget.load();
+    await widget.toggle('b', '2026-10-13'); // 위젯이 체크
+    await app.toggle('a', '2026-10-13'); // 앱은 위젯의 변경을 아직 모르는 상태에서 체크
+    final check = RoutineRepository(await StorageService.create());
+    await check.load();
+    expect(check.isDone('a', '2026-10-13'), isTrue);
+    expect(check.isDone('b', '2026-10-13'), isTrue, reason: '위젯의 체크가 유실되면 안 된다');
+  });
+
+  test('기간 쉬기는 시작일부터 종료일까지 모두 표시한다', () async {
+    final repo = await emptyRoutine();
+    await repo.setRestRange('2026-10-10', '2026-10-13', true);
+    expect(repo.restDates.toSet(), {'2026-10-10', '2026-10-11', '2026-10-12', '2026-10-13'});
+  });
+}
