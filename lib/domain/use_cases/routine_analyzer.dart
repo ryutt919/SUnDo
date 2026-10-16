@@ -35,8 +35,17 @@ class RoutineAnalyzer {
     final current = date == null || date.compareTo(today) >= 0;
     final mode = current ? _routine.activeModeId : _routine.modeOn(date);
     if (h.modes.contains(mode)) return true;
-    // 소속 모드가 모두 삭제된 습관은 지금부터는 모든 모드에 나타난다(지난 날의 구성은 그대로 둔다).
-    return current && h.modes.every((m) => !_routine.hasMode(m));
+    // 소속 모드가 모두 삭제된 습관은 마지막 모드를 삭제한 날부터 모든 모드에 나타난다.
+    // 삭제 전 날짜는 그때의 모드 구성을 그대로 따른다(과거 달성률과 신호등이 변하지 않게).
+    if (h.modes.every((m) => !_routine.hasMode(m))) {
+      var since = '0000-01-01';
+      for (final m in h.modes) {
+        final d = _routine.modeDeletedOn(m);
+        if (d != null && d.compareTo(since) > 0) since = d;
+      }
+      return (date ?? today).compareTo(since) >= 0;
+    }
+    return false;
   }
 
   int _weekDoneCount(Habit h, String date) {
@@ -81,7 +90,8 @@ class RoutineAnalyzer {
     if (_weekDoneCount(h, date) >= h.repeat.times) return false;
     for (var d = we; d.compareTo(ws) >= 0; d = addDaysKey(d, -1)) {
       if (d.compareTo(h.start) < 0) break;
-      if (_routine.isDone(h.id, d) || _routine.isRest(d)) continue;
+      // 쉬는 날이거나 그 날 다른 모드였던 날은 미달 표시일로 삼지 않는다
+      if (_routine.isDone(h.id, d) || _routine.isRest(d) || !inActiveMode(h, d)) continue;
       return d == date;
     }
     return false;

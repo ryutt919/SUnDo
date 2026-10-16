@@ -12,6 +12,7 @@ class _Imported {
     required this.modes,
     required this.activeMode,
     required this.modeFrom,
+    required this.modeDeleted,
     required this.logs,
     required this.rest,
   });
@@ -19,6 +20,7 @@ class _Imported {
   final List<RoutineMode> modes;
   final String activeMode;
   final Map<String, String> modeFrom;
+  final Map<String, String> modeDeleted;
   final Map<String, Map<String, HabitLog>> logs;
   final Set<String> rest;
 }
@@ -53,6 +55,12 @@ class RoutineRepository extends ChangeNotifier {
 
   /// 지금 존재하는 모드인지(삭제되지 않았는지).
   bool hasMode(String id) => _modes.any((m) => m.id == id);
+
+  /// 삭제한 모드가 삭제된 날짜. 삭제하지 않았으면 null.
+  String? modeDeletedOn(String id) => _modeDeletedOn[id];
+
+  /// 삭제한 모드의 id와 삭제한 날짜. 소속 모드가 모두 사라진 습관이 언제부터 모든 모드에 나타나는지 정하는 데 쓴다.
+  Map<String, String> _modeDeletedOn = {};
 
   List<Habit> get habits => List.unmodifiable(_habits);
   List<RoutineMode> get modes => List.unmodifiable(_modes);
@@ -90,9 +98,13 @@ class RoutineRepository extends ChangeNotifier {
       final rest = _store.readJson('rest');
       _rest = rest is Map ? rest.keys.map((k) => '$k').toSet() : {};
       _modeFrom = _parseModeFrom(_store.readJson('modeFrom'), _activeMode);
+      _modeDeletedOn = _parseStringMap(_store.readJson('modeDeleted'));
     }
     notifyListeners();
   }
+
+  Map<String, String> _parseStringMap(Object? raw) =>
+      raw is Map ? raw.map((k, v) => MapEntry('$k', '$v')) : <String, String>{};
 
   Map<String, String> _parseModeFrom(Object? raw, String fallbackMode) {
     final m = raw is Map ? raw.map((k, v) => MapEntry('$k', '$v')) : <String, String>{};
@@ -128,6 +140,7 @@ class RoutineRepository extends ChangeNotifier {
     await _store.writeJson('modes', _modes.map((m) => m.toJson()).toList());
     await _store.writeString('activeMode', _activeMode);
     await _store.writeJson('modeFrom', _modeFrom);
+    await _store.writeJson('modeDeleted', _modeDeletedOn);
     await _persistLogs();
     await _persistRest();
   }
@@ -199,19 +212,34 @@ class RoutineRepository extends ChangeNotifier {
   }
 
   Future<void> updateLog(String habitId, String date, HabitLog Function(HabitLog) edit) async {
-    if (habitById(habitId) == null) return; // 삭제된 습관(예: 실행 중이던 타이머)의 기록은 만들지 않는다
     await _refreshLogsAndRest();
+    // 최신 기록을 읽은 직후, 중간에 기다리는 일 없이 존재 확인과 수정을 한다.
+    // 삭제된 습관(예: 실행 중이던 타이머)의 기록은 만들지 않는다.
+    if (habitById(habitId) == null) return;
     final day = _logs.putIfAbsent(date, () => {});
-    day[habitId] = edit(day[habitId] ?? const HabitLog());
-    await _persistLogs();
+    final before = day[habitId];
+    day[habitId] = edit(before ?? const HabitLog());
+    try {
+      await _persistLogs();
+    } on Object {
+      // 저장에 실패하면 메모리의 기록도 되돌려, 화면과 저장된 내용이 어긋나지 않게 한다
+      if (before == null) {
+        day.remove(habitId);
+      } else {
+        day[habitId] = before;
+      }
+      notifyListeners();
+      rethrow;
+    }
     notifyListeners();
   }
 
   Future<void> setDone(String habitId, String date, bool done) =>
       updateLog(habitId, date, (l) => l.copyWith(done: done));
 
+  /// 체크를 뒤집는다. 최신 기록을 읽은 뒤의 값을 기준으로 뒤집어, 위젯이 먼저 바꾼 상태를 거꾸로 되돌리지 않는다.
   Future<void> toggle(String habitId, String date) =>
-      setDone(habitId, date, !isDone(habitId, date));
+      updateLog(habitId, date, (l) => l.copyWith(done: !l.done));
 
   // ---- 쉬는 날 ----
   Future<void> setRest(String date, bool rest) =>
@@ -251,8 +279,10 @@ class RoutineRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteMode(String id) async {
+  /// 모드를 지운다. [on]은 지운 날짜(생략하면 오늘).
+  Future<void> deleteMode(String id, {String? on}) async {
     if (_modes.length <= 1) return;
+    _modeDeletedOn[id] = on ?? todayKey();
     await _refreshLogsAndRest(); // _persistAll이 기록 전체를 다시 쓰므로 최신 기록에서 시작
     // 습관의 모드 지정과 날짜별 모드 이력은 그대로 둔다. 지난 날의 달성률과 신호등이 바뀌지 않게 하려는 것이다.
     // 소속 모드가 모두 사라진 습관은 지금부터 모든 모드에 나타난다(RoutineAnalyzer.inActiveMode).
@@ -271,6 +301,7 @@ class RoutineRepository extends ChangeNotifier {
         'modes': _modes.map((m) => m.toJson()).toList(),
         'activeMode': _activeMode,
         'modeFrom': _modeFrom,
+        'modeDeleted': _modeDeletedOn,
         'logs': _logs.map((d, day) => MapEntry(d, day.map((id, l) => MapEntry(id, l.toJson())))),
         'rest': {for (final d in _rest) d: true},
       };
@@ -293,6 +324,7 @@ class RoutineRepository extends ChangeNotifier {
         modes: modes,
         activeMode: active,
         modeFrom: _parseModeFrom(j['modeFrom'], active),
+        modeDeleted: _parseStringMap(j['modeDeleted']),
         logs: _parseLogs(j['logs']),
         rest: rest is Map ? rest.keys.map((k) => '$k').toSet() : {},
       );
@@ -313,6 +345,7 @@ class RoutineRepository extends ChangeNotifier {
     _modes = d.modes;
     _activeMode = d.activeMode;
     _modeFrom = d.modeFrom;
+    _modeDeletedOn = d.modeDeleted;
     _logs = d.logs;
     _rest = d.rest;
     await _persistAll();
@@ -324,6 +357,7 @@ class RoutineRepository extends ChangeNotifier {
     _modes = [const RoutineMode(id: 'm1', name: '기본')];
     _activeMode = 'm1';
     _modeFrom = {_modeEpoch: 'm1'};
+    _modeDeletedOn = {};
     _logs = {};
     _rest = {};
     await _persistAll();

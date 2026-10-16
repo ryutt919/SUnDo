@@ -46,10 +46,13 @@ class PhotoService {
   }
 
   /// 백업에서 꺼낸 사진을 앱 전용 폴더에 다시 저장하고 새 경로를 돌려준다.
+  /// 이미 있는 사진을 덮어쓰지 않도록 항상 새 파일 이름을 만든다(가져오기가 중간에 실패해도 기존 사진이 상하지 않게).
   Future<String> restore(String name, List<int> bytes) async {
     final dir = await _proofsDir();
-    final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
-    final dest = '${dir.path}/$safe';
+    var safe = name.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_'); // 점도 제거해 '.', '..'를 막는다
+    if (safe.isEmpty) safe = 'photo';
+    final stamp = DateTime.now().microsecondsSinceEpoch;
+    final dest = '${dir.path}/restored_${stamp}_$safe.jpg';
     await File(dest).writeAsBytes(bytes);
     return dest;
   }

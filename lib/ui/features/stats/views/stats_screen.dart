@@ -108,9 +108,12 @@ class StatsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             if (wide)
-              Wrap(spacing: 12, runSpacing: 0, children: [
-                for (final c in cards) SizedBox(width: (MediaQuery.sizeOf(context).width - 44) / 2, child: c),
-              ])
+              // 카드 폭은 화면 전체가 아니라 실제 본문 폭(내비게이션 레일을 뺀 폭)에서 계산한다
+              LayoutBuilder(
+                builder: (_, box) => Wrap(spacing: 12, runSpacing: 0, children: [
+                  for (final c in cards) SizedBox(width: (box.maxWidth - 12) / 2, child: c),
+                ]),
+              )
             else
               ...cards,
           ],

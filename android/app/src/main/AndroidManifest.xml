@@ -81,9 +81,10 @@
         </receiver>
 
         <!-- 위젯에서 보낸 체크 요청을 Dart 백그라운드 콜백으로 전달 -->
+        <!-- 위젯의 PendingIntent(우리 앱 권한으로 실행)만 받으면 되므로 외부 앱이 직접 보낼 수 없게 막는다 -->
         <receiver
             android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="es.antonborri.home_widget.action.BACKGROUND" />
             </intent-filter>
