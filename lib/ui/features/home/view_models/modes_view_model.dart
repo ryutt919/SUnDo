@@ -10,8 +10,6 @@ class ModesViewModel extends RepoViewModel {
 
   List<RoutineMode> get modes => _routine.modes;
   String get activeModeId => _routine.activeModeId;
-  int get maxModes => RoutineRepository.maxModes;
-  bool get canAdd => modes.length < maxModes;
   bool get canDelete => modes.length > 1;
 
   Future<void> apply(String id) => _routine.setActiveMode(id);

@@ -83,14 +83,12 @@ class _ModesSheet extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.tonalIcon(
-                onPressed: !vm.canAdd
-                    ? null
-                    : () async {
-                        final n = await promptDialog(context, '새 모드 이름');
-                        if (n != null) await vm.add(n);
-                      },
+                onPressed: () async {
+                  final n = await promptDialog(context, '새 모드 이름');
+                  if (n != null) await vm.add(n);
+                },
                 icon: const Icon(Icons.add),
-                label: Text('모드 추가 (${vm.modes.length}/${vm.maxModes})'),
+                label: Text('모드 추가 (${vm.modes.length}개)'),
               ),
             ),
           ],

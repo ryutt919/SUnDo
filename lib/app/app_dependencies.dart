@@ -68,7 +68,7 @@ class AppDependencies {
       backup: BackupRepository(BackupService(), photos, routine, journal, settings),
       analyzer: analyzer,
       stats: StatsUseCase(routine, analyzer),
-      widgetSnapshot: WidgetSnapshotUseCase(routine, analyzer),
+      widgetSnapshot: WidgetSnapshotUseCase(routine, analyzer, journal: journal),
       alarmPlan: AlarmPlanUseCase(routine, analyzer),
       notifications: notifications,
       widgets: HomeWidgetService(),

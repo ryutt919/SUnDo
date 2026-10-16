@@ -40,7 +40,6 @@ class RoutineRepository extends ChangeNotifier {
   /// 날짜별 루틴 모드 이력: "이 날부터 이 모드". 모드를 바꿔도 지난 날의 통계가 변하지 않게 한다.
   Map<String, String> _modeFrom = {'0000-01-01': 'm1'};
 
-  static const maxModes = 10;
   static const _modeEpoch = '0000-01-01';
 
   /// 지난 날 [date]에 쓰던 모드. 오늘 이후는 현재 모드를 쓰면 되므로 호출하는 쪽에서 구분한다.
@@ -271,7 +270,6 @@ class RoutineRepository extends ChangeNotifier {
   }
 
   Future<bool> addMode(String name) async {
-    if (_modes.length >= maxModes) return false;
     _modes = [..._modes, RoutineMode(id: newId(), name: name)];
     await _store.writeJson('modes', _modes.map((m) => m.toJson()).toList());
     notifyListeners();

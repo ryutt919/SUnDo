@@ -149,12 +149,12 @@ void main() {
     expect(jsonEncode(other.exportJson()), jsonEncode(repo.exportJson()));
   });
 
-  test('모드는 10개까지만 만들 수 있다', () async {
+  test('모드 개수에 제한이 없다', () async {
     final repo = await emptyRoutine();
     for (var i = 0; i < 20; i++) {
-      await repo.addMode('모드$i');
+      expect(await repo.addMode('모드$i'), isTrue);
     }
-    expect(repo.modes.length, RoutineRepository.maxModes);
+    expect(repo.modes.length, 21); // 기본 모드 1개 + 20개
   });
 
   test('삭제한 습관의 기록은 새로 만들어지지 않는다', () async {

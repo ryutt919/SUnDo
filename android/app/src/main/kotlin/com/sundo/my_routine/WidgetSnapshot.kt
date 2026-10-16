@@ -14,6 +14,7 @@ data class WidgetRow(
     val time: String,
     val done: Boolean,
     val color: String,
+    val kind: String = "habit", // "habit" 또는 "todo"
 )
 
 data class WidgetWeekDay(
@@ -66,6 +67,7 @@ data class WidgetSnapshot(
                             time = r.optString("time", ""),
                             done = r.getBoolean("done"),
                             color = r.optString("color", "#E3F7E8"),
+                            kind = r.optString("kind", "habit"),
                         )
                     },
                     week = (0 until week.length()).map {

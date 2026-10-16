@@ -9,8 +9,10 @@ import '../settings/view_models/settings_view_model.dart';
 import '../settings/views/settings_screen.dart';
 import '../stats/view_models/stats_view_model.dart';
 import '../stats/views/stats_screen.dart';
+import '../todos/view_models/todos_view_model.dart';
+import '../todos/views/todos_screen.dart';
 
-/// 하단 탭(넓은 화면에서는 왼쪽 레일)으로 홈, 계획, 통계, 설정을 오간다.
+/// 하단 탭(넓은 화면에서는 왼쪽 레일)으로 홈, 투두, 계획, 통계, 설정을 오간다.
 class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.deps});
   final AppDependencies deps;
@@ -24,6 +26,7 @@ class _AppShellState extends State<AppShell> {
 
   static const _items = [
     (Icons.home_outlined, Icons.home, '홈'),
+    (Icons.checklist_outlined, Icons.checklist, '투두'),
     (Icons.flag_outlined, Icons.flag, '계획'),
     (Icons.bar_chart_outlined, Icons.bar_chart, '통계'),
     (Icons.settings_outlined, Icons.settings, '설정'),
@@ -38,6 +41,7 @@ class _AppShellState extends State<AppShell> {
         ChangeNotifierProvider(
           create: (_) => HomeViewModel(routine: d.routine, journal: d.journal, settings: d.settings, analyzer: d.analyzer),
         ),
+        ChangeNotifierProvider(create: (_) => TodosViewModel(d.journal)),
         ChangeNotifierProvider(
           create: (_) => StatsViewModel(routine: d.routine, journal: d.journal, analyzer: d.analyzer, stats: d.stats),
         ),
@@ -69,6 +73,7 @@ class _AppShellState extends State<AppShell> {
                 index: _index,
                 children: [
                   const HomeScreen(),
+                  const TodosScreen(),
                   GoalsScreenEntry(journal: d.journal),
                   const StatsScreen(),
                   const SettingsScreen(),

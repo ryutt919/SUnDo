@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+import '../data/repositories/journal_repository.dart';
 import '../data/repositories/routine_repository.dart';
 import '../data/repositories/settings_repository.dart';
 import '../data/services/home_widget_service.dart';
@@ -13,6 +14,7 @@ import '../domain/use_cases/widget_snapshot_use_case.dart';
 
 /// 홈 화면 위젯이 앱을 열지 않고 보내는 요청을 백그라운드에서 처리한다.
 ///  - `myroutine://toggle?id=<습관 ID>`: 오늘 그 습관의 체크를 바꾼다.
+///  - `myroutine://toggletodo?id=<투두 ID>`: 그 투두의 완료 상태를 바꾼다.
 ///  - `myroutine://refresh`: 날짜나 시간대가 바뀌었을 때 위젯 데이터와 알람을 새로 만든다.
 @pragma('vm:entry-point')
 Future<void> widgetBackgroundCallback(Uri? uri) async {
@@ -21,9 +23,21 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
 
   final storage = await StorageService.create();
   final routine = RoutineRepository(storage);
-  await routine.load();
+  final journal = JournalRepository(storage);
+  await Future.wait([routine.load(), journal.load()]);
 
   switch (uri.host) {
+    case 'toggletodo': // URI 호스트는 소문자로 정규화되므로 소문자로 쓴다
+      final id = uri.queryParameters['id'];
+      if (id == null || id.isEmpty) return;
+      final todo = journal.todos.where((t) => t.id == id).firstOrNull;
+      if (todo != null) {
+        try {
+          await journal.updateTodo(todo.copyWith(done: !todo.done));
+        } on StorageWriteException catch (e) {
+          debugPrint('위젯 투두 저장 실패: $e');
+        }
+      }
     case 'toggle':
       final id = uri.queryParameters['id'];
       if (id == null || id.isEmpty) return;
@@ -41,7 +55,7 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
   }
 
   final analyzer = RoutineAnalyzer(routine);
-  await HomeWidgetService().push(WidgetSnapshotUseCase(routine, analyzer).build());
+  await HomeWidgetService().push(WidgetSnapshotUseCase(routine, analyzer, journal: journal).build());
 
   // 위젯에서 체크한 습관의 알람을 취소하고, 앱을 오래 열지 않아도 알람 예약이 이어지게 다시 만든다.
   try {

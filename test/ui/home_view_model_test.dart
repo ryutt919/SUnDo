@@ -99,6 +99,23 @@ void main() {
     expect(((snap['rows'] as List).first as Map)['id'], 'a');
   });
 
+  test('위젯 데이터에 오늘 투두와 지난 미완료 투두가 들어가고 투두 칸은 3개까지다', () async {
+    final s = await _setup();
+    for (var i = 0; i < 10; i++) {
+      await s.routine.addHabit(habit('h$i', name: 'H$i'));
+    }
+    await s.journal.addTodo('오늘 할 일', _today);
+    await s.journal.addTodo('어제 못한 일', '2026-10-13');
+    await s.journal.addTodo('내일 일', '2026-10-15');
+    final snap = WidgetSnapshotUseCase(s.routine, s.analyzer, journal: s.journal).build();
+    final rows = (snap['rows'] as List).cast<Map>();
+    final todos = rows.where((r) => r['kind'] == 'todo').toList();
+    expect(todos.map((r) => r['name']), ['오늘 할 일', '어제 못한 일'], reason: '내일 투두는 제외');
+    expect(rows.length, WidgetSnapshotUseCase.maxRows);
+    expect(rows.where((r) => r['kind'] == 'habit').length, WidgetSnapshotUseCase.maxRows - 2);
+    expect(snap['more'], 10 - (WidgetSnapshotUseCase.maxRows - 2));
+  });
+
   test('알람은 해야 하는 날에만, 아직 안 한 습관에만 만든다', () async {
     final s = await _setup();
     await s.routine.addHabit(habit('a').copyWith(alarm: '09:00'));

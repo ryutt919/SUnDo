@@ -67,7 +67,8 @@ class TodayWidgetProvider : HomeWidgetProvider() {
                 checkId(i), "setBackgroundResource",
                 if (r.done) R.drawable.widget_check_done else R.drawable.widget_check,
             )
-            v.setOnClickPendingIntent(checkId(i), WidgetUi.backgroundIntent(context, "myroutine://toggle?id=${r.id}"))
+            val action = if (r.kind == "todo") "toggletodo" else "toggle"
+            v.setOnClickPendingIntent(checkId(i), WidgetUi.backgroundIntent(context, "myroutine://$action?id=${r.id}"))
         }
         if (s.more > 0) {
             v.setViewVisibility(R.id.more_text, View.VISIBLE)
