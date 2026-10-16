@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/routine_repository.dart';
 import '../../../core/widgets.dart';
+import '../view_models/modes_view_model.dart';
 
 /// 루틴 모드 선택/관리 시트. 모드를 누르면 바로 적용된다.
 Future<void> showModesSheet(BuildContext context) {
@@ -10,7 +11,10 @@ Future<void> showModesSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => const _ModesSheet(),
+    builder: (_) => ChangeNotifierProvider(
+      create: (c) => ModesViewModel(c.read<RoutineRepository>()),
+      child: const _ModesSheet(),
+    ),
   );
 }
 
@@ -19,7 +23,7 @@ class _ModesSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final repo = context.watch<RoutineRepository>();
+    final vm = context.watch<ModesViewModel>();
     final cs = Theme.of(context).colorScheme;
     return SafeArea(
       child: Padding(
@@ -37,35 +41,35 @@ class _ModesSheet extends StatelessWidget {
               child: ListView(
                 shrinkWrap: true,
                 children: [
-                  for (final m in repo.modes)
+                  for (final m in vm.modes)
                     Card(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
-                        side: BorderSide(color: m.id == repo.activeModeId ? cs.primary : cs.outlineVariant),
+                        side: BorderSide(color: m.id == vm.activeModeId ? cs.primary : cs.outlineVariant),
                       ),
                       child: ListTile(
                         onTap: () async {
-                          await repo.setActiveMode(m.id);
+                          await vm.apply(m.id);
                           if (context.mounted) Navigator.pop(context);
                         },
-                        leading: Icon(m.id == repo.activeModeId ? Icons.check_circle : Icons.circle_outlined,
-                            color: m.id == repo.activeModeId ? cs.primary : null),
+                        leading: Icon(m.id == vm.activeModeId ? Icons.check_circle : Icons.circle_outlined,
+                            color: m.id == vm.activeModeId ? cs.primary : null),
                         title: Text(m.name, style: const TextStyle(fontWeight: FontWeight.w700)),
                         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                           IconButton(
                             icon: const Icon(Icons.edit_outlined),
                             onPressed: () async {
                               final n = await promptDialog(context, '모드 이름', initial: m.name);
-                              if (n != null) await repo.renameMode(m.id, n);
+                              if (n != null) await vm.rename(m.id, n);
                             },
                           ),
                           IconButton(
                             icon: const Icon(Icons.delete_outline),
-                            onPressed: repo.modes.length == 1
+                            onPressed: !vm.canDelete
                                 ? null
                                 : () async {
                                     if (await confirmDialog(context, '이 모드를 삭제할까요? 습관은 지워지지 않아요.', ok: '삭제')) {
-                                      await repo.deleteMode(m.id);
+                                      await vm.delete(m.id);
                                     }
                                   },
                           ),
@@ -79,14 +83,14 @@ class _ModesSheet extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton.tonalIcon(
-                onPressed: repo.modes.length >= RoutineRepository.maxModes
+                onPressed: !vm.canAdd
                     ? null
                     : () async {
                         final n = await promptDialog(context, '새 모드 이름');
-                        if (n != null) await repo.addMode(n);
+                        if (n != null) await vm.add(n);
                       },
                 icon: const Icon(Icons.add),
-                label: Text('모드 추가 (${repo.modes.length}/${RoutineRepository.maxModes})'),
+                label: Text('모드 추가 (${vm.modes.length}/${vm.maxModes})'),
               ),
             ),
           ],

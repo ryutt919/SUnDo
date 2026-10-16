@@ -84,6 +84,39 @@ void main() {
     expect(repo.habits.map((h) => h.id), ['c', 'b', 'a', 'd']);
   });
 
+  test('형식이 틀린 백업을 불러오면 기존 데이터는 그대로 남는다', () async {
+    final repo = await emptyRoutine();
+    await repo.addHabit(habit('keep', name: '지키기'));
+    await repo.setDone('keep', '2026-10-13', true);
+    // id가 없는 습관이 섞인 잘못된 백업
+    expect(
+      () => repo.importJson({
+        'habits': [{'name': 'id 없음', 'start': '2026-10-01'}],
+        'logs': <String, dynamic>{},
+      }),
+      throwsFormatException,
+    );
+    expect(repo.habits.map((h) => h.id), ['keep']);
+    expect(repo.isDone('keep', '2026-10-13'), isTrue);
+    final again = RoutineRepository(await StorageService.create());
+    await again.load();
+    expect(again.habits.map((h) => h.id), ['keep'], reason: '디스크도 그대로');
+  });
+
+  test('앱과 위젯(다른 인스턴스)이 번갈아 체크해도 서로의 기록을 덮어쓰지 않는다', () async {
+    final app = await emptyRoutine();
+    await app.addHabit(habit('a'));
+    await app.addHabit(habit('b'));
+    final widget = RoutineRepository(await StorageService.create());
+    await widget.load();
+    await widget.toggle('b', '2026-10-13'); // 위젯이 체크
+    await app.toggle('a', '2026-10-13'); // 앱은 위젯의 변경을 아직 모르는 상태에서 체크
+    final check = RoutineRepository(await StorageService.create());
+    await check.load();
+    expect(check.isDone('a', '2026-10-13'), isTrue);
+    expect(check.isDone('b', '2026-10-13'), isTrue, reason: '위젯의 체크가 유실되면 안 된다');
+  });
+
   test('기간 쉬기는 시작일부터 종료일까지 모두 표시한다', () async {
     final repo = await emptyRoutine();
     await repo.setRestRange('2026-10-10', '2026-10-13', true);

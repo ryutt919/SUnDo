@@ -17,6 +17,7 @@ class NotificationService {
     channelDescription: '습관을 할 시간에 알려 줘요',
     importance: Importance.high,
     priority: Priority.high,
+    icon: 'ic_stat_notify',
   );
 
   Future<void> init() async {
@@ -24,7 +25,7 @@ class NotificationService {
     final zone = await FlutterTimezone.getLocalTimezone();
     tz.setLocalLocation(tz.getLocation(zone.identifier));
     await _plugin.initialize(
-      settings: const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')),
+      settings: const InitializationSettings(android: AndroidInitializationSettings('ic_stat_notify')),
     );
     _ready = true;
   }

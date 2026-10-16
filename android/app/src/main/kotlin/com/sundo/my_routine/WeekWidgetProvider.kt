@@ -13,10 +13,7 @@ class WeekWidgetProvider : HomeWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        when (intent.action) {
-            Intent.ACTION_DATE_CHANGED, Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED ->
-                WidgetUi.backgroundIntent(context, "myroutine://refresh").send()
-        }
+        WidgetUi.handleRefreshBroadcast(context, intent)
     }
 
     override fun onUpdate(
@@ -26,6 +23,7 @@ class WeekWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences,
     ) {
         val snapshot = WidgetSnapshot.parse(widgetData.getString("snapshot", null))
+        WidgetUi.onWidgetUpdate(context, snapshot)
         appWidgetIds.forEach { id ->
             val views = RemoteViews(context.packageName, R.layout.widget_week)
             views.setOnClickPendingIntent(R.id.widget_root, WidgetUi.openAppIntent(context))

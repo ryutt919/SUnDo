@@ -13,11 +13,8 @@ class TodayWidgetProvider : HomeWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        // 자정이 지나 날짜가 바뀌면 Dart에게 위젯 데이터를 새로 만들게 한다.
-        when (intent.action) {
-            Intent.ACTION_DATE_CHANGED, Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED ->
-                WidgetUi.backgroundIntent(context, "myroutine://refresh").send()
-        }
+        // 자정이 지나거나 시간대가 바뀌면 Dart에게 위젯 데이터와 알람을 새로 만들게 한다.
+        WidgetUi.handleRefreshBroadcast(context, intent)
     }
 
     override fun onUpdate(
@@ -27,6 +24,7 @@ class TodayWidgetProvider : HomeWidgetProvider() {
         widgetData: SharedPreferences,
     ) {
         val snapshot = WidgetSnapshot.parse(widgetData.getString("snapshot", null))
+        WidgetUi.onWidgetUpdate(context, snapshot)
         appWidgetIds.forEach { id ->
             val views = RemoteViews(context.packageName, R.layout.widget_today)
             render(context, views, snapshot)

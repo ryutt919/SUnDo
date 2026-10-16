@@ -28,6 +28,9 @@ class BackupRepository {
     if (data['habits'] is! List || data['logs'] is! Map) {
       throw const FormatException('내 루틴 백업 파일이 아니에요');
     }
+    // 어느 한쪽이라도 형식이 틀리면 아무것도 바꾸지 않도록 먼저 모두 검사한다.
+    _routine.validateJson(data);
+    _journal.validateJson(data);
     await _routine.importJson(data);
     await _journal.importJson(data);
     final s = data['settings'];

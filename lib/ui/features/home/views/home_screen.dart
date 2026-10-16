@@ -117,6 +117,7 @@ class HomeScreen extends StatelessWidget {
         TodoTile(
           data: t,
           onToggle: () => vm.toggleTodo(t.todo),
+          onEdit: () => showTodoDialog(context, vm.selectedDate, existing: t.todo),
         ),
     ];
     return [

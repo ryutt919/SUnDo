@@ -1,10 +1,12 @@
 package com.sundo.my_routine
 
+import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import es.antonborri.home_widget.HomeWidgetBackgroundIntent
+import java.util.Calendar
 
 /** 두 위젯이 함께 쓰는 보조 함수. */
 object WidgetUi {
@@ -45,4 +47,45 @@ object WidgetUi {
     /** 앱을 열지 않고 Dart 백그라운드 콜백을 실행하는 PendingIntent. */
     fun backgroundIntent(context: Context, uri: String): PendingIntent =
         HomeWidgetBackgroundIntent.getBroadcast(context, Uri.parse(uri))
+
+    const val ACTION_MIDNIGHT = "com.sundo.my_routine.ACTION_MIDNIGHT_REFRESH"
+
+    /**
+     * 다음 자정 직후에 위젯 데이터를 새로 만들게 예약한다.
+     * DATE_CHANGED 같은 암시적 방송은 Android 8 이상에서 매니페스트로 못 받을 수 있어서 직접 예약한다.
+     */
+    fun scheduleMidnightRefresh(context: Context) {
+        val alarms = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val at = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 5)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        val intent = Intent(context, TodayWidgetProvider::class.java).setAction(ACTION_MIDNIGHT)
+        val pending = PendingIntent.getBroadcast(
+            context, 77, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending)
+    }
+
+    /** 날짜, 시간, 시간대가 바뀌거나 자정 예약이 울리면 Dart에게 위젯 데이터를 새로 만들게 한다. */
+    fun handleRefreshBroadcast(context: Context, intent: Intent) {
+        when (intent.action) {
+            Intent.ACTION_DATE_CHANGED, Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED, ACTION_MIDNIGHT -> {
+                backgroundIntent(context, "myroutine://refresh").send()
+                scheduleMidnightRefresh(context)
+            }
+        }
+    }
+
+    /** 위젯을 그릴 때마다 자정 예약을 갱신하고, 저장된 데이터가 어제 것이면 새로 만들게 한다. */
+    fun onWidgetUpdate(context: Context, snapshot: WidgetSnapshot?) {
+        scheduleMidnightRefresh(context)
+        if (snapshot != null && snapshot.isStale) {
+            backgroundIntent(context, "myroutine://refresh").send()
+        }
+    }
 }

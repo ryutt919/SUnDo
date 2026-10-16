@@ -129,6 +129,16 @@ void main() {
     expect(ids.length, plan.length, reason: '알람 ID는 서로 달라야 한다');
   });
 
+  test('알람은 최대 400개까지만 예약한다', () async {
+    final s = await _setup();
+    for (var i = 0; i < 40; i++) {
+      await s.routine.addHabit(habit('h$i').copyWith(alarm: '23:00'));
+    }
+    final plan = AlarmPlanUseCase(s.routine, s.analyzer).build(now: DateTime(2026, 10, 14, 8, 0));
+    expect(plan.length, AlarmPlanUseCase.maxAlarms);
+    expect(plan.first.at.isBefore(plan.last.at) || plan.first.at == plan.last.at, isTrue, reason: '가까운 알람부터');
+  });
+
   test('시간순 보기는 시각이 있는 습관을 시간 순으로, 없는 습관을 뒤에 둔다', () async {
     final s = await _setup();
     await s.routine.addHabit(habit('late').copyWith(time: '22:00'));

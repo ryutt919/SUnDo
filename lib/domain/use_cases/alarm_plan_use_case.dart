@@ -19,6 +19,7 @@ class AlarmPlanUseCase {
   final RoutineAnalyzer _analyzer;
 
   static const horizonDays = 14;
+  static const maxAlarms = 400;
 
   /// [morning], [evening]은 'HH:mm' (빈 문자열이면 끔). 쉬는 날에는 울리지 않는다.
   List<AlarmSpec> build({DateTime? now, String morning = '', String evening = ''}) {
@@ -31,7 +32,7 @@ class AlarmPlanUseCase {
       final due = _analyzer.dueHabits(key).length;
       final m = _at(key, morning);
       if (m != null && m.isAfter(n) && due > 0) {
-        out.add(AlarmSpec(id: _stableId('morning', key), title: '좋은 아침이에요', body: '오늘의 루틴 $due개가 기다려요', at: m));
+        out.add(AlarmSpec(id: _stableId('morning', key), title: '좋은 아침이에요', body: '오늘의 루틴을 확인해 보세요', at: m));
       }
       final e = _at(key, evening);
       if (e != null && e.isAfter(n)) {
@@ -61,7 +62,8 @@ class AlarmPlanUseCase {
       }
     }
     out.sort((a, b) => a.at.compareTo(b.at));
-    return out;
+    // 일부 갤럭시 기기는 예약 알림이 500개를 넘으면 실패하므로, 가까운 알람부터 상한까지만 예약한다.
+    return out.length > maxAlarms ? out.sublist(0, maxAlarms) : out;
   }
 
   static DateTime? _at(String key, String hhmm) {

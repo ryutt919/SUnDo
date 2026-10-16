@@ -15,10 +15,7 @@ class MonthWidgetProvider : HomeWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        when (intent.action) {
-            Intent.ACTION_DATE_CHANGED, Intent.ACTION_TIME_CHANGED, Intent.ACTION_TIMEZONE_CHANGED ->
-                WidgetUi.backgroundIntent(context, "myroutine://refresh").send()
-        }
+        WidgetUi.handleRefreshBroadcast(context, intent)
     }
 
     override fun onUpdate(
@@ -30,6 +27,7 @@ class MonthWidgetProvider : HomeWidgetProvider() {
         val raw = widgetData.getString("snapshot", null)
         val snapshot = WidgetSnapshot.parse(raw)
         val month = parseMonth(raw)
+        WidgetUi.onWidgetUpdate(context, snapshot)
         appWidgetIds.forEach { id ->
             val v = RemoteViews(context.packageName, R.layout.widget_month)
             v.setOnClickPendingIntent(R.id.widget_root, WidgetUi.openAppIntent(context))

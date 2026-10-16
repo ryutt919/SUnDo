@@ -102,15 +102,19 @@ class _CheckButton extends StatelessWidget {
 }
 
 class TodoTile extends StatelessWidget {
-  const TodoTile({super.key, required this.data, required this.onToggle});
+  const TodoTile({super.key, required this.data, required this.onToggle, required this.onEdit});
   final TodoRowData data;
   final VoidCallback onToggle;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final t = data.todo;
-    return Container(
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onEdit,
+      child: Container(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
@@ -141,6 +145,7 @@ class TodoTile extends StatelessWidget {
             icon: Icon(t.done ? Icons.check_box : Icons.check_box_outline_blank, color: AppColors.green, size: 30),
           ),
         ],
+      ),
       ),
     );
   }

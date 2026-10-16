@@ -130,6 +130,29 @@ void main() {
     });
   });
 
+  group('보관', () {
+    test('보관해도 과거 달성률과 신호등은 그대로이고 보관한 날부터 사라진다', () async {
+      final repo = await emptyRoutine();
+      await repo.addHabit(habit('a', start: '2026-10-01'));
+      await repo.setDone('a', '2026-10-13', true);
+      final an = RoutineAnalyzer(repo, today: () => today);
+      expect(an.lightOf(an.dayStat('2026-10-13'), '2026-10-13'), TrafficLight.green);
+
+      // 오늘(10-14) 보관: 어제까지만 나타난다
+      await repo.updateHabit(repo.habitById('a')!.copyWith(archived: true, finishedOn: '2026-10-13'));
+      expect(an.dayStat('2026-10-13').due, 1, reason: '과거 기록은 유지');
+      expect(an.lightOf(an.dayStat('2026-10-13'), '2026-10-13'), TrafficLight.green);
+      expect(an.dayStat(today).due, 0, reason: '오늘부터는 사라짐');
+    });
+
+    test('종료일이 없는 보관 습관(웹 백업)은 어느 날에도 나타나지 않는다', () async {
+      final repo = await emptyRoutine();
+      await repo.addHabit(habit('a', start: '2026-10-01').copyWith(archived: true));
+      final an = RoutineAnalyzer(repo, today: () => today);
+      expect(an.dayStat('2026-10-13').due, 0);
+    });
+  });
+
   group('루틴 모드', () {
     test('모드가 지정된 습관은 그 모드에서만 나온다', () async {
       final repo = await emptyRoutine();

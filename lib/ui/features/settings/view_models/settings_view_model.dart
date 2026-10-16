@@ -70,7 +70,7 @@ class SettingsViewModel extends RepoViewModel {
 
   Future<void> restore(String id) async {
     final h = _routine.habitById(id);
-    if (h != null) await _routine.updateHabit(h.copyWith(archived: false));
+    if (h != null) await _routine.updateHabit(h.copyWith(archived: false, clearFinished: true));
   }
 
   Future<void> purge(String id) => _routine.deleteHabit(id);

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/journal_repository.dart';
+import '../../../../domain/models/date_key.dart';
 import '../../../../domain/models/journal_models.dart';
 import '../../templates/views/templates_screen.dart';
+import '../view_models/todo_editor_view_model.dart';
 import 'habit_form_screen.dart';
 
 Future<void> showAddMenu(BuildContext context, String date) {
@@ -47,61 +49,63 @@ Future<void> showAddMenu(BuildContext context, String date) {
   );
 }
 
-Future<void> showTodoDialog(BuildContext context, String date, {Todo? existing}) async {
-  final journal = context.read<JournalRepository>();
-  final ctrl = TextEditingController(text: existing?.text ?? '');
-  var pickedDate = existing?.date ?? date;
-  await showDialog<void>(
+Future<void> showTodoDialog(BuildContext context, String date, {Todo? existing}) {
+  return showDialog<void>(
     context: context,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (_, setState) => AlertDialog(
-        title: Text(existing == null ? '새 투두' : '투두 편집'),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          TextField(controller: ctrl, autofocus: true, decoration: const InputDecoration(labelText: '할 일')),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            icon: const Icon(Icons.event),
-            label: Text(pickedDate),
-            onPressed: () async {
-              final p = await showDatePicker(
-                context: dialogContext,
-                initialDate: DateTime.parse(pickedDate),
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2100),
-              );
-              if (p != null) {
-                setState(() => pickedDate =
-                    '${p.year.toString().padLeft(4, '0')}-${p.month.toString().padLeft(2, '0')}-${p.day.toString().padLeft(2, '0')}');
-              }
-            },
-          ),
-        ]),
-        actions: [
-          if (existing != null)
-            TextButton(
-              onPressed: () async {
-                await journal.deleteTodo(existing.id);
-                if (dialogContext.mounted) Navigator.pop(dialogContext);
-              },
-              child: const Text('삭제'),
-            ),
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('취소')),
-          TextButton(
-            onPressed: () async {
-              final text = ctrl.text.trim();
-              if (text.isEmpty) return;
-              if (existing == null) {
-                await journal.addTodo(text, pickedDate);
-              } else {
-                await journal.updateTodo(existing.copyWith(text: text, date: pickedDate));
-              }
-              if (dialogContext.mounted) Navigator.pop(dialogContext);
-            },
-            child: const Text('저장'),
-          ),
-        ],
-      ),
+    builder: (_) => ChangeNotifierProvider(
+      create: (c) => TodoEditorViewModel(c.read<JournalRepository>(), defaultDate: date, existing: existing),
+      child: const _TodoDialog(),
     ),
   );
-  ctrl.dispose();
+}
+
+class _TodoDialog extends StatelessWidget {
+  const _TodoDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final vm = context.watch<TodoEditorViewModel>();
+    return AlertDialog(
+      title: Text(vm.isNew ? '새 투두' : '투두 편집'),
+      content: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextFormField(
+          initialValue: vm.text,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: '할 일'),
+          onChanged: (v) => vm.text = v,
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          icon: const Icon(Icons.event),
+          label: Text(vm.date),
+          onPressed: () async {
+            final p = await showDatePicker(
+              context: context,
+              initialDate: parseDateKey(vm.date),
+              firstDate: DateTime(2020),
+              lastDate: DateTime(2100),
+            );
+            if (p != null) vm.setDate(dateKey(p));
+          },
+        ),
+      ]),
+      actions: [
+        if (!vm.isNew)
+          TextButton(
+            onPressed: () async {
+              await vm.delete();
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('삭제'),
+          ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+        TextButton(
+          onPressed: () async {
+            if (await vm.save() && context.mounted) Navigator.pop(context);
+          },
+          child: const Text('저장'),
+        ),
+      ],
+    );
+  }
 }

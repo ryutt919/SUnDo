@@ -10,6 +10,7 @@ class AppSync {
 
   final AppDependencies _deps;
   Timer? _debounce;
+  Future<void> _chain = Future.value();
 
   void start() {
     _deps.routine.addListener(_schedule);
@@ -30,7 +31,14 @@ class AppSync {
     _debounce = Timer(const Duration(milliseconds: 400), syncNow);
   }
 
-  Future<void> syncNow() async {
+  /// 동기화는 한 번에 하나씩만 실행한다. 예약을 지우고 다시 만드는 작업이 겹치면
+  /// 이미 지운 알람이 되살아날 수 있기 때문이다.
+  Future<void> syncNow() {
+    _chain = _chain.then((_) => _run());
+    return _chain;
+  }
+
+  Future<void> _run() async {
     try {
       await _deps.widgets.push(_deps.widgetSnapshot.build());
     } on Exception catch (e) {

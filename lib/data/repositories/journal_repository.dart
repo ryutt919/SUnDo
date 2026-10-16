@@ -120,16 +120,35 @@ class JournalRepository extends ChangeNotifier {
         'reviews': _reviews.map((k, v) => MapEntry(k, v.toJson())),
       };
 
+  /// 백업 JSON을 모두 해석해 본다. 형식이 틀리면 FormatException을 던지고 상태는 바꾸지 않는다.
+  ({List<Todo> todos, List<Memo> memos, List<Goal> goals, Map<String, DayReview> reviews}) _parseImport(
+      Map<String, dynamic> j) {
+    try {
+      List<T> list<T>(String key, T Function(Map<String, dynamic>) f) =>
+          ((j[key] as List?) ?? const []).map((e) => f((e as Map).cast<String, dynamic>())).toList();
+      final r = j['reviews'];
+      return (
+        todos: list('todos', Todo.fromJson),
+        memos: list('memos', Memo.fromJson),
+        goals: list('goals', Goal.fromJson),
+        reviews: r is Map
+            ? r.map((k, v) => MapEntry('$k', DayReview.fromJson((v as Map).cast<String, dynamic>())))
+            : <String, DayReview>{},
+      );
+    } on TypeError catch (e) {
+      throw FormatException('회고/투두 백업 형식이 올바르지 않아요: $e');
+    }
+  }
+
+  /// 덮어쓰기 전에 형식만 검사한다.
+  void validateJson(Map<String, dynamic> j) => _parseImport(j);
+
   Future<void> importJson(Map<String, dynamic> j) async {
-    List<T> list<T>(String key, T Function(Map<String, dynamic>) f) =>
-        ((j[key] as List?) ?? const []).map((e) => f((e as Map).cast<String, dynamic>())).toList();
-    _todos = list('todos', Todo.fromJson);
-    _memos = list('memos', Memo.fromJson);
-    _goals = list('goals', Goal.fromJson);
-    final r = j['reviews'];
-    _reviews = r is Map
-        ? r.map((k, v) => MapEntry('$k', DayReview.fromJson((v as Map).cast<String, dynamic>())))
-        : {};
+    final d = _parseImport(j);
+    _todos = d.todos;
+    _memos = d.memos;
+    _goals = d.goals;
+    _reviews = d.reviews;
     for (final k in ['todos', 'memos', 'goals', 'reviews']) {
       await _save(k);
     }

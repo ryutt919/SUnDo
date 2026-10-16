@@ -40,7 +40,8 @@ class RoutineAnalyzer {
   }
 
   bool isDue(Habit h, String date) {
-    if (h.archived || date.compareTo(h.start) < 0) return false;
+    // 보관하면 finishedOn이 정해져서 보관한 날 이후만 사라지고 과거 기록과 신호등은 그대로 남는다.
+    if ((h.archived && h.finishedOn == null) || date.compareTo(h.start) < 0) return false;
     final fin = h.finishedOn;
     if (fin != null && date.compareTo(fin) > 0) return false;
     final r = h.repeat;

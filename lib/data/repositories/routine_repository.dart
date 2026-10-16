@@ -6,6 +6,21 @@ import '../../domain/models/id.dart';
 import '../../domain/models/journal_models.dart';
 import '../services/storage_service.dart';
 
+class _Imported {
+  const _Imported({
+    required this.habits,
+    required this.modes,
+    required this.activeMode,
+    required this.logs,
+    required this.rest,
+  });
+  final List<Habit> habits;
+  final List<RoutineMode> modes;
+  final String activeMode;
+  final Map<String, Map<String, HabitLog>> logs;
+  final Set<String> rest;
+}
+
 /// 습관, 일별 기록, 쉬는 날, 루틴 모드의 단일 출처.
 class RoutineRepository extends ChangeNotifier {
   RoutineRepository(this._store);
@@ -30,7 +45,6 @@ class RoutineRepository extends ChangeNotifier {
   bool isDone(String habitId, String date) => logOf(habitId, date)?.done ?? false;
   bool isRest(String date) => _rest.contains(date);
   Iterable<String> get restDates => _rest;
-  Map<String, Map<String, HabitLog>> get logs => _logs;
 
   int get totalChecks => _logs.values
       .fold(0, (a, day) => a + day.values.where((l) => l.done).length);
@@ -147,7 +161,17 @@ class RoutineRepository extends ChangeNotifier {
   }
 
   // ---- 기록 ----
+  /// 앱과 위젯(다른 isolate)이 같은 저장소를 쓰므로, 쓰기 직전에 디스크의 최신 기록을 다시 읽어
+  /// 서로의 체크를 덮어쓰는 일을 막는다.
+  Future<void> _refreshLogsAndRest() async {
+    await _store.reload();
+    _logs = _parseLogs(_store.readJson('logs'));
+    final rest = _store.readJson('rest');
+    _rest = rest is Map ? rest.keys.map((k) => '$k').toSet() : {};
+  }
+
   Future<void> updateLog(String habitId, String date, HabitLog Function(HabitLog) edit) async {
+    await _refreshLogsAndRest();
     final day = _logs.putIfAbsent(date, () => {});
     day[habitId] = edit(day[habitId] ?? const HabitLog());
     await _persistLogs();
@@ -166,6 +190,7 @@ class RoutineRepository extends ChangeNotifier {
 
   /// 시작일부터 종료일까지 쉬는 날(휴가)로 표시하거나 해제한다.
   Future<void> setRestRange(String from, String to, bool rest) async {
+    await _refreshLogsAndRest();
     for (var d = from; d.compareTo(to) <= 0; d = addDaysKey(d, 1)) {
       rest ? _rest.add(d) : _rest.remove(d);
     }
@@ -212,20 +237,44 @@ class RoutineRepository extends ChangeNotifier {
         'rest': {for (final d in _rest) d: true},
       };
 
-  /// 웹앱 또는 이 앱의 백업 JSON으로 덮어쓴다.
+  /// 백업 JSON을 모두 해석해 본다. 형식이 틀리면 FormatException을 던지고 상태는 바꾸지 않는다.
+  _Imported _parseImport(Map<String, dynamic> j) {
+    try {
+      final habits = ((j['habits'] as List?) ?? const [])
+          .map((e) => Habit.fromJson((e as Map).cast<String, dynamic>()))
+          .toList();
+      var modes = ((j['modes'] as List?) ?? const [])
+          .map((e) => RoutineMode.fromJson((e as Map).cast<String, dynamic>()))
+          .toList();
+      if (modes.isEmpty) modes = const [RoutineMode(id: 'm1', name: '기본')];
+      var active = (j['activeMode'] as String?) ?? modes.first.id;
+      if (!modes.any((m) => m.id == active)) active = modes.first.id;
+      final rest = j['rest'];
+      return _Imported(
+        habits: habits,
+        modes: modes,
+        activeMode: active,
+        logs: _parseLogs(j['logs']),
+        rest: rest is Map ? rest.keys.map((k) => '$k').toSet() : {},
+      );
+    } on TypeError catch (e) {
+      throw FormatException('습관 백업 형식이 올바르지 않아요: $e');
+    } on FormatException {
+      rethrow;
+    }
+  }
+
+  /// 덮어쓰기 전에 형식만 검사한다.
+  void validateJson(Map<String, dynamic> j) => _parseImport(j);
+
+  /// 웹앱 또는 이 앱의 백업 JSON으로 덮어쓴다. 해석에 실패하면 기존 데이터는 그대로 둔다.
   Future<void> importJson(Map<String, dynamic> j) async {
-    _habits = ((j['habits'] as List?) ?? const [])
-        .map((e) => Habit.fromJson((e as Map).cast<String, dynamic>()))
-        .toList();
-    final modes = ((j['modes'] as List?) ?? const [])
-        .map((e) => RoutineMode.fromJson((e as Map).cast<String, dynamic>()))
-        .toList();
-    if (modes.isNotEmpty) _modes = modes;
-    _activeMode = (j['activeMode'] as String?) ?? _modes.first.id;
-    if (!_modes.any((m) => m.id == _activeMode)) _activeMode = _modes.first.id;
-    _logs = _parseLogs(j['logs']);
-    final rest = j['rest'];
-    _rest = rest is Map ? rest.keys.map((k) => '$k').toSet() : {};
+    final d = _parseImport(j);
+    _habits = d.habits;
+    _modes = d.modes;
+    _activeMode = d.activeMode;
+    _logs = d.logs;
+    _rest = d.rest;
     await _persistAll();
     notifyListeners();
   }
