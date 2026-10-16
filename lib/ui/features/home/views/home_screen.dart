@@ -170,7 +170,8 @@ class _Header extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(4),
               child: Text('${d.year}년 ${d.month}월 ${d.day}일',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+                  maxLines: 1,
+                  style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
             ),
           ),
           const Icon(Icons.expand_more, size: 20),
@@ -179,7 +180,11 @@ class _Header extends StatelessWidget {
             TextButton(onPressed: vm.goToday, child: const Text('오늘')),
           ActionChip(
             avatar: const Icon(Icons.layers_outlined, size: 16),
-            label: Text(vm.activeMode.name),
+            // 모드 이름이 길어도 오른쪽 메뉴 버튼이 화면 밖으로 밀리지 않게 폭을 제한한다
+            label: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 72),
+              child: Text(vm.activeMode.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
             onPressed: () => showModesSheet(context),
           ),
           const SizedBox(width: 4),
