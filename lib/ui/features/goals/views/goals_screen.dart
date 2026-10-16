@@ -116,15 +116,6 @@ class _GoalCard extends StatelessWidget {
                     color: done ? outline : null,
                   )),
             ),
-            if (done)
-              const Padding(
-                padding: EdgeInsets.only(right: 4),
-                child: Chip(
-                  visualDensity: VisualDensity.compact,
-                  avatar: Icon(Icons.check_circle, size: 16, color: AppColors.darkGreen),
-                  label: Text('완료', style: TextStyle(fontSize: 12, color: AppColors.darkGreen)),
-                ),
-              ),
             PopupMenuButton<String>(
               onSelected: (v) async {
                 if (v == 'rename') {
