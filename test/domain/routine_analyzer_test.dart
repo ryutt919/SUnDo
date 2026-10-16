@@ -253,6 +253,33 @@ void main() {
       expect(check.isDone('a', '2026-10-13'), isFalse);
     });
 
+    test('주중에 종료한 주 N회 습관은 종료일 이전의 마지막 미체크 날을 미달로 센다', () async {
+      final repo = await emptyRoutine();
+      // 10-05(월) 시작, 주 3회, 10-07(수) 종료, 완료 0회
+      await repo.addHabit(habit('a', start: '2026-10-05', repeat: const RepeatRule(type: RepeatType.weekly, times: 3))
+          .copyWith(finishedOn: '2026-10-07'));
+      final an = RoutineAnalyzer(repo, today: () => today);
+      final h = repo.habitById('a')!;
+      expect(an.isDue(h, '2026-10-11'), isFalse, reason: '종료일 이후는 대상이 아니다');
+      expect(an.isDue(h, '2026-10-07'), isTrue, reason: '종료일까지의 마지막 미체크 날이 미달 1일');
+      expect(an.isDue(h, '2026-10-06'), isFalse);
+    });
+
+    test('범위를 벗어난 반복 값이 든 백업은 안전한 값으로 걸러진다', () {
+      final r = RepeatRule.fromJson({
+        'type': 'weekdays',
+        'days': [0, 3, 7, -1],
+        'times': 99,
+        'every': 0,
+        'monthDays': [0, 15, 32],
+      });
+      expect(r.days, [0, 3]);
+      expect(r.times, 7);
+      expect(r.every, 1);
+      expect(r.monthDays, [15]);
+      expect(r.summary, isNotEmpty); // 요일 번호 7이 남아 있으면 요약 생성이 범위를 벗어난다
+    });
+
     test('주 목표 미달 표시일은 그 날 다른 모드였던 날을 건너뛴다', () async {
       final repo = await emptyRoutine();
       await repo.addMode('주말');

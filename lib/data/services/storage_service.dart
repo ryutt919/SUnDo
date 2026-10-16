@@ -30,14 +30,34 @@ class StorageService {
     }
   }
 
-  Future<void> writeJson(String key, Object value) =>
-      _prefs.setString(key, jsonEncode(value));
+  /// 저장에 실패하면(플러그인이 false를 돌려주면) 예외를 던진다. 조용히 넘어가면 화면에는
+  /// 저장된 것처럼 보이지만 디스크에는 남지 않기 때문이다.
+  Future<void> writeJson(String key, Object value) async {
+    if (!await _prefs.setString(key, jsonEncode(value))) {
+      throw StorageWriteException(key);
+    }
+  }
 
   String? readString(String key) => _prefs.getString(key);
 
-  Future<void> writeString(String key, String value) => _prefs.setString(key, value);
+  Future<void> writeString(String key, String value) async {
+    if (!await _prefs.setString(key, value)) throw StorageWriteException(key);
+  }
 
-  Future<void> remove(String key) => _prefs.remove(key);
+  Future<void> remove(String key) async {
+    if (!await _prefs.remove(key)) throw StorageWriteException(key);
+  }
 
-  Future<void> clearAll() => _prefs.clear();
+  Future<void> clearAll() async {
+    if (!await _prefs.clear()) throw StorageWriteException('(전체)');
+  }
+}
+
+/// 값을 디스크에 저장하지 못했을 때 던지는 예외.
+class StorageWriteException implements Exception {
+  StorageWriteException(this.key);
+  final String key;
+
+  @override
+  String toString() => '"$key" 저장에 실패했어요';
 }

@@ -90,6 +90,8 @@ class RoutineAnalyzer {
     if (_weekDoneCount(h, date) >= h.repeat.times) return false;
     for (var d = we; d.compareTo(ws) >= 0; d = addDaysKey(d, -1)) {
       if (d.compareTo(h.start) < 0) break;
+      final fin = h.finishedOn;
+      if (fin != null && d.compareTo(fin) > 0) continue; // 종료한 날 이후는 미달 표시일이 될 수 없다
       // 쉬는 날이거나 그 날 다른 모드였던 날은 미달 표시일로 삼지 않는다
       if (_routine.isDone(h.id, d) || _routine.isRest(d) || !inActiveMode(h, d)) continue;
       return d == date;

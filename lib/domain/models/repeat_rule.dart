@@ -70,14 +70,16 @@ class RepeatRule {
 
   factory RepeatRule.fromJson(Map<String, dynamic>? j) {
     if (j == null) return const RepeatRule();
-    List<int> ints(Object? v, List<int> fallback) =>
-        v is List ? v.map((e) => (e as num).toInt()).toList() : fallback;
+    // 범위를 벗어난 값(손상되거나 직접 고친 백업)은 걸러 낸다
+    List<int> ints(Object? v, List<int> fallback, int min, int max) => v is List
+        ? v.map((e) => (e as num).toInt()).where((n) => n >= min && n <= max).toList()
+        : fallback;
     return RepeatRule(
       type: _typeFromJson(j['type'] as String?),
-      days: ints(j['days'], const [1, 2, 3, 4, 5]),
-      times: (j['times'] as num?)?.toInt() ?? 3,
-      every: (j['every'] as num?)?.toInt() ?? 2,
-      monthDays: ints(j['monthDays'], const [1]),
+      days: ints(j['days'], const [1, 2, 3, 4, 5], 0, 6),
+      times: ((j['times'] as num?)?.toInt() ?? 3).clamp(1, 7),
+      every: ((j['every'] as num?)?.toInt() ?? 2).clamp(1, 365),
+      monthDays: ints(j['monthDays'], const [1], 1, 31),
     );
   }
 }

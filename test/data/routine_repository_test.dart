@@ -32,6 +32,18 @@ const _webBackup = {
   'rest': {'2026-10-12': true},
 };
 
+/// 특정 키를 저장할 때 실패하는 저장소(디스크 오류를 흉내 낸다).
+class _FlakyStorage extends StorageService {
+  _FlakyStorage(super.prefs);
+  String? failKey;
+
+  @override
+  Future<void> writeJson(String key, Object value) {
+    if (key == failKey) throw StorageWriteException(key);
+    return super.writeJson(key, value);
+  }
+}
+
 /// 파일 선택 없이 정해진 JSON을 돌려주는 가짜 백업 서비스.
 class _FakeBackupService extends BackupService {
   _FakeBackupService(this._data);
@@ -57,6 +69,9 @@ class _FakePhotoService extends PhotoService {
     files[path] = bytes;
     return path;
   }
+
+  @override
+  Future<void> delete(String path) async => files.remove(path);
 }
 
 void main() {
@@ -253,6 +268,50 @@ void main() {
     }), _FakePhotoService(), routine, journal, settings);
     await expectLater(backup.importFromFile(), throwsFormatException);
     expect(routine.habits.map((h) => h.id), ['keep'], reason: '습관 데이터는 그대로');
+  });
+
+  test('백업을 적용하다 저장이 실패하면 이전 데이터로 되돌리고 복원하던 사진도 지운다', () async {
+    SharedPreferences.setMockInitialValues({'habits': '[]'});
+    final prefs = await SharedPreferences.getInstance();
+    final store = _FlakyStorage(prefs);
+    final routine = RoutineRepository(store);
+    await routine.load();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+    await routine.addHabit(habit('keep'));
+    await journal.addTodo('남아야 하는 투두', '2026-10-13');
+
+    final photos = _FakePhotoService();
+    final backup = BackupRepository(
+      _FakeBackupService({
+        'habits': [
+          {'id': 'new', 'name': '가져올 습관', 'start': '2026-10-01'}
+        ],
+        'logs': {
+          '2026-10-13': {
+            'new': {'done': true, 'photo': 'photos/p.jpg'}
+          }
+        },
+        'photoFiles': {'p.jpg': base64Encode([9, 9])},
+        'todos': [
+          {'id': 't', 'text': '가져올 투두', 'date': '2026-10-13'}
+        ],
+      }),
+      photos,
+      routine,
+      journal,
+      settings,
+    );
+
+    store.failKey = 'todos'; // 루틴은 적용된 뒤, 회고(투두) 저장에서 실패
+    await expectLater(backup.importFromFile(), throwsA(isA<StorageWriteException>()));
+
+    store.failKey = null;
+    expect(routine.habits.map((h) => h.id), ['keep'], reason: '루틴도 원래대로');
+    expect(journal.todos.map((t) => t.text), ['남아야 하는 투두']);
+    expect(photos.files, isEmpty, reason: '복원하다 만 사진은 지운다');
   });
 
   test('습관이나 모드를 삭제해도 위젯이 방금 한 체크는 남는다', () async {

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import '../services/backup_service.dart';
 import '../services/photo_service.dart';
 import 'journal_repository.dart';
@@ -68,11 +70,39 @@ class BackupRepository {
     _settings.validateJson(settingsJson);
     final photoBytes = _decodePhotos(data);
 
-    await _restorePhotos(data, photoBytes);
-    await _routine.importJson(data);
-    await _journal.importJson(data);
-    await _settings.importJson(settingsJson);
+    // 적용 도중 저장이 실패하면 이전 데이터로 되돌릴 수 있게 지금 상태를 먼저 보관한다.
+    final before = (routine: _routine.exportJson(), journal: _journal.exportJson(), settings: _settings.exportJson());
+    final restoredPhotos = <String>[];
+    try {
+      await _restorePhotos(data, photoBytes, restoredPhotos);
+      await _routine.importJson(data);
+      await _journal.importJson(data);
+      await _settings.importJson(settingsJson);
+    } on Object {
+      await _rollback(before, restoredPhotos);
+      rethrow;
+    }
     return true;
+  }
+
+  Future<void> _rollback(
+    ({Map<String, dynamic> routine, Map<String, dynamic> journal, Map<String, dynamic> settings}) before,
+    List<String> restoredPhotos,
+  ) async {
+    try {
+      await _routine.importJson(before.routine);
+      await _journal.importJson(before.journal);
+      await _settings.importJson(before.settings);
+    } on Object catch (e) {
+      debugPrint('백업 가져오기 실패 후 원상복구도 실패했어요: $e');
+    }
+    for (final p in restoredPhotos) {
+      try {
+        await _photos.delete(p);
+      } on Object catch (e) {
+        debugPrint('복원하다 만 사진을 지우지 못했어요: $e');
+      }
+    }
   }
 
   /// 사진 base64를 미리 풀어 본다. 깨져 있으면 FormatException.
@@ -90,7 +120,11 @@ class BackupRepository {
   }
 
   /// 백업의 `photos/<이름>` 표시를 이 기기에 복원한 파일 경로로 바꾼다.
-  Future<void> _restorePhotos(Map<String, dynamic> data, Map<String, List<int>> bytes) async {
+  Future<void> _restorePhotos(
+    Map<String, dynamic> data,
+    Map<String, List<int>> bytes,
+    List<String> restoredPaths,
+  ) async {
     final logs = data['logs'] as Map;
     for (final day in logs.values) {
       for (final log in (day as Map).values) {
@@ -107,7 +141,9 @@ class BackupRepository {
         if (b == null) {
           entry.remove('photo'); // 파일이 백업에 없으면 사진 연결만 끊는다
         } else {
-          entry['photo'] = await _photos.restore(name, b);
+          final path = await _photos.restore(name, b);
+          restoredPaths.add(path);
+          entry['photo'] = path;
         }
       }
     }
