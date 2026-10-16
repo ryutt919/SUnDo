@@ -1,0 +1,102 @@
+/** VERSION = "v1": 실제 Chrome에서 스킬 서재 기능과 반응형 화면을 검증한다. */
+import assert from 'node:assert/strict';
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+import {homedir} from 'node:os';
+import {resolve,join} from 'node:path';
+import {pathToFileURL} from 'node:url';
+
+const VERSION='v1';
+const root=resolve(import.meta.dirname,'..');
+const out=join(root,'evidence','v1_스킬_서재');
+mkdirSync(out,{recursive:true});
+const {Browser}=await import(pathToFileURL(join(homedir(),'.agents/skills/design-taste-frontend/scripts/lib/cdp.mjs')));
+const inventory=JSON.parse(readFileSync(join(root,'data/01_skills_inventory.json'),'utf8'));
+assert.equal(inventory.meta.errors.length,0);
+assert.equal(inventory.skills.length,new Set(inventory.skills.map(s=>s.name.toLowerCase())).size);
+const checks=[];
+const browser=await Browser.launch();
+try{
+  const page=await browser.newPage();
+  const url=pathToFileURL(join(root,'htmls/v1_스킬_서재/01_설치된_스킬.html')).href;
+  await page.goto(url,{settleMs:250});
+  assert.equal(await page.eval(()=>document.querySelector('#total').textContent),inventory.skills.length.toLocaleString('en-US'));
+  assert.equal(await page.eval(()=>document.querySelectorAll('.skill').length),60);
+  checks.push('전체 인벤토리 로드와 60개 페이지 표시');
+  await page.eval(()=>{document.querySelector('#new').click()});
+  assert.equal(await page.eval(()=>document.querySelectorAll('.skill').length),5);
+  await page.eval(()=>{document.querySelector('#agent').value='both';document.querySelector('#agent').dispatchEvent(new Event('change'))});
+  assert.equal(await page.eval(()=>document.querySelectorAll('.skill').length),5);
+  checks.push('신규 스킬 5개와 두 도구 전역 설치');
+  await page.eval(()=>{document.querySelector('#all').click();const s=document.querySelector('#search');s.value='design-motion-principles';s.dispatchEvent(new Event('input'))});
+  assert.equal(await page.eval(()=>document.querySelectorAll('.skill').length),1);
+  await page.eval(()=>document.querySelector('.skill-title').click());
+  assert.equal(await page.eval(()=>document.querySelector('#detail').open),true);
+  assert.match(await page.eval(()=>document.querySelector('#detail-body').textContent),/SKILL.md/);
+  await page.screenshot({path:join(out,'04_상세정보.png'),format:'png'});
+  await page.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
+  await page.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
+  assert.equal(await page.eval(()=>document.querySelector('#detail').open),false);
+  assert.equal(await page.eval(()=>document.activeElement.className),'skill-title');
+  checks.push('검색, 상세창, Escape 닫기와 포커스 복귀');
+  await page.eval(()=>document.querySelector('[data-favorite]').click());
+  await page.eval(()=>{document.querySelector('#search').value='';document.querySelector('#search').dispatchEvent(new Event('input'));document.querySelector('#saved').click()});
+  assert.equal(await page.eval(()=>document.querySelectorAll('.skill').length),1);
+  await page.goto(url,{settleMs:100});
+  await page.eval(()=>document.querySelector('#saved').click());
+  assert.equal(await page.eval(()=>document.querySelectorAll('.skill').length),1);
+  checks.push('즐겨찾기 저장과 새로고침 후 복원');
+  await page.eval(()=>{document.querySelector('#all').click();document.querySelector('#scope').value='plugin';document.querySelector('#scope').dispatchEvent(new Event('change'))});
+  const expectedPlugin=inventory.skills.filter(s=>s.locations.some(l=>l.kind==='plugin')).length;
+  assert.match(await page.eval(()=>document.querySelector('#result-count').textContent),new RegExp(String(expectedPlugin)));
+  await page.eval(()=>{document.querySelector('#scope').value='global';document.querySelector('#scope').dispatchEvent(new Event('change'))});
+  const expectedGlobal=inventory.skills.filter(s=>s.locations.some(l=>l.kind==='global')).length;
+  assert.match(await page.eval(()=>document.querySelector('#result-count').textContent),new RegExp(String(expectedGlobal)));
+  checks.push('전역 스킬과 플러그인 캐시 필터 수량 일치');
+  await page.eval(()=>{document.querySelector('#all').click();document.querySelector('#next').click()});
+  assert.match(await page.eval(()=>document.querySelector('#page-status').textContent),/^2 /);
+  await page.eval(()=>document.querySelector('#prev').click());
+  assert.match(await page.eval(()=>document.querySelector('#page-status').textContent),/^1 /);
+  checks.push('페이지 이동');
+  await page.eval(()=>{const s=document.querySelector('#search');s.value='no-skill-match-97892345';s.dispatchEvent(new Event('input'))});
+  assert.equal(await page.eval(()=>document.querySelectorAll('.empty').length),1);
+  await page.eval(()=>document.querySelector('[data-reset]').click());
+  checks.push('검색 결과 없음과 초기화');
+  await page.eval(()=>{const s=document.querySelector('#search');s.value='<img src=x onerror=alert(1)>';s.dispatchEvent(new Event('input'))});
+  assert.equal(await page.eval(()=>document.querySelectorAll('#list img').length),0);
+  await page.eval(()=>document.querySelector('#all').click());
+  checks.push('검색 문자열을 HTML로 실행하지 않음');
+  await page.eval(()=>{window.__downloads=[];URL.createObjectURL=(blob)=>{window.__downloads.push(blob);return 'blob:test'};URL.revokeObjectURL=()=>{};HTMLAnchorElement.prototype.click=function(){window.__downloadName=this.download};document.querySelector('#export').click()});
+  assert.equal(await page.eval(()=>window.__downloadName),'skills-filtered.json');
+  const exported=await page.eval(async()=>JSON.parse(await window.__downloads[0].text()).skills.length);
+  assert.equal(exported,inventory.skills.length);
+  checks.push('JSON 내보내기 내용과 다운로드 파일명');
+  await page.eval(()=>{document.activeElement.blur();document.querySelector('#toast').textContent=''});
+  for(const [width,height,label]of [[1440,1000,'01_데스크톱'],[768,1024,'02_태블릿'],[390,844,'03_모바일']]){
+    await page.setViewport({width,height,mobile:width<600});
+    await page.eval(()=>window.scrollTo(0,0));
+    assert.equal(await page.eval(()=>document.documentElement.scrollWidth<=window.innerWidth),true,`${width}px 수평 넘침`);
+    await page.screenshot({path:join(out,label+'.png'),format:'png'});
+    if(width===390){
+      await page.eval(()=>document.querySelector('#menu').click());
+      assert.equal(await page.eval(()=>document.querySelector('#sidebar').classList.contains('open')),true);
+      await page.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});
+      assert.equal(await page.eval(()=>document.querySelector('#sidebar').classList.contains('open')),false);
+    }
+  }
+  checks.push('1440 / 768 / 390 화면 넘침 없음, 모바일 메뉴');
+  await page.setViewport({width:1440,height:1000});
+  await page.eval(()=>document.querySelector('#theme').click());
+  assert.equal(await page.eval(()=>document.documentElement.dataset.theme),'dark');
+  await page.screenshot({path:join(out,'05_어두운테마.png'),format:'png'});
+  await page.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  await page.eval(()=>document.querySelector('[data-detail]').click());
+  assert.equal(await page.eval(()=>getComputedStyle(document.querySelector('#detail')).transitionDuration),'0s');
+  checks.push('어두운 테마와 동작 줄이기');
+  assert.equal(page.consoleErrors.length,0,page.consoleErrors.join('\n'));
+  checks.push('브라우저 JavaScript 예외 없음');
+  const report={version:VERSION,verifiedAt:new Date().toISOString(),total:inventory.skills.length,checks,screenshots:5};
+  writeFileSync(join(out,'06_검증결과.json'),JSON.stringify(report,null,2));
+  console.log(JSON.stringify(report,null,2));
+}finally{
+  await browser.close();
+}

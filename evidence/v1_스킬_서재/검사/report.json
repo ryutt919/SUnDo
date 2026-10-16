@@ -1,0 +1,988 @@
+{
+ "url": "htmls/v1_스킬_서재/01_설치된_스킬.html",
+ "at": "2026-10-16T18:11:16.568Z",
+ "allow": [
+  "few-pictures",
+  "focal-point",
+  "icon-cards",
+  "body-size",
+  "eyebrow",
+  "numbering",
+  "still-page"
+ ],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 11,
+   "filled": [
+    0.58,
+    0.87,
+    0.87,
+    0.92,
+    0.92,
+    0.92,
+    0.92,
+    0.87,
+    0.87,
+    0.92,
+    0.68
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 9577,
+     "screens": 10.6,
+     "words": 2638,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 132,
+     "sections": 2,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": []
+    },
+    "hero": {
+     "text": "1,119",
+     "words": 1,
+     "chars": 5,
+     "lines": 1,
+     "size": 62,
+     "vw": 4.3,
+     "font": "Segoe UI",
+     "weight": 400,
+     "tracking": -0.06,
+     "leading": 1,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "right",
+     "position": "right",
+     "widthRatio": 0.09,
+     "top": 240,
+     "tag": "strong",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "필요한 순간, 맞는 스킬을.",
+     "words": 4,
+     "lines": 2,
+     "size": 57.6,
+     "font": "Segoe UI"
+    },
+    "headings": [
+     {
+      "text": "필요한 순간, 맞는 스킬을.",
+      "words": 4,
+      "chars": 15,
+      "lines": 2,
+      "size": 57.6,
+      "vw": 4,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.055,
+      "leading": 1.17,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.64,
+      "top": 124,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "1,119",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 62,
+      "vw": 4.3,
+      "font": "Segoe UI",
+      "weight": 400,
+      "tracking": -0.06,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "right",
+      "position": "right",
+      "widthRatio": 0.09,
+      "top": 240,
+      "tag": "strong",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 2,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 4,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Segoe UI",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      24,
+      58,
+      62
+     ],
+     "sizeCount": 10,
+     "notLoaded": [],
+     "body": {
+      "font": "Segoe UI",
+      "size": 14,
+      "leading": 1.65,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 5.7
+     },
+     "measureChars": 113,
+     "max": {
+      "size": 62,
+      "vw": 4.3,
+      "font": "Segoe UI",
+      "text": "1,119"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.02,
+     "centerShare": 0,
+     "smallText": 0
+    },
+    "eyebrows": [
+     {
+      "text": "수집 기준 2026-10-17 03:10:56 KST",
+      "above": "필요한 순간, 맞는 스킬을.",
+      "upper": true,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 14,
+      "top": 53
+     }
+    ],
+    "numbered": [
+     {
+      "text": "007",
+      "size": 17,
+      "top": 973
+     }
+    ],
+    "color": {
+     "bodyBg": "#f7f8f9",
+     "bodyBgHsl": {
+      "h": 210,
+      "s": 0.14,
+      "l": 0.97
+     },
+     "dark": false,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#59696b",
+       "share": 0.87
+      },
+      {
+       "color": "#202b2d",
+       "share": 0.09
+      },
+      {
+       "color": "#136958",
+       "share": 0.03
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#eaf0ef",
+      "hsl": {
+       "h": 170,
+       "s": 0.17,
+       "l": 0.93
+      },
+      "fg": "#202b2d"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 5,
+     "inHero": 3,
+     "radius": 7,
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "목록으로 건너뛰기",
+      "전체 스킬 1,119",
+      "목록 내보내기"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 61,
+     "boxRadius": 8,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 60,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 810
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 900,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": []
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 12,
+   "filled": [
+    0.79,
+    0.96,
+    0.95,
+    0.91,
+    0.96,
+    0.96,
+    0.95,
+    0.95,
+    0.96,
+    0.91,
+    0.91,
+    0.8
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 11705,
+     "screens": 11.4,
+     "words": 2623,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 132,
+     "sections": 2,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": []
+    },
+    "hero": {
+     "text": "1,119",
+     "words": 1,
+     "chars": 5,
+     "lines": 1,
+     "size": 48,
+     "vw": 6.3,
+     "font": "Segoe UI",
+     "weight": 400,
+     "tracking": -0.06,
+     "leading": 1,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "right",
+     "position": "right",
+     "widthRatio": 0.14,
+     "top": 168,
+     "tag": "strong",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "필요한 순간, 맞는 스킬을.",
+     "words": 4,
+     "lines": 2,
+     "size": 34,
+     "font": "Segoe UI"
+    },
+    "headings": [
+     {
+      "text": "필요한 순간, 맞는 스킬을.",
+      "words": 4,
+      "chars": 15,
+      "lines": 2,
+      "size": 34,
+      "vw": 4.4,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.055,
+      "leading": 1.17,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.49,
+      "top": 93,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "1,119",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 48,
+      "vw": 6.3,
+      "font": "Segoe UI",
+      "weight": 400,
+      "tracking": -0.06,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "right",
+      "position": "right",
+      "widthRatio": 0.14,
+      "top": 168,
+      "tag": "strong",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 2,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 4,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Segoe UI",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20,
+      24,
+      34,
+      48
+     ],
+     "sizeCount": 10,
+     "notLoaded": [],
+     "body": {
+      "font": "Segoe UI",
+      "size": 14,
+      "leading": 1.65,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 5.7
+     },
+     "measureChars": 52,
+     "max": {
+      "size": 48,
+      "vw": 6.3,
+      "font": "Segoe UI",
+      "text": "1,119"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.02,
+     "centerShare": 0,
+     "smallText": 0
+    },
+    "eyebrows": [
+     {
+      "text": "수집 기준 2026-10-17 03:10:56 KST",
+      "above": "필요한 순간, 맞는 스킬을.",
+      "upper": true,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 14,
+      "top": 36
+     }
+    ],
+    "numbered": [
+     {
+      "text": "007",
+      "size": 17,
+      "top": 1008
+     }
+    ],
+    "color": {
+     "bodyBg": "#f7f8f9",
+     "bodyBgHsl": {
+      "h": 210,
+      "s": 0.14,
+      "l": 0.97
+     },
+     "dark": false,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#59696b",
+       "share": 0.87
+      },
+      {
+       "color": "#202b2d",
+       "share": 0.09
+      },
+      {
+       "color": "#136958",
+       "share": 0.03
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#eaf0ef",
+      "hsl": {
+       "h": 170,
+       "s": 0.17,
+       "l": 0.93
+      },
+      "fg": "#202b2d"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 5,
+     "inHero": 3,
+     "radius": 7,
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "목록으로 건너뛰기",
+      "전체 스킬 1,119",
+      "목록 내보내기"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 61,
+     "boxRadius": 8,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 60,
+       "iconTopped": true,
+       "rounded": true,
+       "top": 817
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 1024,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": []
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 12,
+   "filled": [
+    0.64,
+    0.92,
+    0.92,
+    0.92,
+    0.92,
+    0.92,
+    0.92,
+    0.86,
+    0.92,
+    0.92,
+    0.92,
+    0.92
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 13960,
+     "screens": 16.5,
+     "words": 2565,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 132,
+     "sections": 2,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 1,
+     "brokenImages": [],
+     "emoji": []
+    },
+    "hero": {
+     "text": "1,119",
+     "words": 1,
+     "chars": 5,
+     "lines": 1,
+     "size": 38,
+     "vw": 9.7,
+     "font": "Segoe UI",
+     "weight": 400,
+     "tracking": -0.06,
+     "leading": 1,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "right",
+     "position": "right",
+     "widthRatio": 0.25,
+     "top": 162,
+     "tag": "strong",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "필요한 순간, 맞는 스킬을.",
+     "words": 4,
+     "lines": 2,
+     "size": 37,
+     "font": "Segoe UI"
+    },
+    "headings": [
+     {
+      "text": "필요한 순간, 맞는 스킬을.",
+      "words": 4,
+      "chars": 15,
+      "lines": 2,
+      "size": 37,
+      "vw": 9.5,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.055,
+      "leading": 1.17,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.91,
+      "top": 156,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "1,119",
+      "words": 1,
+      "chars": 5,
+      "lines": 1,
+      "size": 38,
+      "vw": 9.7,
+      "font": "Segoe UI",
+      "weight": 400,
+      "tracking": -0.06,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "right",
+      "position": "right",
+      "widthRatio": 0.25,
+      "top": 162,
+      "tag": "strong",
+      "kind": "heading"
+     },
+     {
+      "text": "전체 스킬",
+      "words": 2,
+      "chars": 5,
+      "lines": 1,
+      "size": 23,
+      "vw": 5.9,
+      "font": "Segoe UI",
+      "weight": 600,
+      "tracking": -0.04,
+      "leading": 1.6,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.34,
+      "top": 674,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 3,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 4,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Segoe UI",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      23,
+      37,
+      38
+     ],
+     "sizeCount": 9,
+     "notLoaded": [],
+     "body": {
+      "font": "Segoe UI",
+      "size": 13,
+      "leading": 1.65,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 5.7
+     },
+     "measureChars": 36,
+     "max": {
+      "size": 38,
+      "vw": 9.7,
+      "font": "Segoe UI",
+      "text": "1,119"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.02,
+     "centerShare": 0,
+     "smallText": 0
+    },
+    "eyebrows": [
+     {
+      "text": "수집 기준 2026-10-17 03:10:56 KST",
+      "above": "필요한 순간, 맞는 스킬을.",
+      "upper": true,
+      "tracked": false,
+      "mono": false,
+      "pill": false,
+      "size": 13,
+      "top": 90
+     }
+    ],
+    "numbered": [
+     {
+      "text": "007",
+      "size": 15,
+      "top": 1123
+     }
+    ],
+    "color": {
+     "bodyBg": "#f7f8f9",
+     "bodyBgHsl": {
+      "h": 210,
+      "s": 0.14,
+      "l": 0.97
+     },
+     "dark": false,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#59696b",
+       "share": 0.88
+      },
+      {
+       "color": "#202b2d",
+       "share": 0.08
+      },
+      {
+       "color": "#136958",
+       "share": 0.03
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#eaf0ef",
+      "hsl": {
+       "h": 170,
+       "s": 0.17,
+       "l": 0.93
+      },
+      "fg": "#202b2d"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 4,
+     "inHero": 2,
+     "radius": 7,
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "목록으로 건너뛰기",
+      "목록 내보내기"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 61,
+     "boxRadius": 8,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": true,
+     "height": 0,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": []
+   },
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "WARN",
+   "id": "size-count",
+   "width": 1440,
+   "message": "10 different font sizes (13, 14, 15, 16, 17, 18, 20, 24, 58, 62).",
+   "fix": "A page needs about five: display, heading, lead, body, small.",
+   "alsoAt": [
+    768
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "grey-body",
+   "width": 1440,
+   "message": "The running text is a soft grey on its ground (5.7:1).",
+   "fix": "Set body copy in the full ink (7:1 or more). Keep the muted ink for secondary notes; pages read thin and unfinished when everything is grey.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  },
+  {
+   "level": "WARN",
+   "id": "measure",
+   "width": 1440,
+   "message": "Longest paragraph runs about 113 characters per line.",
+   "fix": "Cap paragraphs at 45–75 characters (max-width: 60ch)."
+  },
+  {
+   "level": "WARN",
+   "id": "side-scroll",
+   "width": 390,
+   "message": "1 row(s) scroll sideways with content past their edge.",
+   "fix": "Jurors and most visitors read a row cut at the edge as clipped, not as scrollable. Wrap it onto more lines, or end it inside the grid."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\desktop-fold.jpg",
+   "pages": [
+    "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\desktop-page-01.jpg",
+    "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\desktop-page-02.jpg",
+    "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\desktop-page-03.jpg"
+   ]
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\tablet-fold.jpg",
+   "pages": [
+    "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\tablet-page-01.jpg",
+    "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\tablet-page-02.jpg"
+   ]
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\mobile-page-01.jpg",
+    "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\evidence\\v1_스킬_서재\\검사\\mobile-page-02.jpg"
+   ]
+  }
+ ]
+}

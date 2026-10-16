@@ -1,0 +1,231 @@
+{
+  "version": "v1",
+  "verifiedAt": "2026-10-17T03:11:15.816566+09:00",
+  "skills": [
+    {
+      "name": "design-taste-frontend",
+      "locations": [
+        {
+          "agent": "Claude Code",
+          "path": "C:\\Users\\kimt9\\.claude\\skills\\design-taste-frontend\\SKILL.md",
+          "readable": true,
+          "sha256": "fcf8ac6e5a55f3cc067e16e3d651670d59c4ab0980743051c3438f54141a031e"
+        },
+        {
+          "agent": "Codex",
+          "path": "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\SKILL.md",
+          "readable": true,
+          "sha256": "fcf8ac6e5a55f3cc067e16e3d651670d59c4ab0980743051c3438f54141a031e"
+        }
+      ],
+      "files": [
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\README.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\SKILL.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\assets\\base.css",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\assets\\base.js",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\evals\\evals.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\library\\directions.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\library\\heroes.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\library\\motions.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\library\\palettes.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\library\\photos.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\library\\sections.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\library\\sites.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\library\\type.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\references\\colour.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\references\\copy.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\references\\critique.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\references\\imagery.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\references\\layout.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\references\\motion.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\references\\research.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\references\\tells.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\references\\type.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\scripts\\assets.mjs",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\scripts\\draw.mjs",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\scripts\\inspect.mjs",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\scripts\\lint.mjs",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\scripts\\lib\\cdp.mjs",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\scripts\\lib\\probe.mjs",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-taste-frontend\\scripts\\lib\\rules.mjs"
+      ],
+      "fileCount": 29
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "locations": [
+        {
+          "agent": "Claude Code",
+          "path": "C:\\Users\\kimt9\\.claude\\skills\\ui-ux-pro-max\\SKILL.md",
+          "readable": true,
+          "sha256": "88aadd21220542083a455e373bd162ffe7843266a71f06f4d837bb3b34f9c9c7"
+        },
+        {
+          "agent": "Codex",
+          "path": "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\SKILL.md",
+          "readable": true,
+          "sha256": "88aadd21220542083a455e373bd162ffe7843266a71f06f4d837bb3b34f9c9c7"
+        }
+      ],
+      "files": [
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\SKILL.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\app-interface.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\catalog-summary.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\charts.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\colors.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\data-provenance.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\google-font-licenses.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\google-fonts.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\icons.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\landing.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\motion.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\phosphor-icons-upstream.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\products.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\react-performance.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\styles.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\typography.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\ui-reasoning.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\ux-guidelines.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\references\\pro-rules.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\references\\quick-reference.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\core.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\design_system.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\reasoning_contract.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\search.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\validate_data.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_catalog_refresh.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_catalog_summary_line_endings.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_core.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_core_data_quality.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_data_contracts.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_design_system_mode.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_design_system_stack.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_native_desktop_stack_freshness.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_relevance_evaluator.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_skill_script_paths.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_style_taxonomy.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_text_layout_resilience.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\test_web_stack_freshness.py",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\__pycache__\\core.cpython-313.pyc",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\__pycache__\\design_system.cpython-313.pyc",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\__pycache__\\reasoning_contract.cpython-313.pyc",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\relevance-baseline.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\relevance-cases.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\relevance-thresholds.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\google-api.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\google-catalog.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\google-existing.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\google-metadata.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\google-overrides.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\icons-curated.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\phosphor-core.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\phosphor-package.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\phosphor-react-exports.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\scripts\\tests\\fixtures\\catalogs\\phosphor-react-package.json",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\angular.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\astro.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\avalonia.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\flutter.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\html-tailwind.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\javafx.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\jetpack-compose.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\laravel.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\nextjs.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\nuxt-ui.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\nuxtjs.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\react-native.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\react.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\shadcn.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\svelte.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\swiftui.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\threejs.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\uno.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\uwp.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\vue.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\winui.csv",
+        "C:\\Users\\kimt9\\.agents\\skills\\ui-ux-pro-max\\data\\stacks\\wpf.csv"
+      ],
+      "fileCount": 76
+    },
+    {
+      "name": "awesome-claude-design",
+      "locations": [
+        {
+          "agent": "Claude Code",
+          "path": "C:\\Users\\kimt9\\.claude\\skills\\awesome-claude-design\\SKILL.md",
+          "readable": true,
+          "sha256": "02bd8550853e5887887f23526457e89b51f18a2cc79ce5149510618ca4624d20"
+        },
+        {
+          "agent": "Codex",
+          "path": "C:\\Users\\kimt9\\.agents\\skills\\awesome-claude-design\\SKILL.md",
+          "readable": true,
+          "sha256": "02bd8550853e5887887f23526457e89b51f18a2cc79ce5149510618ca4624d20"
+        }
+      ],
+      "files": [
+        "C:\\Users\\kimt9\\.agents\\skills\\awesome-claude-design\\SKILL.md"
+      ],
+      "fileCount": 1
+    },
+    {
+      "name": "design-motion-principles",
+      "locations": [
+        {
+          "agent": "Claude Code",
+          "path": "C:\\Users\\kimt9\\.claude\\skills\\design-motion-principles\\SKILL.md",
+          "readable": true,
+          "sha256": "d0164f16382be52d0733aa3c0aaf35ee68e9a8322abee19422803c25c3f5379c"
+        },
+        {
+          "agent": "Codex",
+          "path": "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\SKILL.md",
+          "readable": true,
+          "sha256": "d0164f16382be52d0733aa3c0aaf35ee68e9a8322abee19422803c25c3f5379c"
+        }
+      ],
+      "files": [
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\SKILL.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\accessibility.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\anti-checklist.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\audit-checklist.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\creation-gotchas.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\demo-shell.html",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\emil-kowalski.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\jakub-krehel.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\jhey-tompkins.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\motion-cookbook.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\output-format.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\performance.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\references\\report-template.html",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\workflows\\audit.md",
+        "C:\\Users\\kimt9\\.agents\\skills\\design-motion-principles\\workflows\\create.md"
+      ],
+      "fileCount": 15
+    },
+    {
+      "name": "design-md-chrome-extractor",
+      "locations": [
+        {
+          "agent": "Claude Code",
+          "path": "C:\\Users\\kimt9\\.claude\\skills\\design-md-chrome-extractor\\SKILL.md",
+          "readable": true,
+          "sha256": "9f61b4664623a474b685ae01dbf7d2c78d1534a424c42452f8eb9f8172e263a4"
+        },
+        {
+          "agent": "Codex",
+          "path": "C:\\Users\\kimt9\\.agents\\skills\\design-md-chrome-extractor\\SKILL.md",
+          "readable": true,
+          "sha256": "9f61b4664623a474b685ae01dbf7d2c78d1534a424c42452f8eb9f8172e263a4"
+        }
+      ],
+      "files": [
+        "C:\\Users\\kimt9\\.agents\\skills\\design-md-chrome-extractor\\SKILL.md"
+      ],
+      "fileCount": 1
+    }
+  ],
+  "lockPath": "C:\\Users\\kimt9\\.agents\\.skill-lock.json",
+  "chromeExtensionInstalled": false,
+  "notes": "Awesome Claude Design and DESIGN.md Chrome are guide wrappers. The Chrome extension requires separate browser installation."
+}
