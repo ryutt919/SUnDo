@@ -74,7 +74,8 @@ class StatsUseCase {
 
     final habitStats = <HabitStat>[];
     for (final h in _routine.habits) {
-      if (h.archived || !_analyzer.inActiveMode(h)) continue;
+      // 보관한 습관도 보관 전 기간의 통계에는 남긴다(종료일이 없는 보관 습관만 제외).
+      if ((h.archived && h.finishedOn == null) || !_analyzer.inActiveMode(h)) continue;
       var due = 0, done = 0;
       for (final d in dates) {
         if (_routine.isRest(d)) continue;
@@ -85,6 +86,7 @@ class StatsUseCase {
           due++;
         }
       }
+      if (h.archived && due == 0) continue; // 이 기간에 쓰이지 않은 보관 습관은 숨긴다
       habitStats.add(HabitStat(h, due, done));
     }
     return StatsSummary(

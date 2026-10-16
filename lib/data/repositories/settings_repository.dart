@@ -26,5 +26,14 @@ class SettingsRepository extends ChangeNotifier {
 
   Map<String, dynamic> exportJson() => _settings.toJson();
 
+  /// 덮어쓰기 전에 형식만 검사한다. 틀리면 FormatException을 던진다.
+  void validateJson(Map<String, dynamic>? j) {
+    try {
+      AppSettings.fromJson(j);
+    } on TypeError catch (e) {
+      throw FormatException('설정 백업 형식이 올바르지 않아요: $e');
+    }
+  }
+
   Future<void> importJson(Map<String, dynamic>? j) => update(AppSettings.fromJson(j));
 }

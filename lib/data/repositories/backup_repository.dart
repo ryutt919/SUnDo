@@ -29,12 +29,14 @@ class BackupRepository {
       throw const FormatException('내 루틴 백업 파일이 아니에요');
     }
     // 어느 한쪽이라도 형식이 틀리면 아무것도 바꾸지 않도록 먼저 모두 검사한다.
+    final s = data['settings'];
+    final settingsJson = s is Map ? s.cast<String, dynamic>() : null;
     _routine.validateJson(data);
     _journal.validateJson(data);
+    _settings.validateJson(settingsJson);
     await _routine.importJson(data);
     await _journal.importJson(data);
-    final s = data['settings'];
-    await _settings.importJson(s is Map ? s.cast<String, dynamic>() : null);
+    await _settings.importJson(settingsJson);
     return true;
   }
 

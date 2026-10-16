@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_routine/domain/models/repeat_rule.dart';
 import 'package:my_routine/domain/use_cases/routine_analyzer.dart';
+import 'package:my_routine/domain/use_cases/stats_use_case.dart';
+import 'package:my_routine/ui/features/habit_form/view_models/habit_form_view_model.dart';
 
 import '../test_helpers.dart';
 
@@ -143,6 +145,26 @@ void main() {
       expect(an.dayStat('2026-10-13').due, 1, reason: '과거 기록은 유지');
       expect(an.lightOf(an.dayStat('2026-10-13'), '2026-10-13'), TrafficLight.green);
       expect(an.dayStat(today).due, 0, reason: '오늘부터는 사라짐');
+    });
+
+    test('이미 종료한 습관을 보관해도 종료일은 그대로 유지된다', () async {
+      final repo = await emptyRoutine();
+      await repo.addHabit(habit('a', start: '2026-10-01').copyWith(finishedOn: '2026-10-05'));
+      final vm = HabitFormViewModel(repo, habitId: 'a');
+      await vm.archive();
+      expect(repo.habitById('a')!.finishedOn, '2026-10-05');
+      expect(repo.habitById('a')!.archived, isTrue);
+    });
+
+    test('보관한 습관은 보관 전 기간의 습관별 통계에 남는다', () async {
+      final repo = await emptyRoutine();
+      await repo.addHabit(habit('a', start: '2026-10-01'));
+      await repo.setDone('a', '2026-10-13', true);
+      await repo.updateHabit(repo.habitById('a')!.copyWith(archived: true, finishedOn: '2026-10-13'));
+      final an = RoutineAnalyzer(repo, today: () => today);
+      final stats = StatsUseCase(repo, an).summarize(StatsRange.rolling7);
+      expect(stats.habitStats.map((s) => s.habit.id), ['a']);
+      expect(stats.habitStats.single.done, 1);
     });
 
     test('종료일이 없는 보관 습관(웹 백업)은 어느 날에도 나타나지 않는다', () async {

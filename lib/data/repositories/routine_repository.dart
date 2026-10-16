@@ -135,6 +135,7 @@ class RoutineRepository extends ChangeNotifier {
   }
 
   Future<void> deleteHabit(String id) async {
+    await _refreshLogsAndRest(); // 위젯이 방금 한 체크를 지우지 않도록 최신 기록에서 시작
     _habits = _habits.where((h) => h.id != id).toList();
     for (final day in _logs.values) {
       day.remove(id);
@@ -221,6 +222,7 @@ class RoutineRepository extends ChangeNotifier {
 
   Future<void> deleteMode(String id) async {
     if (_modes.length <= 1) return;
+    await _refreshLogsAndRest(); // _persistAll이 기록 전체를 다시 쓰므로 최신 기록에서 시작
     _modes = _modes.where((m) => m.id != id).toList();
     _habits = [for (final h in _habits) h.copyWith(modes: h.modes.where((m) => m != id).toList())];
     if (_activeMode == id) _activeMode = _modes.first.id;

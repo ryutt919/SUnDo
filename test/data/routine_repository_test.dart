@@ -1,7 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:my_routine/data/repositories/backup_repository.dart';
+import 'package:my_routine/data/repositories/journal_repository.dart';
 import 'package:my_routine/data/repositories/routine_repository.dart';
+import 'package:my_routine/data/repositories/settings_repository.dart';
+import 'package:my_routine/data/services/backup_service.dart';
 import 'package:my_routine/data/services/storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,6 +28,15 @@ const _webBackup = {
   },
   'rest': {'2026-10-12': true},
 };
+
+/// 파일 선택 없이 정해진 JSON을 돌려주는 가짜 백업 서비스.
+class _FakeBackupService extends BackupService {
+  _FakeBackupService(this._data);
+  final Map<String, dynamic> _data;
+
+  @override
+  Future<Map<String, dynamic>?> pick() async => _data;
+}
 
 void main() {
   test('체크는 저장소를 거쳐 디스크에 남고 다시 읽으면 복원된다', () async {
@@ -101,6 +114,38 @@ void main() {
     final again = RoutineRepository(await StorageService.create());
     await again.load();
     expect(again.habits.map((h) => h.id), ['keep'], reason: '디스크도 그대로');
+  });
+
+  test('설정 부분이 틀린 전체 백업도 아무것도 바꾸지 않는다', () async {
+    final routine = await emptyRoutine();
+    final store = await StorageService.create();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+    await routine.addHabit(habit('keep'));
+    final backup = BackupRepository(_FakeBackupService({
+      'habits': <dynamic>[],
+      'logs': <String, dynamic>{},
+      'settings': {'doneToBottom': 'bad'}, // bool이어야 하는 값이 문자열
+    }), routine, journal, settings);
+    await expectLater(backup.importFromFile(), throwsFormatException);
+    expect(routine.habits.map((h) => h.id), ['keep'], reason: '습관 데이터는 그대로');
+  });
+
+  test('습관이나 모드를 삭제해도 위젯이 방금 한 체크는 남는다', () async {
+    final app = await emptyRoutine();
+    await app.addHabit(habit('a'));
+    await app.addHabit(habit('b'));
+    await app.addMode('두번째');
+    final widget = RoutineRepository(await StorageService.create());
+    await widget.load();
+    await widget.toggle('b', '2026-10-13'); // 위젯이 체크 (앱은 아직 모름)
+    await app.deleteMode(app.modes.last.id);
+    await app.deleteHabit('a');
+    final check = RoutineRepository(await StorageService.create());
+    await check.load();
+    expect(check.isDone('b', '2026-10-13'), isTrue);
   });
 
   test('앱과 위젯(다른 인스턴스)이 번갈아 체크해도 서로의 기록을 덮어쓰지 않는다', () async {
