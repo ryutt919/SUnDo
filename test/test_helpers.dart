@@ -4,7 +4,7 @@ import 'package:my_routine/domain/models/habit.dart';
 import 'package:my_routine/domain/models/repeat_rule.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 테스트용 저장소. 시드 습관 없이 빈 상태로 시작한다.
+/// 테스트용 저장소. 시드 루틴 없이 빈 상태로 시작한다.
 Future<RoutineRepository> emptyRoutine({Map<String, Object> initial = const {}}) async {
   SharedPreferences.setMockInitialValues({'habits': '[]', ...initial});
   final store = await StorageService.create();

@@ -74,7 +74,7 @@ class StatsUseCase {
 
     final habitStats = <HabitStat>[];
     for (final h in _routine.habits) {
-      // 보관한 습관도 보관 전 기간의 통계에는 남긴다(종료일이 없는 보관 습관만 제외).
+      // 보관한 루틴도 보관 전 기간의 통계에는 남긴다(종료일이 없는 보관 루틴만 제외).
       if (h.archived && h.finishedOn == null) continue;
       var due = 0, done = 0;
       for (final d in dates) {
@@ -87,7 +87,7 @@ class StatsUseCase {
           due++;
         }
       }
-      if (due == 0) continue; // 이 기간에 해당하지 않은 습관(보관, 다른 모드)은 숨긴다
+      if (due == 0) continue; // 이 기간에 해당하지 않은 루틴(보관, 다른 모드)은 숨긴다
       habitStats.add(HabitStat(h, due, done));
     }
     return StatsSummary(
@@ -101,7 +101,7 @@ class StatsUseCase {
     );
   }
 
-  /// 수치형 습관의 최근 기록 (날짜, 값) 목록.
+  /// 수치형 루틴의 최근 기록 (날짜, 값) 목록.
   List<(String, double)> valueSeries(String habitId, {int days = 30}) {
     final t = _analyzer.today;
     final out = <(String, double)>[];

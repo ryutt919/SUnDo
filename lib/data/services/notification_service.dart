@@ -6,15 +6,15 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../../domain/use_cases/alarm_plan_use_case.dart';
 
-/// 습관 알람을 안드로이드 알림으로 예약한다.
+/// 루틴 알람을 안드로이드 알림으로 예약한다.
 class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
   bool _ready = false;
 
   static const _channel = AndroidNotificationDetails(
     'habit_alarms',
-    '습관 알람',
-    channelDescription: '습관을 할 시간에 알려 줘요',
+    '루틴 알람',
+    channelDescription: '루틴을 할 시간에 알려 줘요',
     importance: Importance.high,
     priority: Priority.high,
     icon: 'ic_stat_notify',

@@ -95,7 +95,7 @@ class BackupRepository {
       await _routine.importJson(before.routine);
     } on Object catch (e) {
       routineRestored = false;
-      debugPrint('원상복구 실패(습관): $e');
+      debugPrint('원상복구 실패(루틴): $e');
     }
     try {
       await _journal.importJson(before.journal);
@@ -107,7 +107,7 @@ class BackupRepository {
     } on Object catch (e) {
       debugPrint('원상복구 실패(설정): $e');
     }
-    // 습관 복구가 실패해 새 기록이 남아 있을 수 있으면, 그 기록이 가리키는 사진은 지우지 않는다
+    // 루틴 복구가 실패해 새 기록이 남아 있을 수 있으면, 그 기록이 가리키는 사진은 지우지 않는다
     if (!routineRestored) return;
     for (final p in restoredPhotos) {
       try {

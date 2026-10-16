@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/app_theme.dart';
 import '../view_models/home_view_model.dart';
 
-/// 한 습관 행. 파스텔 배경 위에 번호, 시간/제목, 이모지 체크 버튼이 놓인다.
+/// 한 루틴 행. 파스텔 배경 위에 번호, 시간/제목, 이모지 체크 버튼이 놓인다.
 class HabitTile extends StatelessWidget {
   const HabitTile({
     super.key,

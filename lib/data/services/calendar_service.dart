@@ -1,5 +1,22 @@
 import 'package:device_calendar_plus/device_calendar_plus.dart';
 
+/// 캘린더에서 읽어 온 이벤트 한 개. 시각은 버리고 시작 날짜만 쓴다.
+class CalendarEvent {
+  const CalendarEvent({
+    required this.id,
+    required this.title,
+    required this.day,
+    required this.allDay,
+    required this.recurring,
+  });
+
+  final String id;
+  final String title;
+  final DateTime day; // 시작 날짜(시각 없음)
+  final bool allDay;
+  final bool recurring;
+}
+
 /// 기기 캘린더(Android CalendarProvider)를 감싼 서비스. 상태는 가지지 않는다.
 /// 삼성 캘린더나 구글 캘린더 계정에 연결된 캘린더에 쓰면 해당 계정으로 동기화된다.
 class CalendarService {
@@ -20,6 +37,26 @@ class CalendarService {
     ];
   }
 
+  static CalendarEvent _convert(Event e, {String? id}) => CalendarEvent(
+        id: id ?? e.instanceId,
+        title: e.title,
+        day: DateTime(e.startDate.year, e.startDate.month, e.startDate.day),
+        allDay: e.isAllDay,
+        recurring: e.isRecurring,
+      );
+
+  /// 이벤트 하나를 읽는다. 지워졌으면 null.
+  Future<CalendarEvent?> get(String eventId) async {
+    final e = await _plugin.getEvent(eventId);
+    return e == null ? null : _convert(e, id: eventId);
+  }
+
+  /// [calendarId]에서 [from] 이상 [to] 미만에 걸친 이벤트(반복 일정은 회차마다 한 개).
+  Future<List<CalendarEvent>> listBetween({required String calendarId, required DateTime from, required DateTime to}) async {
+    final events = await _plugin.listEvents(from, to, calendarIds: [calendarId]);
+    return [for (final e in events) _convert(e)];
+  }
+
   /// 종일 이벤트를 만들고 이벤트 ID를 돌려준다. 종일 이벤트의 끝 날짜는 다음 날 0시다.
   Future<String> create({required String calendarId, required String title, required DateTime day}) {
     final start = DateTime(day.year, day.month, day.day);
@@ -33,15 +70,16 @@ class CalendarService {
     );
   }
 
+  /// [title]을 주면 제목을, [day]를 주면 그 날의 종일 이벤트로 옮긴다. 주지 않은 것은 그대로 둔다.
   /// 이벤트가 이미 지워졌으면 false.
-  Future<bool> update({required String eventId, required String title, required DateTime day}) async {
+  Future<bool> update({required String eventId, String? title, DateTime? day}) async {
     try {
       await _plugin.updateEvent(
         instanceId: eventId,
         title: title,
-        startDate: DateTime(day.year, day.month, day.day),
-        endDate: DateTime(day.year, day.month, day.day + 1),
-        isAllDay: true,
+        startDate: day == null ? null : DateTime(day.year, day.month, day.day),
+        endDate: day == null ? null : DateTime(day.year, day.month, day.day + 1),
+        isAllDay: day == null ? null : true,
       );
       return true;
     } on DeviceCalendarException catch (e) {

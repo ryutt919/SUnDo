@@ -11,7 +11,7 @@ class DayStat {
   final int due;
   final int done;
 
-  /// 해야 할 습관이 없거나 쉬는 날이면 null.
+  /// 해야 할 루틴이 없거나 쉬는 날이면 null.
   double? get rate => (rest || due == 0) ? null : done / due;
 }
 
@@ -22,7 +22,7 @@ class WeeklyDay {
   final bool rest;
   final bool future;
 
-  /// 습관 시작일 이후이고 종료일 전이어서 체크할 수 있는 날.
+  /// 루틴 시작일 이후이고 종료일 전이어서 체크할 수 있는 날.
   final bool active;
 }
 
@@ -39,7 +39,7 @@ class WeeklyProgress {
   double get rate => goal == 0 ? 0 : (doneCount / goal).clamp(0.0, 1.0);
 }
 
-/// 날짜별 해야 할 습관, 달성률, 신호등, 연속 일수를 계산한다.
+/// 날짜별 해야 할 루틴, 달성률, 신호등, 연속 일수를 계산한다.
 /// 신호등 기준: 60% 이상 초록, 20% 이상 노랑, 그 미만 빨강.
 class RoutineAnalyzer {
   RoutineAnalyzer(this._routine, {String Function()? today}) : _today = today ?? todayKey;
@@ -52,14 +52,14 @@ class RoutineAnalyzer {
 
   String get today => _today();
 
-  /// [date]에 이 습관이 현재 루틴 모드에 속하는지. 오늘 이후는 현재 모드, 지난 날은 그날 쓰던 모드(이력)를 쓴다.
+  /// [date]에 이 루틴이 현재 루틴 모드에 속하는지. 오늘 이후는 현재 모드, 지난 날은 그날 쓰던 모드(이력)를 쓴다.
   /// 그래서 모드를 바꿔도 지난 날의 달성률과 신호등은 변하지 않는다. [date]를 생략하면 현재 모드 기준.
   bool inActiveMode(Habit h, [String? date]) {
     if (h.modes.isEmpty) return true;
     final current = date == null || date.compareTo(today) >= 0;
     final mode = current ? _routine.activeModeId : _routine.modeOn(date);
     if (h.modes.contains(mode)) return true;
-    // 소속 모드가 모두 삭제된 습관은 마지막 모드를 삭제한 날부터 모든 모드에 나타난다.
+    // 소속 모드가 모두 삭제된 루틴은 마지막 모드를 삭제한 날부터 모든 모드에 나타난다.
     // 삭제 전 날짜는 그때의 모드 구성을 그대로 따른다(과거 달성률과 신호등이 변하지 않게).
     if (h.modes.every((m) => !_routine.hasMode(m))) {
       var since = '0000-01-01';
@@ -104,7 +104,7 @@ class RoutineAnalyzer {
     }
   }
 
-  /// 주 N회 습관의 지난 날(체크하지 않은 날)을 미달로 셀지 정한다.
+  /// 주 N회 루틴의 지난 날(체크하지 않은 날)을 미달로 셀지 정한다.
   /// 지난 날의 미체크를 하루하루 실패로 세지는 않고, 주가 끝난 뒤 주 목표를 못 채웠으면
   /// 그 주에서 체크하지 않은 마지막 날 하루만 미달 1일로 센다. 통계와 연속 일수에 반영된다.
   bool _isWeeklyMissDay(Habit h, String date) {
@@ -187,7 +187,7 @@ class RoutineAnalyzer {
     return starts.isEmpty ? today : starts.first;
   }
 
-  /// 초록불이 이어진 일수. 쉬는 날과 습관이 없는 날은 건너뛴다.
+  /// 초록불이 이어진 일수. 쉬는 날과 루틴이 없는 날은 건너뛴다.
   int streak() {
     var d = today;
     final s0 = dayStat(d);
@@ -209,7 +209,7 @@ class RoutineAnalyzer {
     return n;
   }
 
-  /// 한 습관의 연속 달성 일수.
+  /// 한 루틴의 연속 달성 일수.
   int habitStreak(Habit h) {
     var d = today;
     if (!_routine.isDone(h.id, d)) d = addDaysKey(d, -1);
@@ -228,6 +228,6 @@ class RoutineAnalyzer {
     return n;
   }
 
-  /// 처음 습관을 시작한 뒤 지난 일수 (1일차부터).
+  /// 처음 루틴을 시작한 뒤 지난 일수 (1일차부터).
   int get routineDay => daysBetween(_firstDate, today) + 1;
 }

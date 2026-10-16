@@ -56,11 +56,21 @@ class GoalsScreen extends StatelessWidget {
                       Text('${(vm.overallProgress * 100).round()}%', style: const TextStyle(fontWeight: FontWeight.w900)),
                       const SizedBox(width: 10),
                       Expanded(child: ProgressBar(value: vm.overallProgress)),
+                      const SizedBox(width: 10),
+                      Text('완료 ${vm.completion.done}/${vm.completion.total}', style: TextStyle(color: cs.outline)),
                     ]),
                   ),
                 if (goals.isEmpty)
                   const EmptyHint('이 기간의 계획이 없어요.\n오른쪽 아래 + 버튼으로 계획을 추가해 보세요.'),
-                for (final g in goals) _GoalCard(goal: g, vm: vm, outline: cs.outline),
+                for (final g in vm.openGoals) _GoalCard(goal: g, vm: vm, outline: cs.outline),
+                if (vm.doneGoals.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 18, 0, 6),
+                    child: Text('완료한 계획 ${vm.doneGoals.length}',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: cs.outline)),
+                  ),
+                  for (final g in vm.doneGoals) _GoalCard(goal: g, vm: vm, outline: cs.outline),
+                ],
               ],
             ),
           ),
@@ -78,12 +88,43 @@ class _GoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final done = goal.done;
     return Card(
+      color: done ? AppColors.green.withValues(alpha: 0.12) : null,
+      shape: done
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: AppColors.green.withValues(alpha: 0.6), width: 1.5),
+            )
+          : null,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Expanded(child: Text(goal.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
+            Checkbox(
+              value: done,
+              activeColor: AppColors.green,
+              visualDensity: VisualDensity.compact,
+              onChanged: (_) => vm.toggleGoal(goal),
+            ),
+            Expanded(
+              child: Text(goal.title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    decoration: done ? TextDecoration.lineThrough : null,
+                    color: done ? outline : null,
+                  )),
+            ),
+            if (done)
+              const Padding(
+                padding: EdgeInsets.only(right: 4),
+                child: Chip(
+                  visualDensity: VisualDensity.compact,
+                  avatar: Icon(Icons.check_circle, size: 16, color: AppColors.darkGreen),
+                  label: Text('완료', style: TextStyle(fontSize: 12, color: AppColors.darkGreen)),
+                ),
+              ),
             PopupMenuButton<String>(
               onSelected: (v) async {
                 if (v == 'rename') {

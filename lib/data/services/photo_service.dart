@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// 습관 인증 사진을 고르거나 찍어 앱 전용 폴더에 복사한다.
+/// 루틴 인증 사진을 고르거나 찍어 앱 전용 폴더에 복사한다.
 /// 읽기와 삭제는 앱 전용 사진 폴더 안의 파일에만 허용한다(변조된 백업의 경로로 다른 파일을 건드리지 못하게).
 class PhotoService {
   final ImagePicker _picker = ImagePicker();

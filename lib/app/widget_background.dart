@@ -13,7 +13,7 @@ import '../domain/use_cases/routine_analyzer.dart';
 import '../domain/use_cases/widget_snapshot_use_case.dart';
 
 /// 홈 화면 위젯이 앱을 열지 않고 보내는 요청을 백그라운드에서 처리한다.
-///  - `myroutine://toggle?id=<습관 ID>`: 오늘 그 습관의 체크를 바꾼다.
+///  - `myroutine://toggle?id=<루틴 ID>`: 오늘 그 루틴의 체크를 바꾼다.
 ///  - `myroutine://toggletodo?id=<투두 ID>`: 그 투두의 완료 상태를 바꾼다.
 ///  - `myroutine://refresh`: 날짜나 시간대가 바뀌었을 때 위젯 데이터와 알람을 새로 만든다.
 @pragma('vm:entry-point')
@@ -57,7 +57,7 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
   final analyzer = RoutineAnalyzer(routine);
   await HomeWidgetService().push(WidgetSnapshotUseCase(routine, analyzer, journal: journal).build());
 
-  // 위젯에서 체크한 습관의 알람을 취소하고, 앱을 오래 열지 않아도 알람 예약이 이어지게 다시 만든다.
+  // 위젯에서 체크한 루틴의 알람을 취소하고, 앱을 오래 열지 않아도 알람 예약이 이어지게 다시 만든다.
   try {
     final settings = SettingsRepository(storage);
     await settings.load();

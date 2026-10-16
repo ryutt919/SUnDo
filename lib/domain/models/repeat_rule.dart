@@ -20,7 +20,7 @@ RepeatType _typeFromJson(String? s) => RepeatType.values.firstWhere(
       orElse: () => RepeatType.daily,
     );
 
-/// 습관 반복 규칙. 요일 번호는 일요일=0 ... 토요일=6.
+/// 루틴 반복 규칙. 요일 번호는 일요일=0 ... 토요일=6.
 class RepeatRule {
   const RepeatRule({
     this.type = RepeatType.daily,

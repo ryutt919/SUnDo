@@ -117,7 +117,7 @@ void main() {
     final store = await StorageService.create();
     final repo = RoutineRepository(store);
     await repo.load();
-    expect(repo.habits, isNotEmpty, reason: '처음 실행하면 예시 습관이 생긴다');
+    expect(repo.habits, isNotEmpty, reason: '처음 실행하면 예시 루틴이 생긴다');
 
     final id = repo.habits.first.id;
     await repo.toggle(id, '2026-10-13');
@@ -157,7 +157,7 @@ void main() {
     expect(repo.modes.length, 21); // 기본 모드 1개 + 20개
   });
 
-  test('삭제한 습관의 기록은 새로 만들어지지 않는다', () async {
+  test('삭제한 루틴의 기록은 새로 만들어지지 않는다', () async {
     final repo = await emptyRoutine();
     await repo.addHabit(habit('a'));
     await repo.deleteHabit('a');
@@ -166,7 +166,7 @@ void main() {
     expect(repo.totalChecks, 0);
   });
 
-  test('습관 삭제 중 타이머가 끝나도 유령 기록이 생기지 않는다', () async {
+  test('루틴 삭제 중 타이머가 끝나도 유령 기록이 생기지 않는다', () async {
     final repo = await emptyRoutine();
     await repo.addHabit(habit('a'));
     final timers = HabitTimerManager(repo);
@@ -177,7 +177,7 @@ void main() {
       async.flushMicrotasks();
       async.elapse(const Duration(seconds: 25));
       async.flushMicrotasks();
-      expect(timers.secondsLeft('a', '2026-10-14'), 50, reason: '습관이 없는 동안은 시간이 줄지 않고 기다린다');
+      expect(timers.secondsLeft('a', '2026-10-14'), 50, reason: '루틴이 없는 동안은 시간이 줄지 않고 기다린다');
       async.elapse(const Duration(seconds: 10)); // 30초를 넘겨 계속 없으면 정리한다
       async.flushMicrotasks();
       expect(timers.secondsLeft('a', '2026-10-14'), isNull, reason: '삭제가 확정되면 타이머도 멈춘다');
@@ -188,7 +188,7 @@ void main() {
     expect(repo.totalChecks, 0);
   });
 
-  test('습관이 잠깐 사라졌다 돌아와도(틱이 그 사이에 와도) 타이머는 사라지지 않고 남은 시간이 유지된다', () async {
+  test('루틴이 잠깐 사라졌다 돌아와도(틱이 그 사이에 와도) 타이머는 사라지지 않고 남은 시간이 유지된다', () async {
     final repo = await emptyRoutine();
     await repo.addHabit(habit('a'));
     final habitA = repo.habitById('a')!;
@@ -197,10 +197,10 @@ void main() {
       timers.start('a', '2026-10-14', 1);
       async.elapse(const Duration(seconds: 10));
       expect(timers.secondsLeft('a', '2026-10-14'), 50);
-      repo.deleteHabit('a'); // 가져오기 중 습관이 잠깐 사라진 상황
+      repo.deleteHabit('a'); // 가져오기 중 루틴이 잠깐 사라진 상황
       async.flushMicrotasks();
       async.elapse(const Duration(seconds: 3)); // 사라진 동안 틱이 지나간다
-      repo.addHabit(habitA); // 롤백으로 습관이 돌아온다
+      repo.addHabit(habitA); // 롤백으로 루틴이 돌아온다
       async.flushMicrotasks();
       expect(timers.secondsLeft('a', '2026-10-14'), 50, reason: '없는 동안은 시간이 줄지 않았다');
       async.elapse(const Duration(seconds: 5));
@@ -222,7 +222,7 @@ void main() {
     final timers = HabitTimerManager(routine);
     final backup = BackupRepository(
       _FakeBackupService({
-        'habits': <dynamic>[], // 가져오면 실행 중이던 습관이 사라진다
+        'habits': <dynamic>[], // 가져오면 실행 중이던 루틴이 사라진다
         'logs': <String, dynamic>{},
         'todos': [
           {'id': 't', 'text': 'x', 'date': '2026-10-13'}
@@ -248,7 +248,7 @@ void main() {
       async.flushMicrotasks();
       store.failKey = null;
       expect(failure, isTrue);
-      expect(routine.habitById('running'), isNotNull, reason: '실패하면 습관이 돌아온다');
+      expect(routine.habitById('running'), isNotNull, reason: '실패하면 루틴이 돌아온다');
       expect(timers.isRunning('running', '2026-10-14'), isTrue, reason: '타이머도 이어진다');
       expect(timers.secondsLeft('running', '2026-10-14'), lessThan(55));
     });
@@ -296,7 +296,7 @@ void main() {
     expect(routine.isDone('h', '2026-10-13'), isTrue, reason: '체크 자체는 가져온다');
   });
 
-  test('보이는 습관만 재정렬해도 숨은 습관의 자리는 그대로다', () async {
+  test('보이는 루틴만 재정렬해도 숨은 루틴의 자리는 그대로다', () async {
     final repo = await emptyRoutine();
     for (final id in ['a', 'b', 'c', 'd']) {
       await repo.addHabit(habit(id));
@@ -309,7 +309,7 @@ void main() {
     final repo = await emptyRoutine();
     await repo.addHabit(habit('keep', name: '지키기'));
     await repo.setDone('keep', '2026-10-13', true);
-    // id가 없는 습관이 섞인 잘못된 백업
+    // id가 없는 루틴이 섞인 잘못된 백업
     expect(
       () => repo.importJson({
         'habits': [{'name': 'id 없음', 'start': '2026-10-01'}],
@@ -338,7 +338,7 @@ void main() {
       'settings': {'doneToBottom': 'bad'}, // bool이어야 하는 값이 문자열
     }), _FakePhotoService(), routine, journal, settings);
     await expectLater(backup.importFromFile(), throwsFormatException);
-    expect(routine.habits.map((h) => h.id), ['keep'], reason: '습관 데이터는 그대로');
+    expect(routine.habits.map((h) => h.id), ['keep'], reason: '루틴 데이터는 그대로');
   });
 
   test('백업을 적용하다 저장이 실패하면 이전 데이터로 되돌리고 복원하던 사진도 지운다', () async {
@@ -358,7 +358,7 @@ void main() {
     final backup = BackupRepository(
       _FakeBackupService({
         'habits': [
-          {'id': 'new', 'name': '가져올 습관', 'start': '2026-10-01'}
+          {'id': 'new', 'name': '가져올 루틴', 'start': '2026-10-01'}
         ],
         'logs': {
           '2026-10-13': {
@@ -385,7 +385,7 @@ void main() {
     expect(photos.files, isEmpty, reason: '복원하다 만 사진은 지운다');
   });
 
-  test('습관이나 모드를 삭제해도 위젯이 방금 한 체크는 남는다', () async {
+  test('루틴이나 모드를 삭제해도 위젯이 방금 한 체크는 남는다', () async {
     final app = await emptyRoutine();
     await app.addHabit(habit('a'));
     await app.addHabit(habit('b'));

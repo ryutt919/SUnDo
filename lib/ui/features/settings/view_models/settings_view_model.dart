@@ -74,6 +74,20 @@ class SettingsViewModel extends RepoViewModel {
   bool get calendarOn => _calendar.enabled;
   String get calendarName => _calendar.calendarName;
   int get calendarLinked => _calendar.linkedCount;
+  bool get calendarPull => _calendar.pullChanges;
+  bool get calendarImport => _calendar.importNew;
+
+  Future<void> setCalendarPull(bool v) async {
+    await _calendar.setPullChanges(v);
+    await _calendar.sync();
+  }
+
+  Future<void> setCalendarImport(bool v) async {
+    await _calendar.setImportNew(v);
+    await _calendar.sync();
+  }
+
+  Future<void> syncCalendarNow() => _calendar.sync();
 
   /// 권한을 받고 쓸 수 있는 캘린더 목록을 돌려준다. 권한이 없으면 null.
   Future<List<CalendarChoice>?> loadCalendarChoices() async {

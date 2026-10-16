@@ -130,7 +130,7 @@ class HomeViewModel extends RepoViewModel {
   List<HabitRowData> get habitRows {
     var list = _analyzer.dueHabits(selectedDate);
     if (_settings.settings.sortByTime && !editing) {
-      // 시각이 있는 습관은 시간 순으로, 시각이 없는(상황 기반) 습관은 뒤쪽에 원래 순서대로 둔다.
+      // 시각이 있는 루틴은 시간 순으로, 시각이 없는(상황 기반) 루틴은 뒤쪽에 원래 순서대로 둔다.
       final timed = list.where((h) => h.time.isNotEmpty).toList()..sort((a, b) => a.time.compareTo(b.time));
       list = [...timed, ...list.where((h) => h.time.isEmpty)];
     }
@@ -201,7 +201,7 @@ class HomeViewModel extends RepoViewModel {
     return total == 0 ? 0 : done / total;
   }
 
-  /// 주간 보기에 나올 습관. 보관한 습관은 보관 전에 걸친 주에는 그대로 보인다.
+  /// 주간 보기에 나올 루틴. 보관한 루틴은 보관 전에 걸친 주에는 그대로 보인다.
   List<Habit> get weekGridHabits {
     final weekStart = weekStartKey(selectedDate);
     final days = [for (var i = 0; i < 7; i++) addDaysKey(weekStart, i)];

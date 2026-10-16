@@ -34,7 +34,7 @@ class _ModesSheet extends StatelessWidget {
           children: [
             const Text('루틴 모드', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
             const SizedBox(height: 4),
-            Text('모드를 누르면 바로 적용돼요. 습관마다 적용할 모드를 고를 수 있어요.',
+            Text('모드를 누르면 바로 적용돼요. 루틴마다 적용할 모드를 고를 수 있어요.',
                 style: TextStyle(fontSize: 12, color: cs.outline)),
             const SizedBox(height: 8),
             Flexible(
@@ -68,7 +68,7 @@ class _ModesSheet extends StatelessWidget {
                             onPressed: !vm.canDelete
                                 ? null
                                 : () async {
-                                    if (await confirmDialog(context, '이 모드를 삭제할까요? 습관은 지워지지 않아요.', ok: '삭제')) {
+                                    if (await confirmDialog(context, '이 모드를 삭제할까요? 루틴은 지워지지 않아요.', ok: '삭제')) {
                                       await vm.delete(m.id);
                                     }
                                   },

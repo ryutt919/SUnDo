@@ -59,7 +59,7 @@ class AppSync {
       debugPrint('위젯 갱신 실패: $e');
     }
     try {
-      await _deps.calendar.sync(_deps.journal.todos);
+      await _deps.calendar.sync();
     } on Exception catch (e) {
       debugPrint('캘린더 동기화 실패: $e');
     }

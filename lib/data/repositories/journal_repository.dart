@@ -56,10 +56,12 @@ class JournalRepository extends ChangeNotifier {
   }
 
   // ---- 투두 ----
-  Future<void> addTodo(String text, String date) async {
-    _todos = [..._todos, Todo(id: newId(), text: text, date: date)];
+  Future<Todo> addTodo(String text, String date, {bool done = false}) async {
+    final todo = Todo(id: newId(), text: text, date: date, done: done);
+    _todos = [..._todos, todo];
     await _save('todos');
     notifyListeners();
+    return todo;
   }
 
   Future<void> updateTodo(Todo t) async {

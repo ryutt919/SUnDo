@@ -25,7 +25,7 @@ class _Imported {
   final Set<String> rest;
 }
 
-/// 습관, 일별 기록, 쉬는 날, 루틴 모드의 단일 출처.
+/// 루틴, 일별 기록, 쉬는 날, 루틴 모드의 단일 출처.
 class RoutineRepository extends ChangeNotifier {
   RoutineRepository(this._store);
 
@@ -58,7 +58,7 @@ class RoutineRepository extends ChangeNotifier {
   /// 삭제한 모드가 삭제된 날짜. 삭제하지 않았으면 null.
   String? modeDeletedOn(String id) => _modeDeletedOn[id];
 
-  /// 삭제한 모드의 id와 삭제한 날짜. 소속 모드가 모두 사라진 습관이 언제부터 모든 모드에 나타나는지 정하는 데 쓴다.
+  /// 삭제한 모드의 id와 삭제한 날짜. 소속 모드가 모두 사라진 루틴이 언제부터 모든 모드에 나타나는지 정하는 데 쓴다.
   Map<String, String> _modeDeletedOn = {};
 
   List<Habit> get habits => List.unmodifiable(_habits);
@@ -89,7 +89,7 @@ class RoutineRepository extends ChangeNotifier {
       try {
         await _persistAll();
       } on StorageWriteException catch (e) {
-        // 첫 실행에서 예시 습관을 저장하지 못해도 앱은 시작한다(다음 저장 때 다시 기록된다)
+        // 첫 실행에서 예시 루틴을 저장하지 못해도 앱은 시작한다(다음 저장 때 다시 기록된다)
         debugPrint('초기 데이터 저장 실패: $e');
       }
     } else {
@@ -155,7 +155,7 @@ class RoutineRepository extends ChangeNotifier {
   Future<void> _persistHabits() =>
       _store.writeJson('habits', _habits.map((h) => h.toJson()).toList());
 
-  // ---- 습관 ----
+  // ---- 루틴 ----
   Future<void> addHabit(Habit h) async {
     _habits = [..._habits, h];
     await _persistHabits();
@@ -189,7 +189,7 @@ class RoutineRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 화면에 보이는 습관들의 새 순서를 전체 목록에 반영한다.
+  /// 화면에 보이는 루틴들의 새 순서를 전체 목록에 반영한다.
   Future<void> reorderVisible(List<String> orderedIds) async {
     final slots = <int>[
       for (var i = 0; i < _habits.length; i++)
@@ -218,7 +218,7 @@ class RoutineRepository extends ChangeNotifier {
   Future<void> updateLog(String habitId, String date, HabitLog Function(HabitLog) edit) async {
     await _refreshLogsAndRest();
     // 최신 기록을 읽은 직후, 중간에 기다리는 일 없이 존재 확인과 수정을 한다.
-    // 삭제된 습관(예: 실행 중이던 타이머)의 기록은 만들지 않는다.
+    // 삭제된 루틴(예: 실행 중이던 타이머)의 기록은 만들지 않는다.
     if (habitById(habitId) == null) return;
     final day = _logs.putIfAbsent(date, () => {});
     final before = day[habitId];
@@ -287,8 +287,8 @@ class RoutineRepository extends ChangeNotifier {
     if (_modes.length <= 1) return;
     _modeDeletedOn[id] = on ?? todayKey();
     await _refreshLogsAndRest(); // _persistAll이 기록 전체를 다시 쓰므로 최신 기록에서 시작
-    // 습관의 모드 지정과 날짜별 모드 이력은 그대로 둔다. 지난 날의 달성률과 신호등이 바뀌지 않게 하려는 것이다.
-    // 소속 모드가 모두 사라진 습관은 지금부터 모든 모드에 나타난다(RoutineAnalyzer.inActiveMode).
+    // 루틴의 모드 지정과 날짜별 모드 이력은 그대로 둔다. 지난 날의 달성률과 신호등이 바뀌지 않게 하려는 것이다.
+    // 소속 모드가 모두 사라진 루틴은 지금부터 모든 모드에 나타난다(RoutineAnalyzer.inActiveMode).
     _modes = _modes.where((m) => m.id != id).toList();
     if (_activeMode == id) {
       _activeMode = _modes.first.id;
@@ -332,7 +332,7 @@ class RoutineRepository extends ChangeNotifier {
         rest: rest is Map ? rest.keys.map((k) => '$k').toSet() : {},
       );
     } on TypeError catch (e) {
-      throw FormatException('습관 백업 형식이 올바르지 않아요: $e');
+      throw FormatException('루틴 백업 형식이 올바르지 않아요: $e');
     } on FormatException {
       rethrow;
     }

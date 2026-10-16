@@ -1,4 +1,4 @@
-/// 하루 단위 습관 기록.
+/// 하루 단위 루틴 기록.
 class HabitLog {
   const HabitLog({
     this.done = false,
@@ -156,24 +156,30 @@ class Goal {
     required this.period,
     required this.periodKey,
     this.items = const [],
+    this.done = false,
   });
   final String id;
   final String title;
   final GoalPeriod period;
 
+  /// 계획을 완료로 체크했는지. 세부 항목을 모두 끝내면 함께 완료가 된다.
+  final bool done;
+
   /// 주간은 그 주 월요일(yyyy-MM-dd), 월간은 yyyy-MM, 연간은 yyyy.
   final String periodKey;
   final List<GoalItem> items;
 
+  /// 완료한 계획은 항상 100%, 아니면 완료한 세부 항목의 비율.
   double get progress =>
-      items.isEmpty ? 0 : items.where((i) => i.done).length / items.length;
+      done ? 1 : (items.isEmpty ? 0 : items.where((i) => i.done).length / items.length);
 
-  Goal copyWith({String? title, List<GoalItem>? items}) => Goal(
+  Goal copyWith({String? title, List<GoalItem>? items, bool? done}) => Goal(
       id: id,
       title: title ?? this.title,
       period: period,
       periodKey: periodKey,
-      items: items ?? this.items);
+      items: items ?? this.items,
+      done: done ?? this.done);
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -181,6 +187,7 @@ class Goal {
         'period': period.name,
         'periodKey': periodKey,
         'items': items.map((e) => e.toJson()).toList(),
+        'done': done,
       };
   factory Goal.fromJson(Map<String, dynamic> j) => Goal(
         id: j['id'] as String,
@@ -191,6 +198,7 @@ class Goal {
         items: ((j['items'] as List?) ?? const [])
             .map((e) => GoalItem.fromJson((e as Map).cast<String, dynamic>()))
             .toList(),
+        done: (j['done'] as bool?) ?? false,
       );
 }
 

@@ -35,6 +35,10 @@ class GoalsViewModel extends RepoViewModel {
 
   List<Goal> get goals => _journal.goalsFor(period, periodKey);
 
+  /// 아직 끝내지 않은 계획과 완료한 계획(완료한 것은 아래쪽에 따로 보인다).
+  List<Goal> get openGoals => goals.where((g) => !g.done).toList();
+  List<Goal> get doneGoals => goals.where((g) => g.done).toList();
+
   double get overallProgress {
     final g = goals;
     if (g.isEmpty) return 0;
@@ -66,15 +70,29 @@ class GoalsViewModel extends RepoViewModel {
 
   Future<void> rename(Goal g, String title) => _journal.saveGoal(g.copyWith(title: title));
 
+  /// 새 세부 항목은 아직 안 끝난 일이라 완료였던 계획도 다시 진행 중이 된다.
   Future<void> addItem(Goal g, String text) =>
-      _journal.saveGoal(g.copyWith(items: [...g.items, GoalItem(text: text)]));
+      _journal.saveGoal(g.copyWith(items: [...g.items, GoalItem(text: text)], done: false));
 
-  Future<void> toggleItem(Goal g, int index) => _journal.saveGoal(g.copyWith(
-        items: [for (var i = 0; i < g.items.length; i++) i == index ? g.items[i].copyWith(done: !g.items[i].done) : g.items[i]],
-      ));
+  /// 계획 전체를 완료로 체크하면 세부 항목도 모두 끝낸 것으로 하고, 체크를 풀면 계획만 진행 중으로 돌린다.
+  Future<void> toggleGoal(Goal g) => _journal.saveGoal(g.done
+      ? g.copyWith(done: false)
+      : g.copyWith(done: true, items: [for (final i in g.items) i.copyWith(done: true)]));
 
-  Future<void> removeItem(Goal g, int index) =>
-      _journal.saveGoal(g.copyWith(items: [for (var i = 0; i < g.items.length; i++) if (i != index) g.items[i]]));
+  /// 세부 항목을 모두 끝내면 계획이 완료가 되고, 하나라도 풀면 진행 중으로 돌아간다.
+  Future<void> toggleItem(Goal g, int index) {
+    final items = [for (var i = 0; i < g.items.length; i++) i == index ? g.items[i].copyWith(done: !g.items[i].done) : g.items[i]];
+    return _journal.saveGoal(g.copyWith(items: items, done: items.isNotEmpty && items.every((i) => i.done)));
+  }
+
+  Future<void> removeItem(Goal g, int index) {
+    final items = [for (var i = 0; i < g.items.length; i++) if (i != index) g.items[i]];
+    // 마지막 남은 미완료 항목을 지우면 나머지가 모두 완료여서 계획도 완료가 된다
+    return _journal.saveGoal(g.copyWith(items: items, done: g.done || (items.isNotEmpty && items.every((i) => i.done))));
+  }
+
+  /// 이 기간에서 완료한 계획 수와 전체 수.
+  ({int done, int total}) get completion => (done: doneGoals.length, total: goals.length);
 
   Future<void> deleteGoal(String id) => _journal.deleteGoal(id);
 }

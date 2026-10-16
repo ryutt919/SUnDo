@@ -61,7 +61,7 @@ class AppDependencies {
     final notifications = NotificationService();
     final photos = PhotoService();
 
-    final calendar = CalendarRepository(storage, CalendarService());
+    final calendar = CalendarRepository(storage, CalendarService(), journal);
 
     await Future.wait([routine.load(), journal.load(), settings.load(), calendar.load(), notifications.init()]);
 

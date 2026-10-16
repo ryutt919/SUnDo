@@ -4,7 +4,7 @@ import '../../../../domain/models/date_key.dart';
 import '../../../core/app_theme.dart';
 import '../view_models/home_view_model.dart';
 
-/// 주간 보기: 습관 x 7일 격자. 칸을 누르면 그 날의 체크를 바꾼다.
+/// 주간 보기: 루틴 x 7일 격자. 칸을 누르면 그 날의 체크를 바꾼다.
 class WeekGrid extends StatelessWidget {
   const WeekGrid({super.key, required this.vm});
   final HomeViewModel vm;
@@ -12,7 +12,7 @@ class WeekGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final habits = vm.weekGridHabits;
-    if (habits.isEmpty) return const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('습관이 없어요.')));
+    if (habits.isEmpty) return const Padding(padding: EdgeInsets.all(32), child: Center(child: Text('루틴이 없어요.')));
     final dates = vm.weekDates;
     final cs = Theme.of(context).colorScheme;
     return Column(

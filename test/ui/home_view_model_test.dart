@@ -100,7 +100,7 @@ void main() {
     expect(((snap['rows'] as List).first as Map)['id'], 'a');
   });
 
-  test('위젯 데이터는 습관 행과 투두 목록을 따로 담고, 오늘 채울 주간 루틴을 습관 뒤에 붙인다', () async {
+  test('위젯 데이터는 루틴 행과 투두 목록을 따로 담고, 오늘 채울 주간 루틴을 루틴 뒤에 붙인다', () async {
     final s = await _setup();
     await s.routine.addHabit(habit('d', name: 'D'));
     await s.routine.addHabit(habit('w', name: 'W', repeat: const RepeatRule(type: RepeatType.weekly, times: 2)));
@@ -120,7 +120,7 @@ void main() {
     expect(snap['todoTotal'], 3);
   });
 
-  test('알람은 해야 하는 날에만, 아직 안 한 습관에만 만든다', () async {
+  test('알람은 해야 하는 날에만, 아직 안 한 루틴에만 만든다', () async {
     final s = await _setup();
     await s.routine.addHabit(habit('a').copyWith(alarm: '09:00'));
     await s.routine.addHabit(habit('b').copyWith(alarm: '10:00'));
@@ -133,11 +133,11 @@ void main() {
     expect(times.where((d) => d.day == 16).length, 2);
   });
 
-  test('아침/저녁 전체 알람은 쉬는 날을 건너뛰고, 아침 알람은 할 습관이 있을 때만 만든다', () async {
+  test('아침/저녁 전체 알람은 쉬는 날을 건너뛰고, 아침 알람은 할 루틴이 있을 때만 만든다', () async {
     final s = await _setup();
     final plan0 = AlarmPlanUseCase(s.routine, s.analyzer)
         .build(now: DateTime(2026, 10, 14, 6, 0), morning: '08:00', evening: '21:00');
-    expect(plan0.where((a) => a.title == '좋은 아침이에요'), isEmpty, reason: '습관이 없으면 아침 알람 없음');
+    expect(plan0.where((a) => a.title == '좋은 아침이에요'), isEmpty, reason: '루틴이 없으면 아침 알람 없음');
     expect(plan0.where((a) => a.title == '오늘 하루 어땠나요?').length, 14);
 
     await s.routine.addHabit(habit('a'));
@@ -160,7 +160,7 @@ void main() {
     expect(plan.first.at.isBefore(plan.last.at) || plan.first.at == plan.last.at, isTrue, reason: '가까운 알람부터');
   });
 
-  test('시간순 보기는 시각이 있는 습관을 시간 순으로, 없는 습관을 뒤에 둔다', () async {
+  test('시간순 보기는 시각이 있는 루틴을 시간 순으로, 없는 루틴을 뒤에 둔다', () async {
     final s = await _setup();
     await s.routine.addHabit(habit('late').copyWith(time: '22:00'));
     await s.routine.addHabit(habit('none'));

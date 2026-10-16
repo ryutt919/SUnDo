@@ -34,7 +34,7 @@ class TemplatesScreen extends StatelessWidget {
                 : () async {
                     final n = await vm.addSelected();
                     if (context.mounted) {
-                      showToast(context, '습관 $n개를 추가했어요');
+                      showToast(context, '루틴 $n개를 추가했어요');
                       Navigator.pop(context);
                     }
                   },

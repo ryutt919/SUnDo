@@ -76,7 +76,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SectionTitle('알림과 위젯'),
                 ListTile(
-                  title: const Text('습관 알람'),
+                  title: const Text('루틴 알람'),
                   subtitle: Text(vm.notificationsOn ? '알림이 켜져 있어요' : '알림 권한이 꺼져 있어요'),
                   trailing: vm.notificationsOn
                       ? TextButton(onPressed: vm.sendTestNotification, child: const Text('테스트'))
@@ -110,12 +110,33 @@ class SettingsScreen extends StatelessWidget {
                 ListTile(
                   title: const Text('투두를 캘린더에 연동'),
                   subtitle: Text(vm.calendarOn
-                      ? '${vm.calendarName}에 종일 일정으로 동기화 중 (${vm.calendarLinked}개)'
-                      : '날짜를 정한 투두를 기기 캘린더에 일정으로 만들어요. 구글/삼성 캘린더 계정과 동기화돼요'),
+                      ? '${vm.calendarName}과 동기화 중 (${vm.calendarLinked}개)'
+                      : '투두를 기기 캘린더 일정과 양방향으로 맞춰요. 구글/삼성 캘린더 계정과 동기화돼요'),
                   trailing: Switch(value: vm.calendarOn, onChanged: (v) => _toggleCalendar(context, vm, v)),
                   onTap: () => _toggleCalendar(context, vm, !vm.calendarOn),
                 ),
-                if (vm.calendarOn)
+                if (vm.calendarOn) ...[
+                  SwitchListTile(
+                    title: const Text('캘린더에서 바꾼 내용을 투두에 반영'),
+                    subtitle: const Text('제목, 날짜, 완료 표시(제목 앞 ✔), 일정 삭제가 투두에도 적용돼요. 일정을 지우면 투두도 지워져요'),
+                    value: vm.calendarPull,
+                    onChanged: vm.setCalendarPull,
+                  ),
+                  SwitchListTile(
+                    title: const Text('캘린더의 새 일정을 투두로 가져오기'),
+                    subtitle: const Text('오늘부터 60일 안의 반복되지 않는 일정을 투두로 만들어요. 캘린더 일정은 지우거나 옮기지 않아요'),
+                    value: vm.calendarImport,
+                    onChanged: vm.setCalendarImport,
+                  ),
+                  ListTile(
+                    title: const Text('지금 동기화'),
+                    subtitle: const Text('앱을 열 때와 투두를 바꿀 때 자동으로 맞춰요'),
+                    trailing: const Icon(Icons.sync),
+                    onTap: () async {
+                      await vm.syncCalendarNow();
+                      if (context.mounted) showToast(context, '캘린더와 맞췄어요');
+                    },
+                  ),
                   ListTile(
                     title: const Text('캘린더에서 TDnR 일정 모두 지우기'),
                     subtitle: const Text('연동은 유지돼요. 다음 동기화 때 다시 만들어져요'),
@@ -126,6 +147,7 @@ class SettingsScreen extends StatelessWidget {
                       if (context.mounted) showToast(context, '지웠어요');
                     },
                   ),
+                ],
                 const SectionTitle('데이터'),
                 ListTile(
                   title: const Text('백업 내보내기'),
@@ -154,7 +176,7 @@ class SettingsScreen extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  title: const Text('보관된 습관'),
+                  title: const Text('보관된 루틴'),
                   subtitle: Text('${vm.archived.length}개'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => _archivedSheet(context),
@@ -162,7 +184,7 @@ class SettingsScreen extends StatelessWidget {
                 ListTile(
                   title: Text('모든 데이터 지우기', style: TextStyle(color: cs.error)),
                   onTap: () async {
-                    if (await confirmDialog(context, '모든 습관, 기록, 회고가 삭제돼요. 계속할까요?', ok: '지우기') &&
+                    if (await confirmDialog(context, '모든 루틴, 기록, 회고가 삭제돼요. 계속할까요?', ok: '지우기') &&
                         context.mounted &&
                         await confirmDialog(context, '정말 지울까요? 되돌릴 수 없어요.', ok: '지우기')) {
                       await vm.wipe();
@@ -289,8 +311,8 @@ class SettingsScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('보관된 습관', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                if (vm.archived.isEmpty) const EmptyHint('보관된 습관이 없어요.'),
+                const Text('보관된 루틴', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                if (vm.archived.isEmpty) const EmptyHint('보관된 루틴이 없어요.'),
                 for (final h in vm.archived)
                   ListTile(
                     contentPadding: EdgeInsets.zero,

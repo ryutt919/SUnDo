@@ -10,7 +10,7 @@ class TemplateCategory {
   final List<Habit> habits;
 }
 
-/// 추천 습관 템플릿. 앱에 내장된 고정 목록이다.
+/// 추천 루틴 템플릿. 앱에 내장된 고정 목록이다.
 class TemplateRepository {
   List<TemplateCategory> categories() {
     Habit h(String name, String emoji, {String time = '', String context = '', int color = 3, RepeatRule? repeat, String mini = '', String plus = '', String max = ''}) =>

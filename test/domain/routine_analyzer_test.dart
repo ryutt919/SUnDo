@@ -149,7 +149,7 @@ void main() {
       expect(an.dayStat(today).due, 0, reason: '오늘부터는 사라짐');
     });
 
-    test('이미 종료한 습관을 보관해도 종료일은 그대로 유지된다', () async {
+    test('이미 종료한 루틴을 보관해도 종료일은 그대로 유지된다', () async {
       final repo = await emptyRoutine();
       await repo.addHabit(habit('a', start: '2026-10-01').copyWith(finishedOn: '2026-10-05'));
       final vm = HabitFormViewModel(repo, habitId: 'a');
@@ -158,7 +158,7 @@ void main() {
       expect(repo.habitById('a')!.archived, isTrue);
     });
 
-    test('보관한 습관은 보관 전 기간의 습관별 통계에 남는다', () async {
+    test('보관한 루틴은 보관 전 기간의 루틴별 통계에 남는다', () async {
       final repo = await emptyRoutine();
       await repo.addHabit(habit('a', start: '2026-10-01'));
       await repo.setDone('a', '2026-10-13', true);
@@ -169,7 +169,7 @@ void main() {
       expect(stats.habitStats.single.done, 1);
     });
 
-    test('종료일이 없는 보관 습관(웹 백업)은 어느 날에도 나타나지 않는다', () async {
+    test('종료일이 없는 보관 루틴(웹 백업)은 어느 날에도 나타나지 않는다', () async {
       final repo = await emptyRoutine();
       await repo.addHabit(habit('a', start: '2026-10-01').copyWith(archived: true));
       final an = RoutineAnalyzer(repo, today: () => today);
@@ -178,7 +178,7 @@ void main() {
   });
 
   group('모드 이력과 주 목표', () {
-    test('모드를 바꿔도 지난 날의 습관 목록과 달성률은 그날 쓰던 모드 기준으로 남는다', () async {
+    test('모드를 바꿔도 지난 날의 루틴 목록과 달성률은 그날 쓰던 모드 기준으로 남는다', () async {
       final repo = await emptyRoutine();
       await repo.addMode('주말');
       final weekend = repo.modes.last.id;
@@ -206,7 +206,7 @@ void main() {
       expect(other.modeOn('2026-10-10'), repo.modes.last.id);
     });
 
-    test('모드를 삭제해도 지난 날의 구성은 그대로이고, 소속 모드가 사라진 습관은 지금부터 모든 모드에 나타난다', () async {
+    test('모드를 삭제해도 지난 날의 구성은 그대로이고, 소속 모드가 사라진 루틴은 지금부터 모든 모드에 나타난다', () async {
       final repo = await emptyRoutine();
       await repo.addMode('주말');
       final weekend = repo.modes.last.id;
@@ -253,7 +253,7 @@ void main() {
       expect(check.isDone('a', '2026-10-13'), isFalse);
     });
 
-    test('주중에 종료한 주 N회 습관은 종료일 이전의 마지막 미체크 날을 미달로 센다', () async {
+    test('주중에 종료한 주 N회 루틴은 종료일 이전의 마지막 미체크 날을 미달로 센다', () async {
       final repo = await emptyRoutine();
       // 10-05(월) 시작, 주 3회, 10-07(수) 종료, 완료 0회
       await repo.addHabit(habit('a', start: '2026-10-05', repeat: const RepeatRule(type: RepeatType.weekly, times: 3))
@@ -378,7 +378,7 @@ void main() {
   });
 
   group('루틴 모드', () {
-    test('모드가 지정된 습관은 그 모드에서만 나온다', () async {
+    test('모드가 지정된 루틴은 그 모드에서만 나온다', () async {
       final repo = await emptyRoutine();
       await repo.addMode('출근 없는 날');
       final other = repo.modes.last.id;

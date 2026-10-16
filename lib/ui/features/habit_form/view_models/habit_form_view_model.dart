@@ -98,7 +98,7 @@ class HabitFormViewModel extends ChangeNotifier {
   Future<void> archive() async {
     final b = _original;
     // 어제까지만 나타나게 해서, 보관해도 과거 달성률과 신호등이 바뀌지 않게 한다.
-    // 이미 종료한 습관이면 그 종료일을 유지해서 과거 의무일이 늘어나지 않게 한다.
+    // 이미 종료한 루틴이면 그 종료일을 유지해서 과거 의무일이 늘어나지 않게 한다.
     if (b != null) {
       await _routine.updateHabit(b.copyWith(archived: true, finishedOn: b.finishedOn ?? addDaysKey(todayKey(), -1)));
     }

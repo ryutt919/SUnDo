@@ -28,7 +28,7 @@ class HabitFormScreen extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: Text(vm.isNew ? '새 습관' : '습관 편집'),
+        title: Text(vm.isNew ? '새 루틴' : '루틴 편집'),
         actions: [
           if (!vm.isNew)
             PopupMenuButton<String>(
@@ -185,7 +185,7 @@ class HabitFormScreen extends StatelessWidget {
                 TextFormField(
                   initialValue: vm.reason,
                   maxLines: 2,
-                  decoration: const InputDecoration(labelText: '이 습관을 하는 이유 (선택)'),
+                  decoration: const InputDecoration(labelText: '이 루틴을 하는 이유 (선택)'),
                   onChanged: (v) => vm.reason = v,
                 ),
                 const SectionTitle('색상'),
@@ -237,7 +237,7 @@ class HabitFormScreen extends StatelessWidget {
         await vm.archive();
         nav.pop();
       case 'delete':
-        if (await confirmDialog(context, '이 습관과 모든 기록을 삭제할까요? 되돌릴 수 없어요.', ok: '삭제')) {
+        if (await confirmDialog(context, '이 루틴과 모든 기록을 삭제할까요? 되돌릴 수 없어요.', ok: '삭제')) {
           await vm.delete();
           nav.pop();
         }

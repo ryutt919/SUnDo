@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
         SliverToBoxAdapter(
           child: EmptyHint(vm.isRestDay
               ? '🌴 쉬는 날이에요. 스트릭은 끊기지 않아요.'
-              : '이 날의 루틴이 없어요.\n아래 + 버튼으로 습관이나 투두를 추가해 보세요.'),
+              : '이 날의 루틴이 없어요.\n아래 + 버튼으로 루틴이나 투두를 추가해 보세요.'),
         ),
       ];
     }

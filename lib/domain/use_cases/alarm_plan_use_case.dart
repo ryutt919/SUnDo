@@ -10,7 +10,7 @@ class AlarmSpec {
   final DateTime at;
 }
 
-/// 앞으로 며칠 동안 울려야 할 습관 알람 목록을 만든다.
+/// 앞으로 며칠 동안 울려야 할 루틴 알람 목록을 만든다.
 /// 반복 규칙(요일, N일마다 등)을 지켜서, 해야 하는 날에만 알람을 만든다.
 class AlarmPlanUseCase {
   AlarmPlanUseCase(this._routine, this._analyzer);

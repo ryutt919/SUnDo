@@ -7,7 +7,7 @@ import '../test_helpers.dart';
 void main() {
   const d = '2026-10-14';
 
-  test('타이머는 시트(ViewModel)와 무관하게 흐르고, 끝나면 습관을 완료로 체크한다', () async {
+  test('타이머는 시트(ViewModel)와 무관하게 흐르고, 끝나면 루틴을 완료로 체크한다', () async {
     final repo = await emptyRoutine();
     await repo.addHabit(habit('a'));
     final timers = HabitTimerManager(repo);

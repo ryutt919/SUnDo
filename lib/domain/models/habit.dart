@@ -22,7 +22,7 @@ const habitColors = [
   '#DDF1FF', '#EBE4FF', '#FFE4F3', '#EFEFEF',
 ];
 
-/// 습관 한 개. 불변 객체이며 수정은 copyWith로 한다.
+/// 루틴 한 개. 불변 객체이며 수정은 copyWith로 한다.
 class Habit {
   const Habit({
     required this.id,
@@ -59,7 +59,7 @@ class Habit {
   final List<String> modes; // 비어 있으면 모든 모드에 적용
   final bool archived;
   final String start; // 'yyyy-MM-dd'
-  final String reason; // 이 습관을 하는 이유
+  final String reason; // 이 루틴을 하는 이유
   final String? finishedOn; // 종료한 날. 이 날 이후에는 나타나지 않는다
 
   Habit copyWith({

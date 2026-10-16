@@ -9,14 +9,14 @@ class _RunningTimer {
   int secondsLeft;
   Timer? ticker;
   bool finished = false;
-  int missingTicks = 0; // 습관이 없는 채로 지나간 초
+  int missingTicks = 0; // 루틴이 없는 채로 지나간 초
 }
 
 const _missingTicksLimit = 30;
 
-/// 습관별 타이머를 앱이 살아 있는 동안 유지한다.
-/// 상세 시트를 닫았다 다시 열어도 남은 시간이 이어지고, 끝나면 그 날의 습관을 완료로 체크한다.
-/// 습관이 삭제되면 그 습관의 타이머도 함께 멈춘다.
+/// 루틴별 타이머를 앱이 살아 있는 동안 유지한다.
+/// 상세 시트를 닫았다 다시 열어도 남은 시간이 이어지고, 끝나면 그 날의 루틴을 완료로 체크한다.
+/// 루틴이 삭제되면 그 루틴의 타이머도 함께 멈춘다.
 class HabitTimerManager extends ChangeNotifier {
   HabitTimerManager(this._routine);
 
@@ -42,8 +42,8 @@ class HabitTimerManager extends ChangeNotifier {
     if (t.finished || t.secondsLeft <= 0) t.secondsLeft = totalMinutes * 60; // 끝난 타이머는 처음부터
     t.finished = false;
     t.ticker = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      // 습관이 없는 동안에는 시간을 줄이지 않고 기다린다. 백업 가져오기가 실패했다가 되돌려지는 짧은 순간
-      // (습관이 잠깐 사라진다)에 타이머를 잃지 않게 하려는 것이다. 오래(30초 넘게) 없을 때만 정리한다.
+      // 루틴이 없는 동안에는 시간을 줄이지 않고 기다린다. 백업 가져오기가 실패했다가 되돌려지는 짧은 순간
+      // (루틴이 잠깐 사라진다)에 타이머를 잃지 않게 하려는 것이다. 오래(30초 넘게) 없을 때만 정리한다.
       if (_routine.habitById(habitId) == null) {
         t.missingTicks += 1;
         if (t.missingTicks > _missingTicksLimit) {

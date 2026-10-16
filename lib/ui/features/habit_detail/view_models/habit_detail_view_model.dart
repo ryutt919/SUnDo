@@ -9,7 +9,7 @@ import '../../../../domain/use_cases/stats_use_case.dart';
 import '../../../core/habit_timer_manager.dart';
 import '../../../core/repo_view_model.dart';
 
-/// 한 습관의 하루 상세: 난이도, 대체 이름, 수치, 사진 인증, 타이머.
+/// 한 루틴의 하루 상세: 난이도, 대체 이름, 수치, 사진 인증, 타이머.
 /// 타이머 상태는 시트보다 오래 사는 [HabitTimerManager]가 들고 있어서, 시트를 닫아도 계속 흐른다.
 class HabitDetailViewModel extends RepoViewModel {
   HabitDetailViewModel({

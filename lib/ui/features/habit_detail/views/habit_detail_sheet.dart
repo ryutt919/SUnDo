@@ -42,7 +42,7 @@ class _HabitDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<HabitDetailViewModel>();
     final h = vm.habit;
-    if (h == null) return const SizedBox(height: 120, child: Center(child: Text('습관을 찾을 수 없어요.')));
+    if (h == null) return const SizedBox(height: 120, child: Center(child: Text('루틴을 찾을 수 없어요.')));
     final cs = Theme.of(context).colorScheme;
     final log = vm.log;
     final series = vm.valueSeries;

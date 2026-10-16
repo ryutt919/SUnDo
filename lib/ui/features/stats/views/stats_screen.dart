@@ -33,9 +33,9 @@ class StatsScreen extends StatelessWidget {
         ]),
       ),
       _Card(
-        title: '습관별 달성률',
+        title: '루틴별 달성률',
         child: s.habitStats.isEmpty
-            ? const Text('습관이 없어요.')
+            ? const Text('루틴이 없어요.')
             : Column(children: [
                 for (final h in s.habitStats)
                   Padding(
