@@ -138,11 +138,11 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   ListTile(
-                    title: const Text('캘린더에서 TDnR 일정 모두 지우기'),
+                    title: const Text('캘린더에서 루티닝 일정 모두 지우기'),
                     subtitle: const Text('연동은 유지돼요. 다음 동기화 때 다시 만들어져요'),
                     trailing: const Icon(Icons.delete_sweep_outlined),
                     onTap: () async {
-                      if (!await confirmDialog(context, 'TDnR이 만든 캘린더 일정을 모두 지울까요?', ok: '지우기')) return;
+                      if (!await confirmDialog(context, '루티닝이 만든 캘린더 일정을 모두 지울까요?', ok: '지우기')) return;
                       await vm.removeCalendarEvents();
                       if (context.mounted) showToast(context, '지웠어요');
                     },
@@ -260,7 +260,7 @@ class SettingsScreen extends StatelessWidget {
               child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('홈 화면 위젯', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 8),
-                const Text('홈 화면 빈 곳을 길게 눌러 "위젯"에서 "TDnR"을 고르거나, 아래 버튼으로 바로 추가하세요.\n'
+                const Text('홈 화면 빈 곳을 길게 눌러 "위젯"에서 "루티닝"을 고르거나, 아래 버튼으로 바로 추가하세요.\n'
                     '오늘의 루틴 위젯은 이모지 칸을 눌러 앱을 열지 않고 체크할 수 있어요.'),
                 const SizedBox(height: 12),
                 FilledButton.icon(

@@ -66,7 +66,7 @@ class CalendarService {
       startDate: start,
       endDate: DateTime(day.year, day.month, day.day + 1),
       isAllDay: true,
-      description: 'TDnR 투두',
+      description: '루티닝 투두',
     );
   }
 

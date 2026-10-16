@@ -9,5 +9,5 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final deps = await AppDependencies.create();
   await HomeWidget.registerInteractivityCallback(widgetBackgroundCallback);
-  runApp(TdnrApp(deps: deps));
+  runApp(RoutiningApp(deps: deps));
 }

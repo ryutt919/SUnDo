@@ -14,15 +14,15 @@ import '../ui/features/shell/app_shell.dart';
 import 'app_dependencies.dart';
 import 'app_sync.dart';
 
-class TdnrApp extends StatefulWidget {
-  const TdnrApp({super.key, required this.deps});
+class RoutiningApp extends StatefulWidget {
+  const RoutiningApp({super.key, required this.deps});
   final AppDependencies deps;
 
   @override
-  State<TdnrApp> createState() => _TdnrAppState();
+  State<RoutiningApp> createState() => _RoutiningAppState();
 }
 
-class _TdnrAppState extends State<TdnrApp> with WidgetsBindingObserver {
+class _RoutiningAppState extends State<RoutiningApp> with WidgetsBindingObserver {
   late final AppSync _sync = AppSync(widget.deps);
 
   @override
@@ -63,7 +63,7 @@ class _TdnrAppState extends State<TdnrApp> with WidgetsBindingObserver {
       ],
       child: Consumer<SettingsRepository>(
         builder: (_, settings, _) => MaterialApp(
-          title: 'TDnR',
+          title: '루티닝',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),

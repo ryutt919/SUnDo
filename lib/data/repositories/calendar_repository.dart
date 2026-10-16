@@ -108,7 +108,7 @@ class CalendarRepository extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// TDnR이 만든 캘린더 일정을 모두 지우고 연동 기록도 비운다. 가져온 일정은 원래 캘린더 것이라 지우지 않는다.
+  /// 루티닝이 만든 캘린더 일정을 모두 지우고 연동 기록도 비운다. 가져온 일정은 원래 캘린더 것이라 지우지 않는다.
   Future<void> removeAllEvents() async {
     for (final l in _links.values) {
       if (l.imported) continue;
