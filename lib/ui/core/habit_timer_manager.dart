@@ -15,9 +15,7 @@ class _RunningTimer {
 /// 상세 시트를 닫았다 다시 열어도 남은 시간이 이어지고, 끝나면 그 날의 습관을 완료로 체크한다.
 /// 습관이 삭제되면 그 습관의 타이머도 함께 멈춘다.
 class HabitTimerManager extends ChangeNotifier {
-  HabitTimerManager(this._routine) {
-    _routine.addListener(_dropTimersOfDeletedHabits);
-  }
+  HabitTimerManager(this._routine);
 
   final RoutineRepository _routine;
   final Map<String, _RunningTimer> _timers = {};
@@ -41,6 +39,14 @@ class HabitTimerManager extends ChangeNotifier {
     if (t.finished || t.secondsLeft <= 0) t.secondsLeft = totalMinutes * 60; // 끝난 타이머는 처음부터
     t.finished = false;
     t.ticker = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      // 습관이 정말 삭제됐으면 타이머를 멈춘다. 삭제 알림에 바로 반응하지 않고 매 초 확인하는 이유는,
+      // 백업 가져오기가 실패했다가 되돌려지는 짧은 순간에 타이머를 잃지 않게 하려는 것이다.
+      if (_routine.habitById(habitId) == null) {
+        timer.cancel();
+        _timers.remove(key);
+        notifyListeners();
+        return;
+      }
       t.secondsLeft -= 1;
       if (t.secondsLeft <= 0) {
         timer.cancel();
@@ -71,18 +77,8 @@ class HabitTimerManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _dropTimersOfDeletedHabits() {
-    final gone = _timers.keys.where((k) => _routine.habitById(k.split('|').first) == null).toList();
-    if (gone.isEmpty) return;
-    for (final k in gone) {
-      _timers.remove(k)?.ticker?.cancel();
-    }
-    notifyListeners();
-  }
-
   @override
   void dispose() {
-    _routine.removeListener(_dropTimersOfDeletedHabits);
     for (final t in _timers.values) {
       t.ticker?.cancel();
     }

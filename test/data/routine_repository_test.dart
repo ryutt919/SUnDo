@@ -175,12 +175,59 @@ void main() {
       async.elapse(const Duration(seconds: 10));
       repo.deleteHabit('a');
       async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 1)); // 다음 틱에서 습관이 없는 걸 알고 멈춘다
+      async.flushMicrotasks();
       expect(timers.secondsLeft('a', '2026-10-14'), isNull, reason: '삭제하면 타이머도 멈춘다');
       async.elapse(const Duration(seconds: 70));
       async.flushMicrotasks();
     });
     await Future<void>.delayed(Duration.zero);
     expect(repo.totalChecks, 0);
+  });
+
+  test('백업 가져오기가 실패해 되돌려져도 실행 중이던 타이머는 이어진다', () async {
+    SharedPreferences.setMockInitialValues({'habits': '[]'});
+    final store = _FlakyStorage(await SharedPreferences.getInstance());
+    final routine = RoutineRepository(store);
+    await routine.load();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+    await routine.addHabit(habit('running'));
+    final timers = HabitTimerManager(routine);
+    final backup = BackupRepository(
+      _FakeBackupService({
+        'habits': <dynamic>[], // 가져오면 실행 중이던 습관이 사라진다
+        'logs': <String, dynamic>{},
+        'todos': [
+          {'id': 't', 'text': 'x', 'date': '2026-10-13'}
+        ],
+      }),
+      _FakePhotoService(),
+      routine,
+      journal,
+      settings,
+    );
+
+    var failure = false;
+    fakeAsync((async) {
+      timers.start('running', '2026-10-14', 1);
+      async.elapse(const Duration(seconds: 5));
+      store.failKey = 'todos';
+      backup.importFromFile().catchError((Object _) {
+        failure = true;
+        return false;
+      });
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 5));
+      async.flushMicrotasks();
+      store.failKey = null;
+      expect(failure, isTrue);
+      expect(routine.habitById('running'), isNotNull, reason: '실패하면 습관이 돌아온다');
+      expect(timers.isRunning('running', '2026-10-14'), isTrue, reason: '타이머도 이어진다');
+      expect(timers.secondsLeft('running', '2026-10-14'), lessThan(55));
+    });
   });
 
   test('앱 사진 폴더 밖을 가리키는 백업 사진 경로는 연결을 끊고 설정 타입이 틀린 백업은 거부한다', () async {
