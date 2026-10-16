@@ -1,0 +1,310 @@
+{
+  "sourceRoot": "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo",
+  "destinationRoot": "C:\\Users\\kimt9\\OneDrive\\Desktop\\Gal4_PM\\ryutt\\SUnDo\\스킬_서재",
+  "rollbackTag": "before-skill-shelf-relocation-20261017",
+  "fileCount": 50,
+  "files": [
+    {
+      "old": "Agent_handoff/03_전역_스킬_서재.md",
+      "new": "스킬_서재/Agent_handoff/03_전역_스킬_서재.md",
+      "sha256": "869ae27b5d8266b0a3c2782c7ec515c8fd481e9eb2dd61af24ab41bedf48e742",
+      "bytes": 4288
+    },
+    {
+      "old": "data/01_skills_inventory.json",
+      "new": "스킬_서재/data/01_skills_inventory.json",
+      "sha256": "87e4f29a9e4786f2b72fac9d1a72a32e9ed8eb9ff260a3d75cc4542321364aca",
+      "bytes": 1101822
+    },
+    {
+      "old": "data/02_design_skill_installation.json",
+      "new": "스킬_서재/data/02_design_skill_installation.json",
+      "sha256": "a8b72f7b0928ddd59c400fe423cc666b7ea63292e57268bf4785146f530ea3c2",
+      "bytes": 15189
+    },
+    {
+      "old": "data/v1.1_한국어_메모/01_한국어_설명.json",
+      "new": "스킬_서재/data/v1.1_한국어_메모/01_한국어_설명.json",
+      "sha256": "9ff6e59803e8c2e08534e9710b0801f7e14a1e9f769fdf53e2dcbed77508df83",
+      "bytes": 41404
+    },
+    {
+      "old": "data/v1.1_한국어_메모/02_한국어_설명.json",
+      "new": "스킬_서재/data/v1.1_한국어_메모/02_한국어_설명.json",
+      "sha256": "04fe6f701b2579f40e76ec0f43a59c085f0144ebabb320cb8a82ddd43d980e0f",
+      "bytes": 35025
+    },
+    {
+      "old": "data/v1.1_한국어_메모/03_한국어_설명.json",
+      "new": "스킬_서재/data/v1.1_한국어_메모/03_한국어_설명.json",
+      "sha256": "83856131cab4fa469d2c492f8ad88247ad9cba98623096ce8e55c63f577014cb",
+      "bytes": 35977
+    },
+    {
+      "old": "data/v1.1_한국어_메모/04_수집_원본.json",
+      "new": "스킬_서재/data/v1.1_한국어_메모/04_수집_원본.json",
+      "sha256": "cc15239aa1fc1b2c5d2bc67a1f8d4342d5d3d9f031c2de87e1249e9a870ed310",
+      "bytes": 1104649
+    },
+    {
+      "old": "data/v1.1_한국어_메모/05_한국어_전체_목록.json",
+      "new": "스킬_서재/data/v1.1_한국어_메모/05_한국어_전체_목록.json",
+      "sha256": "1a5b7e71d6fcac9033b71e73ac6958ba47f3a7f305b38ad5f77655d1619f95bf",
+      "bytes": 1222719
+    },
+    {
+      "old": "evidence/v1.1_한국어_메모/01_데스크톱.png",
+      "new": "스킬_서재/evidence/v1.1_한국어_메모/01_데스크톱.png",
+      "sha256": "623bd5cbff657500257eb00cd31bb3f6ffec2a3fcf0776b809ca1617656427a6",
+      "bytes": 85872
+    },
+    {
+      "old": "evidence/v1.1_한국어_메모/02_태블릿.png",
+      "new": "스킬_서재/evidence/v1.1_한국어_메모/02_태블릿.png",
+      "sha256": "134f7fec678e35cf7e2bf34981b953ecc9860952526d0dcbaf96f3d5f79aa232",
+      "bytes": 75851
+    },
+    {
+      "old": "evidence/v1.1_한국어_메모/03_모바일.png",
+      "new": "스킬_서재/evidence/v1.1_한국어_메모/03_모바일.png",
+      "sha256": "c251040e86e6aaaa8188c18d7b0d0f1ca742b0eceb7822c6c11ba42588665616",
+      "bytes": 35768
+    },
+    {
+      "old": "evidence/v1.1_한국어_메모/04_상세정보.png",
+      "new": "스킬_서재/evidence/v1.1_한국어_메모/04_상세정보.png",
+      "sha256": "43914a762e1a99dd0d27bd0142158adff677b3800924865e5877bf2b6364ab0a",
+      "bytes": 99557
+    },
+    {
+      "old": "evidence/v1.1_한국어_메모/05_어두운테마.png",
+      "new": "스킬_서재/evidence/v1.1_한국어_메모/05_어두운테마.png",
+      "sha256": "c23ae17f277a2ff570dbb0d0de341214fe5cd3ba972a2def357c21a5befa0e00",
+      "bytes": 85845
+    },
+    {
+      "old": "evidence/v1.1_한국어_메모/06_검증결과.json",
+      "new": "스킬_서재/evidence/v1.1_한국어_메모/06_검증결과.json",
+      "sha256": "af248ac116de24aa94a0b880614198d54775ae857d48eed4707d2b74acd85b7f",
+      "bytes": 1351
+    },
+    {
+      "old": "evidence/v1.1_한국어_메모/07_한국어_설명과_메모.png",
+      "new": "스킬_서재/evidence/v1.1_한국어_메모/07_한국어_설명과_메모.png",
+      "sha256": "f09c7f341a12013b6478b47d5eae3c5ed8a4d4f53d77b4a4c1e41074870e0ee0",
+      "bytes": 80758
+    },
+    {
+      "old": "evidence/v1.1_한국어_메모/08_모바일_메모.png",
+      "new": "스킬_서재/evidence/v1.1_한국어_메모/08_모바일_메모.png",
+      "sha256": "9f57df551be0286c8059593c9a26417fdff3639bba8a207da5d9f70c8494b861",
+      "bytes": 38662
+    },
+    {
+      "old": "evidence/v1_스킬_서재/01_데스크톱.png",
+      "new": "스킬_서재/evidence/v1_스킬_서재/01_데스크톱.png",
+      "sha256": "04899aa443eb59d27f7384d29b7c5406a22014c54fe843950548623169e7983f",
+      "bytes": 87725
+    },
+    {
+      "old": "evidence/v1_스킬_서재/02_태블릿.png",
+      "new": "스킬_서재/evidence/v1_스킬_서재/02_태블릿.png",
+      "sha256": "fa15ceee095a75391d5e675484f61fb5ce587c3839d1ddf36fb00a132dc44b30",
+      "bytes": 75091
+    },
+    {
+      "old": "evidence/v1_스킬_서재/03_모바일.png",
+      "new": "스킬_서재/evidence/v1_스킬_서재/03_모바일.png",
+      "sha256": "b333fda2c321571433b875b13b24dc2f22a6f04163724defa5a83c333fa67189",
+      "bytes": 35288
+    },
+    {
+      "old": "evidence/v1_스킬_서재/04_상세정보.png",
+      "new": "스킬_서재/evidence/v1_스킬_서재/04_상세정보.png",
+      "sha256": "bdceb578996d334508acded29bf73fe30d4ebf861b2efc3484cb57393d5ae116",
+      "bytes": 126507
+    },
+    {
+      "old": "evidence/v1_스킬_서재/05_어두운테마.png",
+      "new": "스킬_서재/evidence/v1_스킬_서재/05_어두운테마.png",
+      "sha256": "479511f1e74555f8dd9cf574c471131ce7face24ecbfd5b0fba5178d5d4f11a2",
+      "bytes": 87802
+    },
+    {
+      "old": "evidence/v1_스킬_서재/06_검증결과.json",
+      "new": "스킬_서재/evidence/v1_스킬_서재/06_검증결과.json",
+      "sha256": "0f7fa565946c9912dcd3716593c4c683c63f6cbfac18b8443127170769dd1d91",
+      "bytes": 743
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/desktop-fold.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/desktop-fold.jpg",
+      "sha256": "0425bea83d16caa29d4d1552b34a9636fed7e22a9d897e6c968eff7127ada68c",
+      "bytes": 105390
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/desktop-page-01.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/desktop-page-01.jpg",
+      "sha256": "36f8a936dc642f089fd68bd10cf7b7d73f45cec6891a12f60ba06fdd8f823c61",
+      "bytes": 162837
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/desktop-page-02.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/desktop-page-02.jpg",
+      "sha256": "34ba9cbc9d950ebff8c51f7657f51337888a0a390600fba639aeeec440511f26",
+      "bytes": 162856
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/desktop-page-03.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/desktop-page-03.jpg",
+      "sha256": "55bacb6b99beb96bdf542e32ffb29a754d8e943d1d97442cd4a38be27778f391",
+      "bytes": 118720
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/mobile-fold.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/mobile-fold.jpg",
+      "sha256": "6c6626ad5bb6096656e16085d24a9de916d41f77d12c50425b4babf83cba7627",
+      "bytes": 40983
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/mobile-page-01.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/mobile-page-01.jpg",
+      "sha256": "2c0153f0dca016c33fa836191e1ff5e871540d77550b06b7e9dad87eaa9204ac",
+      "bytes": 305238
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/mobile-page-02.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/mobile-page-02.jpg",
+      "sha256": "4f87b5439d04158a75350441f4ae587c1dbac797a8d9c9f3dc7b8cc4c3ba5a05",
+      "bytes": 148183
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/report.json",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/report.json",
+      "sha256": "543b711c2127e9dc6e849a480532b2bf9b5e5b32073feca983d05a812c540b0e",
+      "bytes": 19709
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/tablet-fold.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/tablet-fold.jpg",
+      "sha256": "7c54ebfa1389033c2e47e92429b43c989775ae3c06783ed1fd66a1f51357af6f",
+      "bytes": 88838
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/tablet-page-01.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/tablet-page-01.jpg",
+      "sha256": "ec84b62ad897b090dd5f45f5e2096b2f4d9dca3caa52cd96c580394c368f503a",
+      "bytes": 248371
+    },
+    {
+      "old": "evidence/v1_스킬_서재/검사/tablet-page-02.jpg",
+      "new": "스킬_서재/evidence/v1_스킬_서재/검사/tablet-page-02.jpg",
+      "sha256": "ee1dd8889a012db1485b614ac5fc485ac6f0d04a414a9a806a0e95ac280f26f6",
+      "bytes": 249726
+    },
+    {
+      "old": "htmls/01_스킬_서재_템플릿.html",
+      "new": "스킬_서재/htmls/01_스킬_서재_템플릿.html",
+      "sha256": "3a99dca1a87d2536c28c4b53241dbe53f186131ab674ca22098d0f5c6be6cd83",
+      "bytes": 33263
+    },
+    {
+      "old": "htmls/02_한국어_메모_템플릿.html",
+      "new": "스킬_서재/htmls/02_한국어_메모_템플릿.html",
+      "sha256": "5c85a9dd9c93e4078484164febb86a3eb879184a1f9e38e69e4ab0925c2e1f45",
+      "bytes": 34637
+    },
+    {
+      "old": "htmls/03_스킬_메모.js",
+      "new": "스킬_서재/htmls/03_스킬_메모.js",
+      "sha256": "f2ae8eb448409280498f239634c2f8347ecbe484d3959c23e8d004ef2efae8d8",
+      "bytes": 9366
+    },
+    {
+      "old": "htmls/v1.1_한국어_메모/01_설치된_스킬.html",
+      "new": "스킬_서재/htmls/v1.1_한국어_메모/01_설치된_스킬.html",
+      "sha256": "ab54da529a183435062f06bcd4b77daf0cbb83090956a59decc9d28474accef1",
+      "bytes": 985799
+    },
+    {
+      "old": "htmls/v1_스킬_서재/01_설치된_스킬.html",
+      "new": "스킬_서재/htmls/v1_스킬_서재/01_설치된_스킬.html",
+      "sha256": "9d14af2e4ac16975d15e3150f0e4fb6f1a5b6818e073621b8095d53ff2866f2f",
+      "bytes": 864767
+    },
+    {
+      "old": "mds/v1.1_한국어_메모/00_버전_기록서.md",
+      "new": "스킬_서재/mds/v1.1_한국어_메모/00_버전_기록서.md",
+      "sha256": "422f6a849c650d3f23664dad9dbc17a1861f5f8aad7da744d0843346702ab0f6",
+      "bytes": 3559
+    },
+    {
+      "old": "mds/v1.1_한국어_메모/보고서/00_한국어_설명과_개인_메모_개선.md",
+      "new": "스킬_서재/mds/v1.1_한국어_메모/보고서/00_한국어_설명과_개인_메모_개선.md",
+      "sha256": "ad02ad562a711e74c0646601f4eac5859542af1c82f94f1c7a4166036bdc420b",
+      "bytes": 7934
+    },
+    {
+      "old": "mds/v1_스킬_서재/00_버전_기록서.md",
+      "new": "스킬_서재/mds/v1_스킬_서재/00_버전_기록서.md",
+      "sha256": "b2cc35b3e415fe7d76770858abd00d55316e418f87455fe119f6127f176295a9",
+      "bytes": 3695
+    },
+    {
+      "old": "mds/v1_스킬_서재/QnA/00_질문과_답변_기록.md",
+      "new": "스킬_서재/mds/v1_스킬_서재/QnA/00_질문과_답변_기록.md",
+      "sha256": "2884c6c15c918c4f346af5456bb415b07f82df5b6618193fd8bac9b6b442df05",
+      "bytes": 1154
+    },
+    {
+      "old": "mds/v1_스킬_서재/보고서/00_전역_스킬_설치와_HTML_서재.md",
+      "new": "스킬_서재/mds/v1_스킬_서재/보고서/00_전역_스킬_설치와_HTML_서재.md",
+      "sha256": "c1fe223c871b42d29bb328bf8f40ca18afcf82ff384cc8baf974253f3b51608e",
+      "bytes": 11272
+    },
+    {
+      "old": "mds/공통/문서번호_대응표.md",
+      "new": "스킬_서재/mds/공통/문서번호_대응표.md",
+      "sha256": "0565b22692cc02619a0632d462e3aaf6366b489d198297ef52c0cad0f76aef7c",
+      "bytes": 1392
+    },
+    {
+      "old": "mds/공통/보고서/00_프론트엔드_디자인_스킬_추가_설치.md",
+      "new": "스킬_서재/mds/공통/보고서/00_프론트엔드_디자인_스킬_추가_설치.md",
+      "sha256": "29c1bd9942718689f89c66e722c9b1f5a6492cd62471c669328400d615de9a60",
+      "bytes": 2175
+    },
+    {
+      "old": "scripts/01_collect_skills.py",
+      "new": "스킬_서재/scripts/01_collect_skills.py",
+      "sha256": "fe64daee121ac8561104eca1a12d5de1a8a9ae92655b8ea98ff786df75ee3590",
+      "bytes": 11590
+    },
+    {
+      "old": "scripts/02_build_skill_atlas.py",
+      "new": "스킬_서재/scripts/02_build_skill_atlas.py",
+      "sha256": "88aba9a28604b16ac80f16e1f5dd619f2f7321862a1c6a98cb740a90c7db5513",
+      "bytes": 1057
+    },
+    {
+      "old": "scripts/03_verify_skill_atlas.mjs",
+      "new": "스킬_서재/scripts/03_verify_skill_atlas.mjs",
+      "sha256": "b7565509ed3b0c93e90c44f7c90b12ad1e28ab6c290b269952f38b1dacdd881b",
+      "bytes": 8142
+    },
+    {
+      "old": "scripts/04_build_localized_atlas.py",
+      "new": "스킬_서재/scripts/04_build_localized_atlas.py",
+      "sha256": "1275c518d94bb8a0980ed33802bd197d80393a020aa7fb908ed5e6a720df919f",
+      "bytes": 3838
+    },
+    {
+      "old": "scripts/05_verify_localized_atlas.mjs",
+      "new": "스킬_서재/scripts/05_verify_localized_atlas.mjs",
+      "sha256": "a5a877ac65f7f75c0066e4b2d0d60f9ddc5f6a2f7b9fa03478c7fe8916d01914",
+      "bytes": 15618
+    }
+  ],
+  "relocatedAt": "2026-10-17 03:37:31 KST",
+  "verification": "evidence/공통/01_폴더_정리_검증.json"
+}

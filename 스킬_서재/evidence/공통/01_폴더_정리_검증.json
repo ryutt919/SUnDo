@@ -1,0 +1,18 @@
+{
+  "verifiedAt": "2026-10-17 03:38:10 KST",
+  "movedFiles": 50,
+  "unchangedNonMarkdownFiles": 42,
+  "updatedMovedDocuments": 8,
+  "scriptRootsVerified": [
+    "01_collect_skills.py",
+    "02_build_skill_atlas.py",
+    "04_build_localized_atlas.py"
+  ],
+  "javascriptSyntaxChecks": 3,
+  "checkedDocuments": 12,
+  "checkedLinks": 187,
+  "brokenLinks": [],
+  "oldVersionsPreserved": true,
+  "actualUserBrowserDataRead": false,
+  "rollbackTag": "before-skill-shelf-relocation-20261017"
+}
