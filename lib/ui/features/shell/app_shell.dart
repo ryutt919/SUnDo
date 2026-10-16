@@ -52,6 +52,7 @@ class _AppShellState extends State<AppShell> {
             backup: d.backup,
             notifications: d.notifications,
             widgets: d.widgets,
+            calendar: d.calendar,
           ),
         ),
       ],

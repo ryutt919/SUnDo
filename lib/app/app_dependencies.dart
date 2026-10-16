@@ -1,4 +1,6 @@
 import '../data/repositories/backup_repository.dart';
+import '../data/repositories/calendar_repository.dart';
+import '../data/services/calendar_service.dart';
 import '../data/repositories/journal_repository.dart';
 import '../data/repositories/routine_repository.dart';
 import '../data/repositories/settings_repository.dart';
@@ -31,6 +33,7 @@ class AppDependencies {
     required this.widgets,
     required this.photos,
     required this.timers,
+    required this.calendar,
   });
 
   final StorageService storage;
@@ -47,6 +50,7 @@ class AppDependencies {
   final HomeWidgetService widgets;
   final PhotoService photos;
   final HabitTimerManager timers;
+  final CalendarRepository calendar;
 
   static Future<AppDependencies> create() async {
     final storage = await StorageService.create();
@@ -57,7 +61,9 @@ class AppDependencies {
     final notifications = NotificationService();
     final photos = PhotoService();
 
-    await Future.wait([routine.load(), journal.load(), settings.load(), notifications.init()]);
+    final calendar = CalendarRepository(storage, CalendarService());
+
+    await Future.wait([routine.load(), journal.load(), settings.load(), calendar.load(), notifications.init()]);
 
     return AppDependencies._(
       storage: storage,
@@ -74,6 +80,7 @@ class AppDependencies {
       widgets: HomeWidgetService(),
       photos: photos,
       timers: HabitTimerManager(routine),
+      calendar: calendar,
     );
   }
 

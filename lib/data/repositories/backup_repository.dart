@@ -59,7 +59,7 @@ class BackupRepository {
     final data = await _service.pick();
     if (data == null) return false;
     if (data['habits'] is! List || data['logs'] is! Map) {
-      throw const FormatException('내 루틴 백업 파일이 아니에요');
+      throw const FormatException('TDnR 백업 파일이 아니에요');
     }
     // 어느 한쪽이라도 형식이 틀리면 아무것도 바꾸지 않도록 먼저 모두 검사한다.
     final s = data['settings'];

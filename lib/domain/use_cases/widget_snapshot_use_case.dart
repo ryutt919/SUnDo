@@ -2,6 +2,7 @@ import '../../data/repositories/journal_repository.dart';
 import '../../data/repositories/routine_repository.dart';
 import '../models/date_key.dart';
 import '../models/journal_models.dart';
+import '../models/repeat_rule.dart';
 import 'routine_analyzer.dart';
 
 /// 홈 화면 위젯이 그릴 데이터를 JSON으로 만든다. 네이티브(Kotlin) 위젯이 이 형식을 읽는다.
@@ -13,9 +14,6 @@ class WidgetSnapshotUseCase {
   final JournalRepository? _journal;
 
   static const maxRows = 8;
-
-  /// 투두가 있을 때 위젯 행 중 투두에 남겨 두는 최대 칸 수(나머지는 습관).
-  static const maxTodoRows = 3;
 
   /// 위젯에 보일 투두: 오늘 투두와 지난 미완료 투두. 안 한 것이 먼저.
   List<Todo> _widgetTodos(String today) {
@@ -29,10 +27,15 @@ class WidgetSnapshotUseCase {
     final st = _analyzer.dayStat(today);
     final due = _analyzer.dueHabits(today);
     final pct = st.rate == null ? 0 : (st.rate! * 100).round();
+    // 오늘 아직 채워야 하는 주간 루틴은 매일 루틴 뒤에 붙인다(오늘 체크한 것은 목표를 채워도 계속 보인다)
+    final weekly = [
+      for (final h in _analyzer.weeklyHabits(today))
+        if (_analyzer.isDue(h, today)) h
+    ];
+    final habits = [...due, ...weekly];
     final todos = _widgetTodos(today);
-    final todoSlots = todos.length < maxTodoRows ? todos.length : maxTodoRows;
-    final habitSlots = maxRows - todoSlots;
-    final shownTodos = todos.take(todoSlots).toList();
+    final todoDone = todos.where((t) => t.done).length;
+    final shownTodos = todos.take(maxRows).toList();
 
     final ws = weekStartKey(today);
     final week = [
@@ -77,27 +80,34 @@ class WidgetSnapshotUseCase {
       'rest': st.rest,
       'light': _analyzer.lightOf(st, today).name,
       'streak': _analyzer.streak(),
-      'more': (due.length > habitSlots ? due.length - habitSlots : 0) + (todos.length - shownTodos.length),
+      'more': habits.length > maxRows ? habits.length - maxRows : 0,
       'rows': [
-        for (final h in due.take(habitSlots))
+        for (final h in habits.take(maxRows))
           {
             'kind': 'habit',
             'id': h.id,
             'emoji': h.emoji,
             'name': h.name,
-            'time': h.time.isNotEmpty ? h.time : h.context,
+            'time': h.repeat.type == RepeatType.weekly
+                ? '주 ${h.repeat.times}회 중 ${_analyzer.weeklyProgress(h, today).doneCount}'
+                : (h.time.isNotEmpty ? h.time : h.context),
             'done': _routine.isDone(h.id, today),
             'color': h.color,
-          },
+          }
+      ],
+      'todoDone': todoDone,
+      'todoTotal': todos.length,
+      'todoMore': todos.length - shownTodos.length,
+      'todos': [
         for (final t in shownTodos)
           {
             'kind': 'todo',
             'id': t.id,
             'emoji': '✔',
             'name': t.text,
-            'time': t.date == today ? '투두' : '투두 ${t.date.substring(5)} 이월',
+            'time': t.date == today ? '오늘' : '${t.date.substring(5)} 이월',
             'done': t.done,
-            'color': '#E3F0FF',
+            'color': '#DDF1FF',
           },
       ],
       'week': week,

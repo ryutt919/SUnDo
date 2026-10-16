@@ -13,7 +13,7 @@ class BackupService {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/myroutine-backup-${todayKey()}.json');
     await file.writeAsString(const JsonEncoder.withIndent('  ').convert(data));
-    await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], text: '내 루틴 백업'));
+    await SharePlus.instance.share(ShareParams(files: [XFile(file.path)], text: 'TDnR 백업'));
   }
 
   /// 사용자가 고른 JSON 파일을 읽는다. 취소하면 null, 형식이 틀리면 FormatException.

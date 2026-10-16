@@ -11,6 +11,7 @@ import '../../review/views/review_view.dart';
 import '../view_models/home_view_model.dart';
 import 'habit_tile.dart';
 import 'week_grid.dart';
+import 'weekly_section.dart';
 import 'modes_sheet.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -20,7 +21,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<HomeViewModel>();
     return Scaffold(
-      floatingActionButton: vm.tab == HomeTab.routine
+      floatingActionButton: vm.tab != HomeTab.review
           ? FloatingActionButton(
               onPressed: () => showAddMenu(context, vm.selectedDate),
               backgroundColor: AppColors.green,
@@ -40,7 +41,12 @@ class HomeScreen extends StatelessWidget {
               SliverToBoxAdapter(child: _Header(vm: vm)),
               SliverToBoxAdapter(child: _WeekStrip(vm: vm)),
               SliverToBoxAdapter(child: _Tabs(vm: vm)),
-              if (vm.tab == HomeTab.routine) ..._routineSlivers(context, vm) else SliverToBoxAdapter(child: ReviewView(date: vm.selectedDate)),
+              if (vm.tab == HomeTab.routine)
+                ..._routineSlivers(context, vm)
+              else if (vm.tab == HomeTab.weekly)
+                ...weeklySlivers(context, vm)
+              else
+                SliverToBoxAdapter(child: ReviewView(date: vm.selectedDate)),
               const SliverToBoxAdapter(child: SizedBox(height: 90)),
             ],
           ),
@@ -287,7 +293,7 @@ class _Tabs extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(children: [tab('루틴', HomeTab.routine), tab('회고', HomeTab.review)]),
+      child: Row(children: [tab('매일 루틴', HomeTab.routine), tab('주간 루틴', HomeTab.weekly), tab('회고', HomeTab.review)]),
     );
   }
 }
@@ -333,7 +339,7 @@ class _Toolbar extends StatelessWidget {
             style: const ButtonStyle(visualDensity: VisualDensity.compact),
             segments: const [
               ButtonSegment(value: HomeViewMode.day, label: Text('일간')),
-              ButtonSegment(value: HomeViewMode.week, label: Text('주간')),
+              ButtonSegment(value: HomeViewMode.week, label: Text('한 주')),
             ],
             selected: {vm.viewMode},
             onSelectionChanged: (s) => vm.setViewMode(s.first),

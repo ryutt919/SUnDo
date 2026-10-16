@@ -4,6 +4,7 @@ import 'package:my_routine/data/repositories/routine_repository.dart';
 import 'package:my_routine/data/repositories/settings_repository.dart';
 import 'package:my_routine/data/services/storage_service.dart';
 import 'package:my_routine/domain/models/journal_models.dart';
+import 'package:my_routine/domain/models/repeat_rule.dart';
 import 'package:my_routine/domain/use_cases/alarm_plan_use_case.dart';
 import 'package:my_routine/domain/use_cases/routine_analyzer.dart';
 import 'package:my_routine/domain/use_cases/widget_snapshot_use_case.dart';
@@ -99,21 +100,24 @@ void main() {
     expect(((snap['rows'] as List).first as Map)['id'], 'a');
   });
 
-  test('위젯 데이터에 오늘 투두와 지난 미완료 투두가 들어가고 투두 칸은 3개까지다', () async {
+  test('위젯 데이터는 습관 행과 투두 목록을 따로 담고, 오늘 채울 주간 루틴을 습관 뒤에 붙인다', () async {
     final s = await _setup();
-    for (var i = 0; i < 10; i++) {
-      await s.routine.addHabit(habit('h$i', name: 'H$i'));
-    }
+    await s.routine.addHabit(habit('d', name: 'D'));
+    await s.routine.addHabit(habit('w', name: 'W', repeat: const RepeatRule(type: RepeatType.weekly, times: 2)));
     await s.journal.addTodo('오늘 할 일', _today);
     await s.journal.addTodo('어제 못한 일', '2026-10-13');
     await s.journal.addTodo('내일 일', '2026-10-15');
+    await s.journal.addTodo('끝낸 일', _today);
+    await s.journal.updateTodo(s.journal.todos.last.copyWith(done: true));
     final snap = WidgetSnapshotUseCase(s.routine, s.analyzer, journal: s.journal).build();
     final rows = (snap['rows'] as List).cast<Map>();
-    final todos = rows.where((r) => r['kind'] == 'todo').toList();
-    expect(todos.map((r) => r['name']), ['오늘 할 일', '어제 못한 일'], reason: '내일 투두는 제외');
-    expect(rows.length, WidgetSnapshotUseCase.maxRows);
-    expect(rows.where((r) => r['kind'] == 'habit').length, WidgetSnapshotUseCase.maxRows - 2);
-    expect(snap['more'], 10 - (WidgetSnapshotUseCase.maxRows - 2));
+    expect(rows.map((r) => r['id']), ['d', 'w'], reason: '매일 루틴 뒤에 주간 루틴');
+    expect(rows.last['time'], '주 2회 중 0');
+    expect(snap['pct'], 0, reason: '주간 루틴은 매일 달성률에 들어가지 않는다');
+    final todos = (snap['todos'] as List).cast<Map>();
+    expect(todos.map((r) => r['name']), ['오늘 할 일', '어제 못한 일', '끝낸 일'], reason: '안 한 것이 먼저, 내일 투두는 제외');
+    expect(snap['todoDone'], 1);
+    expect(snap['todoTotal'], 3);
   });
 
   test('알람은 해야 하는 날에만, 아직 안 한 습관에만 만든다', () async {

@@ -1,0 +1,16 @@
+package com.sundo.my_routine
+
+/** 남은 투두(오늘과 지난 미완료)를 보여 주고, 큰 체크 버튼으로 앱을 열지 않고 완료한다. */
+class TodoWidgetProvider : RowWidgetProvider() {
+    override val title = "투두"
+
+    override fun rowsOf(s: WidgetSnapshot) = s.todos
+
+    override fun hiddenCountOf(s: WidgetSnapshot, shown: Int) = (s.todos.size - shown) + s.todoMore
+
+    override fun summaryOf(s: WidgetSnapshot) = "${s.todoDone}/${s.todoTotal}"
+
+    override fun progressOf(s: WidgetSnapshot) = if (s.todoTotal == 0) 0 else s.todoDone * 100 / s.todoTotal
+
+    override fun emptyText(s: WidgetSnapshot) = "남은 투두가 없어요"
+}

@@ -7,7 +7,7 @@ import '../../../../domain/models/id.dart';
 import '../../../../domain/models/repeat_rule.dart';
 
 class HabitFormViewModel extends ChangeNotifier {
-  HabitFormViewModel(this._routine, {String? habitId, Habit? template})
+  HabitFormViewModel(this._routine, {String? habitId, Habit? template, RepeatRule? initialRepeat})
       : _original = habitId == null ? null : _routine.habitById(habitId) {
     final h = _original ?? template;
     name = h?.name ?? '';
@@ -15,7 +15,7 @@ class HabitFormViewModel extends ChangeNotifier {
     time = h?.time ?? '';
     context = h?.context ?? '';
     color = h?.color ?? habitColors[3];
-    repeat = h?.repeat ?? const RepeatRule();
+    repeat = h?.repeat ?? initialRepeat ?? const RepeatRule();
     levels = Map.of(h?.levels ?? const {'mini': '', 'plus': '', 'max': ''});
     alts = (h?.alts ?? const []).join(', ');
     alarm = h?.alarm ?? '';

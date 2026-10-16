@@ -7,7 +7,7 @@ import '../../../../domain/models/journal_models.dart';
 import '../../../../domain/use_cases/routine_analyzer.dart';
 import '../../../core/repo_view_model.dart';
 
-enum HomeTab { routine, review }
+enum HomeTab { routine, weekly, review }
 
 enum HomeViewMode { day, week }
 
@@ -57,6 +57,13 @@ class TodoRowData {
   const TodoRowData(this.todo, this.carriedFrom);
   final Todo todo;
   final String? carriedFrom; // 지난 날에서 이월된 투두면 그 날짜
+}
+
+class WeeklyRowData {
+  const WeeklyRowData({required this.progress, required this.doneOnSelected, required this.selectedActive});
+  final WeeklyProgress progress;
+  final bool doneOnSelected; // 선택한 날에 체크했는지
+  final bool selectedActive; // 선택한 날이 이 루틴을 체크할 수 있는 날인지
 }
 
 class WeekGridCell {
@@ -171,6 +178,27 @@ class HomeViewModel extends RepoViewModel {
       list = [...list.where((t) => !t.done), ...list.where((t) => t.done)];
     }
     return [for (final t in list) TodoRowData(t, t.date.compareTo(selectedDate) < 0 ? t.date : null)];
+  }
+
+  /// 선택한 날이 속한 주의 주간 루틴(주 N회 목표)과 그 진행 상황.
+  List<WeeklyRowData> get weeklyRows => [
+        for (final h in _analyzer.weeklyHabits(selectedDate))
+          () {
+            final p = _analyzer.weeklyProgress(h, selectedDate);
+            final sel = p.days.firstWhere((d) => d.date == selectedDate);
+            return WeeklyRowData(progress: p, doneOnSelected: sel.done, selectedActive: sel.active);
+          }()
+      ];
+
+  int get weeklyAchieved => weeklyRows.where((r) => r.progress.achieved).length;
+
+  /// 주 단위 달성 여부로 센 전체 진행률(목표 횟수를 채운 만큼의 비율).
+  double get weeklyRate {
+    final rows = weeklyRows;
+    if (rows.isEmpty) return 0;
+    final total = rows.fold<int>(0, (a, r) => a + r.progress.goal);
+    final done = rows.fold<int>(0, (a, r) => a + (r.progress.doneCount > r.progress.goal ? r.progress.goal : r.progress.doneCount));
+    return total == 0 ? 0 : done / total;
   }
 
   /// 주간 보기에 나올 습관. 보관한 습관은 보관 전에 걸친 주에는 그대로 보인다.

@@ -16,6 +16,7 @@ class AppSync {
     _deps.routine.addListener(_schedule);
     _deps.journal.addListener(_schedule);
     _deps.settings.addListener(_schedule);
+    _deps.calendar.addListener(_scheduleOnCalendarSettings);
     syncNow();
   }
 
@@ -24,6 +25,19 @@ class AppSync {
     _deps.routine.removeListener(_schedule);
     _deps.journal.removeListener(_schedule);
     _deps.settings.removeListener(_schedule);
+    _deps.calendar.removeListener(_scheduleOnCalendarSettings);
+  }
+
+  // 동기화가 끝날 때마다 캘린더 저장소도 알림을 보내므로, 연동 설정이 바뀐 경우에만 다시 맞춘다.
+  bool _lastCalendarOn = false;
+  String _lastCalendarId = '';
+
+  void _scheduleOnCalendarSettings() {
+    final cal = _deps.calendar;
+    if (cal.enabled == _lastCalendarOn && cal.calendarId == _lastCalendarId) return;
+    _lastCalendarOn = cal.enabled;
+    _lastCalendarId = cal.calendarId;
+    _schedule();
   }
 
   void _schedule() {
@@ -43,6 +57,11 @@ class AppSync {
       await _deps.widgets.push(_deps.widgetSnapshot.build());
     } on Exception catch (e) {
       debugPrint('위젯 갱신 실패: $e');
+    }
+    try {
+      await _deps.calendar.sync(_deps.journal.todos);
+    } on Exception catch (e) {
+      debugPrint('캘린더 동기화 실패: $e');
     }
     try {
       final s = _deps.settings.settings;

@@ -9,11 +9,11 @@ import '../../../core/app_theme.dart';
 import '../../../core/widgets.dart';
 import '../view_models/habit_form_view_model.dart';
 
-Future<void> openHabitForm(BuildContext context, {String? habitId, Habit? template}) {
+Future<void> openHabitForm(BuildContext context, {String? habitId, Habit? template, RepeatRule? initialRepeat}) {
   return Navigator.of(context).push(MaterialPageRoute<void>(
     fullscreenDialog: true,
     builder: (_) => ChangeNotifierProvider(
-      create: (c) => HabitFormViewModel(c.read<RoutineRepository>(), habitId: habitId, template: template),
+      create: (c) => HabitFormViewModel(c.read<RoutineRepository>(), habitId: habitId, template: template, initialRepeat: initialRepeat),
       child: const HabitFormScreen(),
     ),
   ));
@@ -111,7 +111,7 @@ class HabitFormScreen extends StatelessWidget {
                   ]),
                 if (vm.repeat.type == RepeatType.weekly)
                   _NumberField(
-                    label: '주 몇 회',
+                    label: '주 목표 횟수 (이 루틴을 일주일에 몇 번 할까요)',
                     value: vm.repeat.times,
                     min: 1,
                     max: 7,

@@ -5,6 +5,7 @@ import '../../../../data/repositories/journal_repository.dart';
 import '../../../../domain/models/date_key.dart';
 import '../../../../domain/models/journal_models.dart';
 import '../../templates/views/templates_screen.dart';
+import '../../../../domain/models/repeat_rule.dart';
 import '../view_models/todo_editor_view_model.dart';
 import 'habit_form_screen.dart';
 
@@ -20,10 +21,19 @@ Future<void> showAddMenu(BuildContext context, String date) {
           children: [
             ListTile(
               leading: const Text('🌿', style: TextStyle(fontSize: 24)),
-              title: const Text('새 습관'),
+              title: const Text('새 매일 루틴'),
               onTap: () {
                 Navigator.pop(sheetContext);
                 openHabitForm(context);
+              },
+            ),
+            ListTile(
+              leading: const Text('📅', style: TextStyle(fontSize: 24)),
+              title: const Text('새 주간 루틴'),
+              subtitle: const Text('일주일에 몇 번 하기로 목표를 세워요'),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                openHabitForm(context, initialRepeat: const RepeatRule(type: RepeatType.weekly, times: 3));
               },
             ),
             ListTile(

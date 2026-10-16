@@ -15,6 +15,30 @@ class DayStat {
   double? get rate => (rest || due == 0) ? null : done / due;
 }
 
+class WeeklyDay {
+  const WeeklyDay({required this.date, required this.done, required this.rest, required this.future, required this.active});
+  final String date;
+  final bool done;
+  final bool rest;
+  final bool future;
+
+  /// 습관 시작일 이후이고 종료일 전이어서 체크할 수 있는 날.
+  final bool active;
+}
+
+/// 주간 루틴의 한 주 진행 상황: 주 목표 횟수와 7일의 체크 상태.
+class WeeklyProgress {
+  const WeeklyProgress({required this.habit, required this.days, required this.goal});
+  final Habit habit;
+  final List<WeeklyDay> days;
+  final int goal;
+
+  int get doneCount => days.where((d) => d.done).length;
+  bool get achieved => doneCount >= goal;
+  int get remaining => achieved ? 0 : goal - doneCount;
+  double get rate => goal == 0 ? 0 : (doneCount / goal).clamp(0.0, 1.0);
+}
+
 /// 날짜별 해야 할 습관, 달성률, 신호등, 연속 일수를 계산한다.
 /// 신호등 기준: 60% 이상 초록, 20% 이상 노랑, 그 미만 빨강.
 class RoutineAnalyzer {
@@ -99,10 +123,47 @@ class RoutineAnalyzer {
     return false;
   }
 
+  /// [date]에 해야 하는 매일 루틴. 주간 루틴(주 N회)은 날짜가 아니라 주 단위로 세므로
+  /// 달성률과 신호등에서 빠지고, [weeklyHabits]와 [weeklyProgress]로 따로 본다.
   List<Habit> dueHabits(String date) => [
         for (final h in _routine.habits)
-          if (inActiveMode(h, date) && isDue(h, date)) h
+          if (h.repeat.type != RepeatType.weekly && inActiveMode(h, date) && isDue(h, date)) h
       ];
+
+  /// [date]가 속한 주에 보여 줄 주간 루틴. 그 주에 시작했거나 이어지는 것만, 보관/종료한 주 이후는 제외한다.
+  List<Habit> weeklyHabits(String date) {
+    final ws = weekStartKey(date);
+    final we = addDaysKey(ws, 6);
+    return [
+      for (final h in _routine.habits)
+        if (h.repeat.type == RepeatType.weekly &&
+            inActiveMode(h, date) &&
+            !(h.archived && h.finishedOn == null) &&
+            h.start.compareTo(we) <= 0 &&
+            (h.finishedOn == null || h.finishedOn!.compareTo(ws) >= 0))
+          h
+    ];
+  }
+
+  /// 주간 루틴 한 개의 [date]가 속한 주 진행 상황.
+  WeeklyProgress weeklyProgress(Habit h, String date) {
+    final ws = weekStartKey(date);
+    final days = [
+      for (var i = 0; i < 7; i++)
+        () {
+          final d = addDaysKey(ws, i);
+          final fin = h.finishedOn;
+          return WeeklyDay(
+            date: d,
+            done: _routine.isDone(h.id, d),
+            rest: _routine.isRest(d),
+            future: d.compareTo(today) > 0,
+            active: d.compareTo(h.start) >= 0 && (fin == null || d.compareTo(fin) <= 0),
+          );
+        }()
+    ];
+    return WeeklyProgress(habit: h, days: days, goal: h.repeat.times);
+  }
 
   DayStat dayStat(String date) {
     if (_routine.isRest(date)) return const DayStat(rest: true, due: 0, done: 0);

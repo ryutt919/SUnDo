@@ -4,7 +4,7 @@ extension RepeatTypeLabel on RepeatType {
   String get label => switch (this) {
         RepeatType.daily => '매일',
         RepeatType.weekdays => '요일 지정',
-        RepeatType.weekly => '주 N회',
+        RepeatType.weekly => '주간 루틴 (주 N회)',
         RepeatType.interval => 'N일마다',
         RepeatType.monthDays => '매월 특정 날짜',
       };

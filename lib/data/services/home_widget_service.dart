@@ -6,6 +6,7 @@ import 'package:home_widget/home_widget.dart';
 class HomeWidgetService {
   static const _package = 'com.sundo.my_routine';
   static const todayProvider = '$_package.TodayWidgetProvider';
+  static const todoProvider = '$_package.TodoWidgetProvider';
   static const weekProvider = '$_package.WeekWidgetProvider';
   static const monthProvider = '$_package.MonthWidgetProvider';
   static const snapshotKey = 'snapshot';
@@ -13,6 +14,7 @@ class HomeWidgetService {
   Future<void> push(Map<String, dynamic> snapshot) async {
     await HomeWidget.saveWidgetData<String>(snapshotKey, jsonEncode(snapshot));
     await HomeWidget.updateWidget(qualifiedAndroidName: todayProvider);
+    await HomeWidget.updateWidget(qualifiedAndroidName: todoProvider);
     await HomeWidget.updateWidget(qualifiedAndroidName: weekProvider);
     await HomeWidget.updateWidget(qualifiedAndroidName: monthProvider);
   }

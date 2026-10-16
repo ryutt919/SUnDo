@@ -319,7 +319,7 @@ void main() {
       expect(an.isDue(h, '2026-10-11'), isTrue, reason: '체크한 날은 계속 표시');
       expect(an.isDue(h, '2026-10-10'), isTrue, reason: '체크하지 않은 마지막 날(토)이 미달 1일');
       expect(an.isDue(h, '2026-10-09'), isFalse);
-      expect(an.dayStat('2026-10-10').rate, 0.0);
+      expect(an.dayStat('2026-10-10').due, 0, reason: '주간 루틴은 매일 달성률에 들어가지 않는다');
     });
 
     test('주가 끝났는데 주 목표를 못 채우면 그 주의 일요일이 미달 1일로 센다', () async {
@@ -330,11 +330,50 @@ void main() {
       final h = repo.habitById('a')!;
       expect(an.isDue(h, '2026-10-07'), isFalse, reason: '중간 날은 여전히 실패로 세지 않는다');
       expect(an.isDue(h, '2026-10-11'), isTrue, reason: '지난 일요일은 미달 1일');
-      expect(an.dayStat('2026-10-11').rate, 0.0);
+      expect(an.weeklyProgress(h, '2026-10-11').achieved, isFalse, reason: '지난주 1/3');
 
       await repo.setDone('a', '2026-10-08', true);
       await repo.setDone('a', '2026-10-09', true); // 3회 달성
       expect(an.isDue(h, '2026-10-11'), isFalse, reason: '목표를 채우면 미달이 아니다');
+    });
+  });
+
+  group('주간 루틴', () {
+    test('주 목표 횟수와 7일 체크 상태를 센다', () async {
+      final repo = await emptyRoutine();
+      await repo.addHabit(habit('a', start: '2026-09-01', repeat: const RepeatRule(type: RepeatType.weekly, times: 3)));
+      await repo.setDone('a', '2026-10-12', true);
+      await repo.setDone('a', '2026-10-14', true);
+      final an = RoutineAnalyzer(repo, today: () => today);
+      final p = an.weeklyProgress(repo.habitById('a')!, today);
+      expect(p.days.length, 7);
+      expect(p.doneCount, 2);
+      expect(p.goal, 3);
+      expect(p.remaining, 1);
+      expect(p.achieved, isFalse);
+      expect(p.days.first.date, '2026-10-12');
+      expect(p.days.where((d) => d.future).length, 4, reason: '오늘(수) 뒤 4일은 미래');
+      await repo.setDone('a', '2026-10-13', true);
+      expect(an.weeklyProgress(repo.habitById('a')!, today).achieved, isTrue);
+    });
+
+    test('주간 루틴은 매일 루틴 목록과 달성률에서 빠지고 주간 목록에만 나온다', () async {
+      final repo = await emptyRoutine();
+      await repo.addHabit(habit('d'));
+      await repo.addHabit(habit('w', repeat: const RepeatRule(type: RepeatType.weekly, times: 2)));
+      final an = RoutineAnalyzer(repo, today: () => today);
+      expect(an.dueHabits(today).map((h) => h.id), ['d']);
+      expect(an.weeklyHabits(today).map((h) => h.id), ['w']);
+      expect(an.dayStat(today).due, 1);
+    });
+
+    test('종료한 주 이후의 주간 루틴은 목록에서 빠진다', () async {
+      final repo = await emptyRoutine();
+      await repo.addHabit(habit('w', start: '2026-09-01', repeat: const RepeatRule(type: RepeatType.weekly, times: 2))
+          .copyWith(finishedOn: '2026-10-07'));
+      final an = RoutineAnalyzer(repo, today: () => today);
+      expect(an.weeklyHabits('2026-10-07').length, 1, reason: '종료일이 속한 주까지는 보인다');
+      expect(an.weeklyHabits('2026-10-14'), isEmpty);
     });
   });
 

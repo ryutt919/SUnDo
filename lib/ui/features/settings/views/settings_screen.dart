@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../data/repositories/calendar_repository.dart';
 import '../../../core/widgets.dart';
 import '../../home/views/modes_sheet.dart';
 import '../view_models/settings_view_model.dart';
@@ -101,10 +102,30 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 ListTile(
                   title: const Text('홈 화면 위젯 추가'),
-                  subtitle: const Text('오늘의 루틴(체크 가능), 주간, 월간 신호등 위젯이 있어요'),
+                  subtitle: const Text('오늘의 루틴과 투두(체크 가능), 주간, 월간 신호등 위젯이 있어요'),
                   trailing: const Icon(Icons.widgets_outlined),
                   onTap: () => _widgetSheet(context, vm),
                 ),
+                const SectionTitle('캘린더'),
+                ListTile(
+                  title: const Text('투두를 캘린더에 연동'),
+                  subtitle: Text(vm.calendarOn
+                      ? '${vm.calendarName}에 종일 일정으로 동기화 중 (${vm.calendarLinked}개)'
+                      : '날짜를 정한 투두를 기기 캘린더에 일정으로 만들어요. 구글/삼성 캘린더 계정과 동기화돼요'),
+                  trailing: Switch(value: vm.calendarOn, onChanged: (v) => _toggleCalendar(context, vm, v)),
+                  onTap: () => _toggleCalendar(context, vm, !vm.calendarOn),
+                ),
+                if (vm.calendarOn)
+                  ListTile(
+                    title: const Text('캘린더에서 TDnR 일정 모두 지우기'),
+                    subtitle: const Text('연동은 유지돼요. 다음 동기화 때 다시 만들어져요'),
+                    trailing: const Icon(Icons.delete_sweep_outlined),
+                    onTap: () async {
+                      if (!await confirmDialog(context, 'TDnR이 만든 캘린더 일정을 모두 지울까요?', ok: '지우기')) return;
+                      await vm.removeCalendarEvents();
+                      if (context.mounted) showToast(context, '지웠어요');
+                    },
+                  ),
                 const SectionTitle('데이터'),
                 ListTile(
                   title: const Text('백업 내보내기'),
@@ -162,6 +183,47 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _toggleCalendar(BuildContext context, SettingsViewModel vm, bool on) async {
+    if (!on) {
+      await vm.disableCalendar();
+      return;
+    }
+    final choices = await vm.loadCalendarChoices();
+    if (!context.mounted) return;
+    if (choices == null) {
+      showToast(context, '캘린더 권한이 필요해요. 앱 설정에서 허용해 주세요');
+      return;
+    }
+    if (choices.isEmpty) {
+      showToast(context, '쓸 수 있는 캘린더가 없어요. 캘린더 앱에서 계정을 먼저 추가해 주세요');
+      return;
+    }
+    final picked = await showModalBottomSheet<CalendarChoice>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text('어느 캘린더에 만들까요?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            ),
+            for (final ch in choices)
+              ListTile(
+                leading: const Icon(Icons.calendar_month),
+                title: Text(ch.name),
+                subtitle: ch.account.isEmpty ? null : Text(ch.account),
+                trailing: ch.isPrimary ? const Text('기본') : null,
+                onTap: () => Navigator.pop(c, ch),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) await vm.enableCalendar(picked);
+  }
+
   void _widgetSheet(BuildContext context, SettingsViewModel vm) {
     showModalBottomSheet<void>(
       context: context,
@@ -176,13 +238,19 @@ class SettingsScreen extends StatelessWidget {
               child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('홈 화면 위젯', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 8),
-                const Text('홈 화면 빈 곳을 길게 눌러 "위젯"에서 "내 루틴"을 고르거나, 아래 버튼으로 바로 추가하세요.\n'
+                const Text('홈 화면 빈 곳을 길게 눌러 "위젯"에서 "TDnR"을 고르거나, 아래 버튼으로 바로 추가하세요.\n'
                     '오늘의 루틴 위젯은 이모지 칸을 눌러 앱을 열지 않고 체크할 수 있어요.'),
                 const SizedBox(height: 12),
                 FilledButton.icon(
                   onPressed: canPin ? () { vm.pinTodayWidget(); Navigator.pop(sheetContext); } : null,
                   icon: const Icon(Icons.checklist),
                   label: const Text('오늘의 루틴 위젯 추가'),
+                ),
+                const SizedBox(height: 8),
+                FilledButton.icon(
+                  onPressed: canPin ? () { vm.pinTodoWidget(); Navigator.pop(sheetContext); } : null,
+                  icon: const Icon(Icons.task_alt),
+                  label: const Text('투두 위젯 추가'),
                 ),
                 const SizedBox(height: 8),
                 FilledButton.tonalIcon(

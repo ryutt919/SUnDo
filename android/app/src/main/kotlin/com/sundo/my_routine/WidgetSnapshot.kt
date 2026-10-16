@@ -35,6 +35,10 @@ data class WidgetSnapshot(
     val more: Int,
     val rows: List<WidgetRow>,
     val week: List<WidgetWeekDay>,
+    val todos: List<WidgetRow> = emptyList(),
+    val todoDone: Int = 0,
+    val todoTotal: Int = 0,
+    val todoMore: Int = 0,
 ) {
     /** 저장된 데이터가 오늘 것이 아니면 true (자정이 지났는데 아직 새로 만들지 못한 경우). */
     val isStale: Boolean get() = date != todayString()
@@ -50,7 +54,21 @@ data class WidgetSnapshot(
                 val o = JSONObject(json)
                 val rows = o.getJSONArray("rows")
                 val week = o.getJSONArray("week")
+                val todos = o.optJSONArray("todos")
+                fun row(r: org.json.JSONObject) = WidgetRow(
+                    id = r.getString("id"),
+                    emoji = r.getString("emoji"),
+                    name = r.getString("name"),
+                    time = r.optString("time", ""),
+                    done = r.getBoolean("done"),
+                    color = r.optString("color", "#E3F7E8"),
+                    kind = r.optString("kind", "habit"),
+                )
                 WidgetSnapshot(
+                    todos = if (todos == null) emptyList() else (0 until todos.length()).map { row(todos.getJSONObject(it)) },
+                    todoDone = o.optInt("todoDone", 0),
+                    todoTotal = o.optInt("todoTotal", 0),
+                    todoMore = o.optInt("todoMore", 0),
                     date = o.getString("date"),
                     pct = o.getInt("pct"),
                     done = o.getInt("done"),
@@ -58,18 +76,7 @@ data class WidgetSnapshot(
                     rest = o.getBoolean("rest"),
                     streak = o.getInt("streak"),
                     more = o.getInt("more"),
-                    rows = (0 until rows.length()).map {
-                        val r = rows.getJSONObject(it)
-                        WidgetRow(
-                            id = r.getString("id"),
-                            emoji = r.getString("emoji"),
-                            name = r.getString("name"),
-                            time = r.optString("time", ""),
-                            done = r.getBoolean("done"),
-                            color = r.optString("color", "#E3F7E8"),
-                            kind = r.optString("kind", "habit"),
-                        )
-                    },
+                    rows = (0 until rows.length()).map { row(rows.getJSONObject(it)) },
                     week = (0 until week.length()).map {
                         val d = week.getJSONObject(it)
                         WidgetWeekDay(
