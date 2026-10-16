@@ -176,8 +176,9 @@ class HomeViewModel extends RepoViewModel {
   /// 주간 보기에 나올 습관. 보관한 습관은 보관 전에 걸친 주에는 그대로 보인다.
   List<Habit> get weekGridHabits {
     final weekStart = weekStartKey(selectedDate);
+    final days = [for (var i = 0; i < 7; i++) addDaysKey(weekStart, i)];
     return _routine.habits.where((h) {
-      if (!_analyzer.inActiveMode(h)) return false;
+      if (!days.any((d) => _analyzer.inActiveMode(h, d))) return false; // 그 주에 한 번도 해당 모드가 아니면 숨김
       if (!h.archived) return true;
       final fin = h.finishedOn;
       return fin != null && weekStart.compareTo(fin) <= 0;

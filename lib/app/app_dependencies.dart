@@ -12,6 +12,7 @@ import '../domain/use_cases/alarm_plan_use_case.dart';
 import '../domain/use_cases/routine_analyzer.dart';
 import '../domain/use_cases/stats_use_case.dart';
 import '../domain/use_cases/widget_snapshot_use_case.dart';
+import '../ui/core/habit_timer_manager.dart';
 
 /// 앱 전체에서 쓰는 서비스, 저장소, 유스케이스를 한 곳에서 만든다.
 class AppDependencies {
@@ -29,6 +30,7 @@ class AppDependencies {
     required this.notifications,
     required this.widgets,
     required this.photos,
+    required this.timers,
   });
 
   final StorageService storage;
@@ -44,6 +46,7 @@ class AppDependencies {
   final NotificationService notifications;
   final HomeWidgetService widgets;
   final PhotoService photos;
+  final HabitTimerManager timers;
 
   static Future<AppDependencies> create() async {
     final storage = await StorageService.create();
@@ -52,6 +55,7 @@ class AppDependencies {
     final settings = SettingsRepository(storage);
     final analyzer = RoutineAnalyzer(routine);
     final notifications = NotificationService();
+    final photos = PhotoService();
 
     await Future.wait([routine.load(), journal.load(), settings.load(), notifications.init()]);
 
@@ -61,14 +65,15 @@ class AppDependencies {
       journal: journal,
       settings: settings,
       templates: TemplateRepository(),
-      backup: BackupRepository(BackupService(), routine, journal, settings),
+      backup: BackupRepository(BackupService(), photos, routine, journal, settings),
       analyzer: analyzer,
       stats: StatsUseCase(routine, analyzer),
       widgetSnapshot: WidgetSnapshotUseCase(routine, analyzer),
       alarmPlan: AlarmPlanUseCase(routine, analyzer),
       notifications: notifications,
       widgets: HomeWidgetService(),
-      photos: PhotoService(),
+      photos: photos,
+      timers: HabitTimerManager(routine),
     );
   }
 

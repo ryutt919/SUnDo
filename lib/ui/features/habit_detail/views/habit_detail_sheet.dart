@@ -9,6 +9,7 @@ import '../../../../data/services/photo_service.dart';
 import '../../../../domain/models/habit.dart';
 import '../../../../domain/use_cases/routine_analyzer.dart';
 import '../../../../domain/use_cases/stats_use_case.dart';
+import '../../../core/habit_timer_manager.dart';
 import '../../../core/widgets.dart';
 import '../../habit_form/views/habit_form_screen.dart';
 import '../view_models/habit_detail_view_model.dart';
@@ -25,6 +26,7 @@ Future<void> showHabitDetail(BuildContext context, String habitId, String date) 
         analyzer: c.read<RoutineAnalyzer>(),
         stats: c.read<StatsUseCase>(),
         photos: c.read<PhotoService>(),
+        timers: c.read<HabitTimerManager>(),
         habitId: habitId,
         date: date,
       ),

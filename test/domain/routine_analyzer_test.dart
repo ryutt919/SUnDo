@@ -175,6 +175,51 @@ void main() {
     });
   });
 
+  group('모드 이력과 주 목표', () {
+    test('모드를 바꿔도 지난 날의 습관 목록과 달성률은 그날 쓰던 모드 기준으로 남는다', () async {
+      final repo = await emptyRoutine();
+      await repo.addMode('주말');
+      final weekend = repo.modes.last.id;
+      await repo.addHabit(habit('onlyWeekend', modes: [weekend]));
+      await repo.addHabit(habit('always'));
+      final an = RoutineAnalyzer(repo, today: () => today);
+
+      await repo.setActiveMode(weekend, from: today); // 오늘(10-14)부터 주말 모드
+      expect(an.dueHabits('2026-10-13').map((h) => h.id), ['always'], reason: '어제는 기본 모드였다');
+      expect(an.dueHabits(today).map((h) => h.id), ['onlyWeekend', 'always']);
+
+      // 다시 기본 모드로 돌려도 어제 기록은 변하지 않는다
+      await repo.setActiveMode(repo.modes.first.id, from: '2026-10-15');
+      expect(an.dueHabits('2026-10-13').map((h) => h.id), ['always']);
+      expect(repo.modeOn('2026-10-14'), weekend);
+    });
+
+    test('모드 이력은 백업으로 내보내고 불러와도 유지된다', () async {
+      final repo = await emptyRoutine();
+      await repo.addMode('주말');
+      await repo.setActiveMode(repo.modes.last.id, from: '2026-10-10');
+      final other = await emptyRoutine();
+      await other.importJson(repo.exportJson());
+      expect(other.modeOn('2026-10-09'), repo.modes.first.id);
+      expect(other.modeOn('2026-10-10'), repo.modes.last.id);
+    });
+
+    test('주가 끝났는데 주 목표를 못 채우면 그 주의 일요일이 미달 1일로 센다', () async {
+      final repo = await emptyRoutine();
+      await repo.addHabit(habit('a', start: '2026-09-01', repeat: const RepeatRule(type: RepeatType.weekly, times: 3)));
+      await repo.setDone('a', '2026-10-06', true); // 지난주(10-05 월요일 시작)에 1회만
+      final an = RoutineAnalyzer(repo, today: () => today);
+      final h = repo.habitById('a')!;
+      expect(an.isDue(h, '2026-10-07'), isFalse, reason: '중간 날은 여전히 실패로 세지 않는다');
+      expect(an.isDue(h, '2026-10-11'), isTrue, reason: '지난 일요일은 미달 1일');
+      expect(an.dayStat('2026-10-11').rate, 0.0);
+
+      await repo.setDone('a', '2026-10-08', true);
+      await repo.setDone('a', '2026-10-09', true); // 3회 달성
+      expect(an.isDue(h, '2026-10-11'), isFalse, reason: '목표를 채우면 미달이 아니다');
+    });
+  });
+
   group('루틴 모드', () {
     test('모드가 지정된 습관은 그 모드에서만 나온다', () async {
       final repo = await emptyRoutine();

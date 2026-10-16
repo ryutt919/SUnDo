@@ -9,6 +9,7 @@ import '../data/services/photo_service.dart';
 import '../domain/use_cases/routine_analyzer.dart';
 import '../domain/use_cases/stats_use_case.dart';
 import '../ui/core/app_theme.dart';
+import '../ui/core/habit_timer_manager.dart';
 import '../ui/features/shell/app_shell.dart';
 import 'app_dependencies.dart';
 import 'app_sync.dart';
@@ -58,6 +59,7 @@ class _MyRoutineAppState extends State<MyRoutineApp> with WidgetsBindingObserver
         Provider<RoutineAnalyzer>.value(value: d.analyzer),
         Provider<StatsUseCase>.value(value: d.stats),
         Provider<PhotoService>.value(value: d.photos),
+        ChangeNotifierProvider<HabitTimerManager>.value(value: d.timers),
       ],
       child: Consumer<SettingsRepository>(
         builder: (_, settings, _) => MaterialApp(

@@ -6,6 +6,7 @@ import 'package:my_routine/data/repositories/journal_repository.dart';
 import 'package:my_routine/data/repositories/routine_repository.dart';
 import 'package:my_routine/data/repositories/settings_repository.dart';
 import 'package:my_routine/data/services/backup_service.dart';
+import 'package:my_routine/data/services/photo_service.dart';
 import 'package:my_routine/data/services/storage_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -38,7 +39,62 @@ class _FakeBackupService extends BackupService {
   Future<Map<String, dynamic>?> pick() async => _data;
 }
 
+/// 파일 시스템 없이 메모리에서 사진 파일을 흉내 내는 가짜 사진 서비스.
+class _FakePhotoService extends PhotoService {
+  final Map<String, List<int>> files = {};
+
+  @override
+  Future<String?> readBase64(String path) async {
+    final b = files[path];
+    return b == null ? null : base64Encode(b);
+  }
+
+  @override
+  Future<String> restore(String name, List<int> bytes) async {
+    final path = '/restored/$name';
+    files[path] = bytes;
+    return path;
+  }
+}
+
 void main() {
+  test('인증 사진은 백업에 담겼다가 불러올 때 파일로 복원된다', () async {
+    final routine = await emptyRoutine();
+    final store = await StorageService.create();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+    final photos = _FakePhotoService()..files['/data/proofs/111.jpg'] = [1, 2, 3, 4];
+
+    await routine.addHabit(habit('a'));
+    await routine.updateLog('a', '2026-10-13', (l) => l.copyWith(done: true, photo: '/data/proofs/111.jpg'));
+    await routine.updateLog('a', '2026-10-12', (l) => l.copyWith(done: true, photo: '/data/proofs/missing.jpg'));
+
+    // 내보내기: 사진은 photoFiles에 담기고, 사라진 파일의 연결은 빠진다
+    final exporter = BackupRepository(_FakeBackupService({}), photos, routine, journal, settings);
+    final exported = await exporter.buildExport();
+    expect((exported['photoFiles'] as Map).keys, ['111.jpg']);
+    final logs = exported['logs'] as Map;
+    expect(((logs['2026-10-13'] as Map)['a'] as Map)['photo'], 'photos/111.jpg');
+    expect(((logs['2026-10-12'] as Map)['a'] as Map).containsKey('photo'), isFalse);
+
+    // 불러오기: 다른 기기처럼 빈 저장소에 복원
+    final other = await emptyRoutine();
+    final restoredPhotos = _FakePhotoService();
+    final importer = BackupRepository(
+      _FakeBackupService(jsonDecode(jsonEncode(exported)) as Map<String, dynamic>),
+      restoredPhotos,
+      other,
+      journal,
+      settings,
+    );
+    expect(await importer.importFromFile(), isTrue);
+    final path = other.logOf('a', '2026-10-13')!.photo!;
+    expect(path, '/restored/111.jpg');
+    expect(restoredPhotos.files[path], [1, 2, 3, 4]);
+  });
+
   test('체크는 저장소를 거쳐 디스크에 남고 다시 읽으면 복원된다', () async {
     SharedPreferences.setMockInitialValues({});
     final store = await StorageService.create();
@@ -128,7 +184,7 @@ void main() {
       'habits': <dynamic>[],
       'logs': <String, dynamic>{},
       'settings': {'doneToBottom': 'bad'}, // bool이어야 하는 값이 문자열
-    }), routine, journal, settings);
+    }), _FakePhotoService(), routine, journal, settings);
     await expectLater(backup.importFromFile(), throwsFormatException);
     expect(routine.habits.map((h) => h.id), ['keep'], reason: '습관 데이터는 그대로');
   });

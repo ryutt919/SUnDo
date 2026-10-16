@@ -28,7 +28,12 @@ class RoutineAnalyzer {
 
   String get today => _today();
 
-  bool inActiveMode(Habit h) => h.modes.isEmpty || h.modes.contains(_routine.activeModeId);
+  /// [date]에 이 습관이 현재 루틴 모드에 속하는지. 오늘 이후는 현재 모드, 지난 날은 그날 쓰던 모드(이력)를 쓴다.
+  /// 그래서 모드를 바꿔도 지난 날의 달성률과 신호등은 변하지 않는다. [date]를 생략하면 현재 모드 기준.
+  bool inActiveMode(Habit h, [String? date]) {
+    final mode = (date == null || date.compareTo(today) >= 0) ? _routine.activeModeId : _routine.modeOn(date);
+    return h.modes.isEmpty || h.modes.contains(mode);
+  }
 
   int _weekDoneCount(Habit h, String date) {
     final ws = weekStartKey(date);
@@ -57,14 +62,18 @@ class RoutineAnalyzer {
         return r.monthDays.contains(parseDateKey(date).day);
       case RepeatType.weekly:
         if (_routine.isDone(h.id, date)) return true;
-        if (date.compareTo(today) < 0) return false; // 지난 날 미체크는 실패로 세지 않는다
+        if (date.compareTo(today) < 0) {
+          // 지난 날의 미체크는 하루하루 실패로 세지 않는다. 대신 주가 끝난 일요일에
+          // 주 목표를 못 채웠으면 그 날을 미달 1일로 센다(통계와 연속 일수에 반영).
+          return sundayZero(parseDateKey(date)) == 0 && _weekDoneCount(h, date) < r.times;
+        }
         return _weekDoneCount(h, date) < r.times;
     }
   }
 
   List<Habit> dueHabits(String date) => [
         for (final h in _routine.habits)
-          if (inActiveMode(h) && isDue(h, date)) h
+          if (inActiveMode(h, date) && isDue(h, date)) h
       ];
 
   DayStat dayStat(String date) {
