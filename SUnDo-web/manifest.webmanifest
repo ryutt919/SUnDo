@@ -1,0 +1,17 @@
+{
+  "name": "내 루틴",
+  "short_name": "내 루틴",
+  "description": "습관, 투두, 회고를 한 곳에서 관리하는 루틴 앱",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FFFBF8",
+  "theme_color": "#FFFBF8",
+  "orientation": "any",
+  "shortcuts": [
+    { "name": "오늘의 루틴 (위젯)", "short_name": "위젯", "url": "./index.html?widget=1" },
+    { "name": "습관 추가", "short_name": "추가", "url": "./index.html?add=1" }
+  ],
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
