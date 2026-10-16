@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:my_routine/ui/core/habit_timer_manager.dart';
 import 'package:my_routine/data/repositories/backup_repository.dart';
 import 'package:my_routine/data/repositories/journal_repository.dart';
 import 'package:my_routine/data/repositories/routine_repository.dart';
@@ -132,16 +134,80 @@ void main() {
     expect(jsonEncode(other.exportJson()), jsonEncode(repo.exportJson()));
   });
 
-  test('모드는 10개까지만 만들 수 있고, 모드를 지우면 습관의 모드 지정도 정리된다', () async {
+  test('모드는 10개까지만 만들 수 있다', () async {
     final repo = await emptyRoutine();
     for (var i = 0; i < 20; i++) {
       await repo.addMode('모드$i');
     }
     expect(repo.modes.length, RoutineRepository.maxModes);
-    final extra = repo.modes.last.id;
-    await repo.addHabit(habit('a', modes: [extra]));
-    await repo.deleteMode(extra);
-    expect(repo.habitById('a')!.modes, isEmpty);
+  });
+
+  test('삭제한 습관의 기록은 새로 만들어지지 않는다', () async {
+    final repo = await emptyRoutine();
+    await repo.addHabit(habit('a'));
+    await repo.deleteHabit('a');
+    await repo.setDone('a', '2026-10-13', true);
+    expect(repo.isDone('a', '2026-10-13'), isFalse);
+    expect(repo.totalChecks, 0);
+  });
+
+  test('습관 삭제 중 타이머가 끝나도 유령 기록이 생기지 않는다', () async {
+    final repo = await emptyRoutine();
+    await repo.addHabit(habit('a'));
+    final timers = HabitTimerManager(repo);
+    fakeAsync((async) {
+      timers.start('a', '2026-10-14', 1);
+      async.elapse(const Duration(seconds: 10));
+      repo.deleteHabit('a');
+      async.flushMicrotasks();
+      expect(timers.secondsLeft('a', '2026-10-14'), isNull, reason: '삭제하면 타이머도 멈춘다');
+      async.elapse(const Duration(seconds: 70));
+      async.flushMicrotasks();
+    });
+    await Future<void>.delayed(Duration.zero);
+    expect(repo.totalChecks, 0);
+  });
+
+  test('앱 사진 폴더 밖을 가리키는 백업 사진 경로는 연결을 끊고 설정 타입이 틀린 백업은 거부한다', () async {
+    final routine = await emptyRoutine();
+    final store = await StorageService.create();
+    final journal = JournalRepository(store);
+    await journal.load();
+    final settings = SettingsRepository(store);
+    await settings.load();
+
+    // 설정 최상위 타입이 틀린 백업은 아무것도 바꾸지 않고 거부
+    await routine.addHabit(habit('keep'));
+    final bad = BackupRepository(
+      _FakeBackupService({'habits': <dynamic>[], 'logs': <String, dynamic>{}, 'settings': 'broken'}),
+      _FakePhotoService(),
+      routine,
+      journal,
+      settings,
+    );
+    await expectLater(bad.importFromFile(), throwsFormatException);
+    expect(routine.habits.map((h) => h.id), ['keep']);
+
+    // 임의 경로(photos/ 표시가 아님)를 가진 사진 연결은 가져오지 않는다
+    final evil = BackupRepository(
+      _FakeBackupService({
+        'habits': [
+          {'id': 'h', 'name': 'x', 'start': '2026-10-01'}
+        ],
+        'logs': {
+          '2026-10-13': {
+            'h': {'done': true, 'photo': '/data/data/other_app/secret.db'}
+          }
+        },
+      }),
+      _FakePhotoService(),
+      routine,
+      journal,
+      settings,
+    );
+    expect(await evil.importFromFile(), isTrue);
+    expect(routine.logOf('h', '2026-10-13')!.photo, isNull);
+    expect(routine.isDone('h', '2026-10-13'), isTrue, reason: '체크 자체는 가져온다');
   });
 
   test('보이는 습관만 재정렬해도 숨은 습관의 자리는 그대로다', () async {

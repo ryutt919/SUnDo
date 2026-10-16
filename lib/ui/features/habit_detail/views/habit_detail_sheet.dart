@@ -130,7 +130,18 @@ class _HabitDetailSheet extends StatelessWidget {
             if (log.photo != null)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(File(log.photo!), height: 180, width: double.infinity, fit: BoxFit.cover),
+                child: Image.file(
+                  File(log.photo!),
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Container(
+                    height: 80,
+                    alignment: Alignment.center,
+                    color: cs.surfaceContainerHighest,
+                    child: Text('사진을 불러오지 못했어요', style: TextStyle(color: cs.outline)),
+                  ),
+                ),
               ),
             Row(children: [
               TextButton.icon(

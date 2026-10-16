@@ -47,9 +47,12 @@ class RoutineRepository extends ChangeNotifier {
     for (final k in _modeFrom.keys) {
       if (k.compareTo(date) <= 0 && (best == null || k.compareTo(best) > 0)) best = k;
     }
-    final id = best == null ? _activeMode : _modeFrom[best]!;
-    return _modes.any((m) => m.id == id) ? id : _modes.first.id;
+    // 삭제한 모드의 id도 그대로 돌려준다. 그래야 모드를 지워도 지난 날의 구성이 바뀌지 않는다.
+    return best == null ? _activeMode : _modeFrom[best]!;
   }
+
+  /// 지금 존재하는 모드인지(삭제되지 않았는지).
+  bool hasMode(String id) => _modes.any((m) => m.id == id);
 
   List<Habit> get habits => List.unmodifiable(_habits);
   List<RoutineMode> get modes => List.unmodifiable(_modes);
@@ -196,6 +199,7 @@ class RoutineRepository extends ChangeNotifier {
   }
 
   Future<void> updateLog(String habitId, String date, HabitLog Function(HabitLog) edit) async {
+    if (habitById(habitId) == null) return; // 삭제된 습관(예: 실행 중이던 타이머)의 기록은 만들지 않는다
     await _refreshLogsAndRest();
     final day = _logs.putIfAbsent(date, () => {});
     day[habitId] = edit(day[habitId] ?? const HabitLog());
@@ -250,10 +254,13 @@ class RoutineRepository extends ChangeNotifier {
   Future<void> deleteMode(String id) async {
     if (_modes.length <= 1) return;
     await _refreshLogsAndRest(); // _persistAll이 기록 전체를 다시 쓰므로 최신 기록에서 시작
+    // 습관의 모드 지정과 날짜별 모드 이력은 그대로 둔다. 지난 날의 달성률과 신호등이 바뀌지 않게 하려는 것이다.
+    // 소속 모드가 모두 사라진 습관은 지금부터 모든 모드에 나타난다(RoutineAnalyzer.inActiveMode).
     _modes = _modes.where((m) => m.id != id).toList();
-    _habits = [for (final h in _habits) h.copyWith(modes: h.modes.where((m) => m != id).toList())];
-    if (_activeMode == id) _activeMode = _modes.first.id;
-    _modeFrom.updateAll((_, v) => v == id ? _modes.first.id : v); // 지운 모드의 이력은 첫 모드로
+    if (_activeMode == id) {
+      _activeMode = _modes.first.id;
+      _modeFrom[todayKey()] = _activeMode;
+    }
     await _persistAll();
     notifyListeners();
   }

@@ -204,6 +204,53 @@ void main() {
       expect(other.modeOn('2026-10-10'), repo.modes.last.id);
     });
 
+    test('모드를 삭제해도 지난 날의 구성은 그대로이고, 소속 모드가 사라진 습관은 지금부터 모든 모드에 나타난다', () async {
+      final repo = await emptyRoutine();
+      await repo.addMode('주말');
+      final weekend = repo.modes.last.id;
+      await repo.addHabit(habit('onlyWeekend', modes: [weekend]));
+      await repo.addHabit(habit('always'));
+      final an = RoutineAnalyzer(repo, today: () => today);
+      await repo.setActiveMode(weekend, from: '2026-10-10');
+      await repo.setActiveMode(repo.modes.first.id, from: '2026-10-12');
+
+      expect(an.dueHabits('2026-10-11').map((h) => h.id), ['onlyWeekend', 'always']);
+      expect(an.dueHabits('2026-10-13').map((h) => h.id), ['always']);
+
+      await repo.deleteMode(weekend);
+
+      expect(an.dueHabits('2026-10-11').map((h) => h.id), ['onlyWeekend', 'always'], reason: '지난 날은 그대로');
+      expect(an.dueHabits('2026-10-13').map((h) => h.id), ['always'], reason: '지난 날은 그대로');
+      expect(an.dueHabits(today).map((h) => h.id), ['onlyWeekend', 'always'], reason: '지금부터는 모든 모드에 나타남');
+    });
+
+    test('개인 연속 일수는 다른 모드였던 날에 끊기지 않는다', () async {
+      final repo = await emptyRoutine();
+      await repo.addMode('주말');
+      final weekend = repo.modes.last.id;
+      await repo.addHabit(habit('w', start: '2026-10-01', modes: [weekend]));
+      await repo.setActiveMode(weekend, from: '2026-10-01');
+      await repo.setActiveMode(repo.modes.first.id, from: '2026-10-12'); // 10-12, 13은 기본 모드
+      await repo.setActiveMode(weekend, from: '2026-10-14');
+      await repo.setDone('w', '2026-10-14', true);
+      await repo.setDone('w', '2026-10-11', true);
+      await repo.setDone('w', '2026-10-10', true);
+      final an = RoutineAnalyzer(repo, today: () => today);
+      expect(an.habitStreak(repo.habitById('w')!), 3, reason: '기본 모드였던 12, 13일은 건너뛴다');
+    });
+
+    test('주 목표 미달 표시는 일요일에 완료했어도 체크하지 않은 마지막 날 하루에 붙는다', () async {
+      final repo = await emptyRoutine();
+      await repo.addHabit(habit('a', start: '2026-09-01', repeat: const RepeatRule(type: RepeatType.weekly, times: 3)));
+      await repo.setDone('a', '2026-10-11', true); // 지난주 일요일에만 1회
+      final an = RoutineAnalyzer(repo, today: () => today);
+      final h = repo.habitById('a')!;
+      expect(an.isDue(h, '2026-10-11'), isTrue, reason: '체크한 날은 계속 표시');
+      expect(an.isDue(h, '2026-10-10'), isTrue, reason: '체크하지 않은 마지막 날(토)이 미달 1일');
+      expect(an.isDue(h, '2026-10-09'), isFalse);
+      expect(an.dayStat('2026-10-10').rate, 0.0);
+    });
+
     test('주가 끝났는데 주 목표를 못 채우면 그 주의 일요일이 미달 1일로 센다', () async {
       final repo = await emptyRoutine();
       await repo.addHabit(habit('a', start: '2026-09-01', repeat: const RepeatRule(type: RepeatType.weekly, times: 3)));

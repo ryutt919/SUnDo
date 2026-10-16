@@ -31,8 +31,12 @@ class RoutineAnalyzer {
   /// [date]에 이 습관이 현재 루틴 모드에 속하는지. 오늘 이후는 현재 모드, 지난 날은 그날 쓰던 모드(이력)를 쓴다.
   /// 그래서 모드를 바꿔도 지난 날의 달성률과 신호등은 변하지 않는다. [date]를 생략하면 현재 모드 기준.
   bool inActiveMode(Habit h, [String? date]) {
-    final mode = (date == null || date.compareTo(today) >= 0) ? _routine.activeModeId : _routine.modeOn(date);
-    return h.modes.isEmpty || h.modes.contains(mode);
+    if (h.modes.isEmpty) return true;
+    final current = date == null || date.compareTo(today) >= 0;
+    final mode = current ? _routine.activeModeId : _routine.modeOn(date);
+    if (h.modes.contains(mode)) return true;
+    // 소속 모드가 모두 삭제된 습관은 지금부터는 모든 모드에 나타난다(지난 날의 구성은 그대로 둔다).
+    return current && h.modes.every((m) => !_routine.hasMode(m));
   }
 
   int _weekDoneCount(Habit h, String date) {
@@ -62,13 +66,25 @@ class RoutineAnalyzer {
         return r.monthDays.contains(parseDateKey(date).day);
       case RepeatType.weekly:
         if (_routine.isDone(h.id, date)) return true;
-        if (date.compareTo(today) < 0) {
-          // 지난 날의 미체크는 하루하루 실패로 세지 않는다. 대신 주가 끝난 일요일에
-          // 주 목표를 못 채웠으면 그 날을 미달 1일로 센다(통계와 연속 일수에 반영).
-          return sundayZero(parseDateKey(date)) == 0 && _weekDoneCount(h, date) < r.times;
-        }
+        if (date.compareTo(today) < 0) return _isWeeklyMissDay(h, date);
         return _weekDoneCount(h, date) < r.times;
     }
+  }
+
+  /// 주 N회 습관의 지난 날(체크하지 않은 날)을 미달로 셀지 정한다.
+  /// 지난 날의 미체크를 하루하루 실패로 세지는 않고, 주가 끝난 뒤 주 목표를 못 채웠으면
+  /// 그 주에서 체크하지 않은 마지막 날 하루만 미달 1일로 센다. 통계와 연속 일수에 반영된다.
+  bool _isWeeklyMissDay(Habit h, String date) {
+    final ws = weekStartKey(date);
+    final we = addDaysKey(ws, 6);
+    if (we.compareTo(today) >= 0) return false; // 아직 끝나지 않은 주
+    if (_weekDoneCount(h, date) >= h.repeat.times) return false;
+    for (var d = we; d.compareTo(ws) >= 0; d = addDaysKey(d, -1)) {
+      if (d.compareTo(h.start) < 0) break;
+      if (_routine.isDone(h.id, d) || _routine.isRest(d)) continue;
+      return d == date;
+    }
+    return false;
   }
 
   List<Habit> dueHabits(String date) => [
@@ -127,6 +143,7 @@ class RoutineAnalyzer {
     var n = 0;
     for (var i = 0; i < 3650 && d.compareTo(h.start) >= 0; i++, d = addDaysKey(d, -1)) {
       if (_routine.isRest(d)) continue;
+      if (!inActiveMode(h, d)) continue; // 그 날 쓰던 모드에 속하지 않았으면 끊지 않고 건너뛴다
       final done = _routine.isDone(h.id, d);
       if (!isDue(h, d) && !done) continue;
       if (done) {

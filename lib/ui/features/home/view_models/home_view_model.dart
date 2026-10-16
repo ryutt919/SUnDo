@@ -192,7 +192,7 @@ class HomeViewModel extends RepoViewModel {
 
   WeekGridCell weekGridCell(Habit h, String date) => WeekGridCell(
         date: date,
-        due: _analyzer.isDue(h, date),
+        due: _analyzer.inActiveMode(h, date) && _analyzer.isDue(h, date),
         done: _routine.isDone(h.id, date),
       );
 

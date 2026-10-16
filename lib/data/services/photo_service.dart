@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// 습관 인증 사진을 고르거나 찍어 앱 전용 폴더에 복사한다.
+/// 읽기와 삭제는 앱 전용 사진 폴더 안의 파일에만 허용한다(변조된 백업의 경로로 다른 파일을 건드리지 못하게).
 class PhotoService {
   final ImagePicker _picker = ImagePicker();
 
@@ -13,6 +14,15 @@ class PhotoService {
     final dir = Directory('${base.path}/proofs');
     await dir.create(recursive: true);
     return dir;
+  }
+
+  /// [path]가 앱 전용 사진 폴더 안의 실제 파일이면 true.
+  Future<bool> _isOwnPhoto(String path) async {
+    final f = File(path);
+    if (!await f.exists()) return false;
+    final root = await (await _proofsDir()).resolveSymbolicLinks();
+    final real = await f.resolveSymbolicLinks();
+    return real.startsWith('$root${Platform.pathSeparator}');
   }
 
   Future<String?> pick(ImageSource source) async {
@@ -24,16 +34,15 @@ class PhotoService {
     return dest;
   }
 
+  /// 앱 전용 폴더 안의 사진만 지운다. 그 밖의 경로는 무시한다.
   Future<void> delete(String path) async {
-    final f = File(path);
-    if (await f.exists()) await f.delete();
+    if (await _isOwnPhoto(path)) await File(path).delete();
   }
 
-  /// 백업용으로 사진 파일을 base64로 읽는다. 파일이 없으면 null.
+  /// 백업용으로 사진 파일을 base64로 읽는다. 앱 전용 폴더 밖이거나 파일이 없으면 null.
   Future<String?> readBase64(String path) async {
-    final f = File(path);
-    if (!await f.exists()) return null;
-    return base64Encode(await f.readAsBytes());
+    if (!await _isOwnPhoto(path)) return null;
+    return base64Encode(await File(path).readAsBytes());
   }
 
   /// 백업에서 꺼낸 사진을 앱 전용 폴더에 다시 저장하고 새 경로를 돌려준다.

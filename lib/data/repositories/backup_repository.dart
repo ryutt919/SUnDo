@@ -61,6 +61,7 @@ class BackupRepository {
     }
     // 어느 한쪽이라도 형식이 틀리면 아무것도 바꾸지 않도록 먼저 모두 검사한다.
     final s = data['settings'];
+    if (s != null && s is! Map) throw const FormatException('설정 백업 형식이 올바르지 않아요'); // 설정이 없는 구백업만 허용
     final settingsJson = s is Map ? s.cast<String, dynamic>() : null;
     _routine.validateJson(data);
     _journal.validateJson(data);
@@ -95,7 +96,12 @@ class BackupRepository {
       for (final log in (day as Map).values) {
         final entry = log as Map;
         final ref = entry['photo'];
-        if (ref is! String || !ref.startsWith(_photoPrefix)) continue;
+        if (ref == null) continue;
+        if (ref is! String || !ref.startsWith(_photoPrefix)) {
+          // 이 앱이 만든 `photos/<이름>` 표시가 아니면 믿을 수 없는 경로이므로 연결을 끊는다
+          entry.remove('photo');
+          continue;
+        }
         final name = ref.substring(_photoPrefix.length);
         final b = bytes[name];
         if (b == null) {
