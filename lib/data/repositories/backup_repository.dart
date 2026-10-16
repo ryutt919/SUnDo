@@ -89,13 +89,26 @@ class BackupRepository {
     ({Map<String, dynamic> routine, Map<String, dynamic> journal, Map<String, dynamic> settings}) before,
     List<String> restoredPhotos,
   ) async {
+    // 저장소마다 따로 복구한다. 하나가 실패해도 나머지는 복구를 시도한다.
+    var routineRestored = true;
     try {
       await _routine.importJson(before.routine);
+    } on Object catch (e) {
+      routineRestored = false;
+      debugPrint('원상복구 실패(습관): $e');
+    }
+    try {
       await _journal.importJson(before.journal);
+    } on Object catch (e) {
+      debugPrint('원상복구 실패(회고): $e');
+    }
+    try {
       await _settings.importJson(before.settings);
     } on Object catch (e) {
-      debugPrint('백업 가져오기 실패 후 원상복구도 실패했어요: $e');
+      debugPrint('원상복구 실패(설정): $e');
     }
+    // 습관 복구가 실패해 새 기록이 남아 있을 수 있으면, 그 기록이 가리키는 사진은 지우지 않는다
+    if (!routineRestored) return;
     for (final p in restoredPhotos) {
       try {
         await _photos.delete(p);

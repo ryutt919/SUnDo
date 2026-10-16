@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../data/repositories/routine_repository.dart';
@@ -26,7 +27,12 @@ Future<void> widgetBackgroundCallback(Uri? uri) async {
     case 'toggle':
       final id = uri.queryParameters['id'];
       if (id == null || id.isEmpty) return;
-      await routine.toggle(id, todayKey());
+      try {
+        await routine.toggle(id, todayKey());
+      } on StorageWriteException catch (e) {
+        // 저장에 실패하면 체크가 바뀌지 않은 상태 그대로 위젯을 다시 그려, 화면과 저장 내용이 어긋나지 않게 한다
+        debugPrint('위젯 체크 저장 실패: $e');
+      }
     case 'refresh':
       break;
     default:

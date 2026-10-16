@@ -87,7 +87,12 @@ class RoutineRepository extends ChangeNotifier {
     await _store.reload();
     if (!_store.contains('habits')) {
       _habits = _seedHabits();
-      await _persistAll();
+      try {
+        await _persistAll();
+      } on StorageWriteException catch (e) {
+        // 첫 실행에서 예시 습관을 저장하지 못해도 앱은 시작한다(다음 저장 때 다시 기록된다)
+        debugPrint('초기 데이터 저장 실패: $e');
+      }
     } else {
       _habits = _list('habits').map(Habit.fromJson).toList();
       final modes = _list('modes').map(RoutineMode.fromJson).toList();
