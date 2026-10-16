@@ -175,14 +175,38 @@ void main() {
       async.elapse(const Duration(seconds: 10));
       repo.deleteHabit('a');
       async.flushMicrotasks();
-      async.elapse(const Duration(seconds: 1)); // 다음 틱에서 습관이 없는 걸 알고 멈춘다
+      async.elapse(const Duration(seconds: 25));
       async.flushMicrotasks();
-      expect(timers.secondsLeft('a', '2026-10-14'), isNull, reason: '삭제하면 타이머도 멈춘다');
+      expect(timers.secondsLeft('a', '2026-10-14'), 50, reason: '습관이 없는 동안은 시간이 줄지 않고 기다린다');
+      async.elapse(const Duration(seconds: 10)); // 30초를 넘겨 계속 없으면 정리한다
+      async.flushMicrotasks();
+      expect(timers.secondsLeft('a', '2026-10-14'), isNull, reason: '삭제가 확정되면 타이머도 멈춘다');
       async.elapse(const Duration(seconds: 70));
       async.flushMicrotasks();
     });
     await Future<void>.delayed(Duration.zero);
     expect(repo.totalChecks, 0);
+  });
+
+  test('습관이 잠깐 사라졌다 돌아와도(틱이 그 사이에 와도) 타이머는 사라지지 않고 남은 시간이 유지된다', () async {
+    final repo = await emptyRoutine();
+    await repo.addHabit(habit('a'));
+    final habitA = repo.habitById('a')!;
+    final timers = HabitTimerManager(repo);
+    fakeAsync((async) {
+      timers.start('a', '2026-10-14', 1);
+      async.elapse(const Duration(seconds: 10));
+      expect(timers.secondsLeft('a', '2026-10-14'), 50);
+      repo.deleteHabit('a'); // 가져오기 중 습관이 잠깐 사라진 상황
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 3)); // 사라진 동안 틱이 지나간다
+      repo.addHabit(habitA); // 롤백으로 습관이 돌아온다
+      async.flushMicrotasks();
+      expect(timers.secondsLeft('a', '2026-10-14'), 50, reason: '없는 동안은 시간이 줄지 않았다');
+      async.elapse(const Duration(seconds: 5));
+      expect(timers.isRunning('a', '2026-10-14'), isTrue);
+      expect(timers.secondsLeft('a', '2026-10-14'), 45, reason: '돌아온 뒤 다시 흐른다');
+    });
   });
 
   test('백업 가져오기가 실패해 되돌려져도 실행 중이던 타이머는 이어진다', () async {
