@@ -107,7 +107,8 @@
 - **iOS 빌드 검증 (2026-10-17 15:41:02 KST)**: 이 Mac에는 Xcode가 없어(설치에 Apple ID 로그인 필요) `xcodeproj` gem으로 `RoutiningWidget` 확장 타깃(앱 확장, 최소 iOS 17, Info.plist, App Group 권한, Runner에 포함)을 프로젝트에 추가. 사용자 승인 후 main을 push하고 GitHub Actions `ios-build.yml`을 실행해 macOS에서 분석, 테스트 114건, `flutter build ios --release --no-codesign` 통과 확인(워크플로의 `flutter analyze`는 기존 info 경고 때문에 실패해 `--no-fatal-infos`로 바꿈)
 - **iOS 시뮬레이터 통합 테스트 (2026-10-17 16:02:34 KST)**: [ios-simulator.yml](../.github/workflows/ios-simulator.yml)(수동 실행)이 macOS 러너의 iPhone 17 Pro 시뮬레이터(iOS 26.2)에 앱을 설치해 [app_test.dart](../SUnDo-ios/integration_test/app_test.dart)를 실행(투두 추가와 시간 선택, 관리에서 일괄 삭제, 통계 투두/계획 캘린더)하고 `Runner.app/PlugIns/RoutiningWidget.appex` 포함을 확인. 이 과정에서 실제 결함 3건을 찾아 고침: (1) 위젯 확장이 Flutter xcconfig 없이 버전 값이 풀리지 않아 설치 실패 → 확장 타깃에 Runner와 같은 xcconfig 지정, (2) iPhone 폭에서 홈 상단 줄 9.4px 넘침 → 날짜 영역을 Flexible로 축소 가능하게, (3) 탭마다 있는 FAB의 Hero 태그 충돌(Android에도 해당) → FAB마다 고유 `heroTag`
 - **iOS 위젯 Swift 로직 실행 확인 (2026-10-17 16:10:53 KST)**: [main.swift](../SUnDo-ios/ios/RoutiningWidgetTests/main.swift)가 위젯 파일(@main 제외)과 함께 macOS에서 컴파일되어 실행됨(Mac과 CI 모두 14개 확인 통과). Dart가 만든 실제 snapshot JSON([snapshot_fixture.json](../SUnDo-ios/ios/RoutiningWidgetTests/snapshot_fixture.json))을 위젯이 그대로 읽는지, 크기별 행 수, 목록이 줄어들 때 쪽 보정과 저장, 쪽 넘김 버튼(App Intent)의 증감과 하한을 검증
-- **미검증**: iOS 위젯의 화면 렌더링과 실제 탭 동작(홈 화면에 올려 눌러 보기), "+" 딥링크가 앱에서 열리는 경로, iOS 실기기 실행, 갤럭시 실기기
+- **iOS 위젯 화면 렌더링 확인 (2026-10-17 16:18:18 KST)**: 같은 main.swift가 SwiftUI `ImageRenderer`로 중간(1쪽), 큰(2쪽) 크기의 투두 위젯과 큰 크기 오늘의 루틴 위젯을 PNG로 그림. 눈으로 확인한 결과 제목과 요약, 항목 행, 위/아래 쪽 넘김 버튼과 쪽 번호(2/2), 오른쪽 아래 초록 "+" 버튼이 표시됨(진행 막대는 `ImageRenderer`가 못 그리는 컨트롤이라 노란 자리표시로 나옴). CI는 이미지를 `ios-widget-images` 산출물로 올림
+- **미검증**: iOS 위젯을 홈 화면에 올려 실제로 누르는 동작(쪽 넘김 버튼 탭, "+" 탭이 앱의 추가 화면을 여는 경로), iOS 실기기 실행, 갤럭시 실기기
 - **한계**: 위젯 행 본문 탭은 동작 없음(컬렉션은 템플릿 하나만 가질 수 있어 체크 버튼만 연결). "+" 버튼이 목록 위에 겹쳐 스크롤 중 오른쪽 아래 행의 체크 버튼을 가릴 수 있음(끝까지 내리면 여백 있음)
 
 ### 원본 대비 추가 구현
