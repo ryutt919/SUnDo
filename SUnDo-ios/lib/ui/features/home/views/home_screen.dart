@@ -166,7 +166,9 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
       child: Row(
         children: [
-          InkWell(
+          // 좁은 화면(iPhone 등)에서는 날짜 글자가 줄어들어 오른쪽 버튼들이 밀려나지 않게 한다
+          Flexible(
+            child: InkWell(
             borderRadius: BorderRadius.circular(8),
             onTap: () async {
               final picked = await showDatePicker(
@@ -181,7 +183,9 @@ class _Header extends StatelessWidget {
               padding: const EdgeInsets.all(4),
               child: Text('${d.year}년 ${d.month}월 ${d.day}일',
                   maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+            ),
             ),
           ),
           const Icon(Icons.expand_more, size: 20),
