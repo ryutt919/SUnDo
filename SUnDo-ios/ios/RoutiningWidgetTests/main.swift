@@ -1,4 +1,6 @@
+import AppKit
 import Foundation
+import SwiftUI
 import WidgetKit
 
 // 위젯 확장의 Swift 로직을 macOS에서 실행해 확인한다(CI의 ios-simulator.yml).
@@ -46,6 +48,36 @@ if #available(macOS 14.0, *) {
     check(loadPage("RoutiningToday") == 0, "위 버튼: 1쪽 에서 0쪽")
     _ = try await ScrollPageIntent(kind: "RoutiningToday", delta: -1).perform()
     check(loadPage("RoutiningToday") == 0, "맨 위에서 위 버튼은 0쪽 아래로 내려가지 않음")
+}
+
+// 5. 위젯 화면을 이미지로 그려 확인한다(두 번째 인자가 있으면 그 폴더에 PNG 저장)
+if CommandLine.arguments.count > 2, #available(macOS 14.0, *) {
+    let outDir = CommandLine.arguments[2]
+    try FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
+    @MainActor func render(_ name: String, size: CGSize, limit: Int, page: Int, rows: [SnapshotRow], title: String, summary: String, kind: String, add: String) throws {
+        let view = RowsView(kind: kind, title: title, summary: summary, progress: 0.1, rows: rows, emptyText: "비었어요",
+                            limit: limit, page: page, addURL: URL(string: add)!)
+            .frame(width: size.width, height: size.height)
+            .padding(12)
+            .background(Color(white: 0.95))
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2
+        guard let image = renderer.nsImage, let tiff = image.tiffRepresentation,
+              let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else {
+            check(false, "\(name) 렌더링"); return
+        }
+        try png.write(to: URL(fileURLWithPath: outDir + "/" + name + ".png"))
+        check(png.count > 2000, "\(name) 렌더링 이미지 생성(\(png.count) bytes)")
+    }
+    let todos = snap.todos ?? []
+    try await MainActor.run {
+        try render("투두_중간_1쪽", size: CGSize(width: 338, height: 158), limit: rowLimit(.systemMedium), page: 0, rows: todos,
+                   title: "투두", summary: "0/10", kind: "RoutiningTodo", add: "myroutine://add?kind=todo&homeWidget")
+        try render("투두_큰_2쪽", size: CGSize(width: 338, height: 354), limit: rowLimit(.systemLarge), page: 1, rows: todos,
+                   title: "투두", summary: "0/10", kind: "RoutiningTodo", add: "myroutine://add?kind=todo&homeWidget")
+        try render("루틴_큰_1쪽", size: CGSize(width: 338, height: 354), limit: rowLimit(.systemLarge), page: 0, rows: snap.rows,
+                   title: "오늘의 루틴", summary: "17%  1/5", kind: "RoutiningToday", add: "myroutine://add?kind=routine&homeWidget")
+    }
 }
 
 defaults.removeObject(forKey: pageKey("RoutiningTodo"))
