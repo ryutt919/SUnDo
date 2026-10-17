@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:my_routine/main.dart' as app;
@@ -57,5 +58,34 @@ void main() {
     expect(find.textContaining('투두 캘린더'), findsOneWidget);
     await tester.scrollUntilVisible(find.textContaining('계획 캘린더'), 300, scrollable: find.byType(Scrollable).first);
     expect(find.textContaining('계획 캘린더'), findsOneWidget);
+  });
+
+  testWidgets('위젯 "+" 링크: 투두 위젯은 투두 추가 창, 오늘의 루틴 위젯은 새 루틴 화면을 연다', (tester) async {
+    await app.main();
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+
+    // iOS 위젯의 "+"(Link)가 앱을 열 때 home_widget 플러그인이 Dart로 보내는 이벤트를 그대로 흉내 낸다
+    Future<void> widgetLink(String url) async {
+      await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+        'home_widget/updates',
+        const StandardMethodCodec().encodeSuccessEnvelope(url),
+        (_) {},
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await widgetLink('myroutine://add?kind=todo&homeWidget');
+    expect(find.text('투두 추가'), findsOneWidget, reason: '투두 위젯 "+" 는 투두 추가 창');
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+
+    await widgetLink('myroutine://add?kind=routine&homeWidget');
+    expect(find.text('새 루틴'), findsOneWidget, reason: '오늘의 루틴 위젯 "+" 는 새 루틴 화면');
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    await widgetLink('myroutine://open?homeWidget');
+    expect(find.text('투두 추가'), findsNothing);
+    expect(find.text('새 루틴'), findsNothing, reason: '그냥 열기 링크는 추가 화면을 열지 않는다');
   });
 }
