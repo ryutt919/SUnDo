@@ -11,9 +11,7 @@ class ManageItem {
 
 /// 항목을 여러 개 골라 한 번에 지우는 화면의 상태. 투두와 루틴이 함께 쓴다.
 class BulkDeleteViewModel extends ChangeNotifier {
-  BulkDeleteViewModel({required List<ManageItem> Function() items, required Future<void> Function(Set<String>) onDelete})
-      : _items = items,
-        _onDelete = onDelete;
+  BulkDeleteViewModel({required this._items, required this._onDelete});
 
   final List<ManageItem> Function() _items;
   final Future<void> Function(Set<String>) _onDelete;
