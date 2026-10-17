@@ -5,7 +5,7 @@
 ## 현재 상태
 
 - Dart 코드: `flutter analyze` 오류 없음, 단위 및 위젯 테스트 114건 통과(macOS에서 확인). iOS 앱 빌드는 Xcode가 있는 Mac이나 GitHub Actions에서 확인 필요
-- iOS 빌드: GitHub Actions(macOS)에서 분석, 테스트, `flutter build ios --release --no-codesign`(위젯 확장 포함) 통과. 시뮬레이터 통합 테스트(`ios-simulator.yml`, iPhone 17 Pro iOS 26.2)로 앱 실행과 위젯 확장 포함까지 확인함. 위젯 동작과 실기기 실행은 아직 확인하지 못함
+- iOS 빌드: GitHub Actions(macOS)에서 분석, 테스트, `flutter build ios --release --no-codesign`(위젯 확장 포함) 통과. 시뮬레이터 통합 테스트(`ios-simulator.yml`, iPhone 17 Pro iOS 26.2)로 앱 실행과 위젯 확장 포함까지 확인함. 위젯 Swift 로직(JSON 해석, 쪽 보정, 쪽 넘김 버튼)은 `ios/RoutiningWidgetTests`로 macOS에서 실행해 확인함. 위젯 화면 렌더링과 실제 탭 동작, 실기기 실행은 아직 확인하지 못함
 - 위젯: WidgetKit 소스와 `RoutiningWidget` 확장 타깃(Info.plist, App Group 권한, Runner에 포함)을 Xcode 프로젝트에 넣어 둠. 실제 빌드 확인은 CI 결과 참고
 
 ## Android와 달라지는 부분
