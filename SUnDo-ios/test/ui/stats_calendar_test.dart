@@ -122,6 +122,45 @@ void main() {
     });
   });
 
+  testWidgets('캘린더 제목을 눌러 연도와 월을 자유롭게 골라 이동한다', (tester) async {
+    final s = await _setup();
+    await s.journal.addTodo('옛날 일', '2024-03-10');
+    await tester.binding.setSurfaceSize(const Size(420, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(MaterialApp(
+      home: ChangeNotifierProvider.value(value: s.vm, child: const StatsScreen()),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('2026년 10월 캘린더'), findsOneWidget);
+
+    await tester.tap(find.text('2026년 10월 캘린더'));
+    await tester.pumpAndSettle();
+    expect(find.text('2026년'), findsOneWidget);
+    await tester.tap(find.byTooltip('이전 해'));
+    await tester.tap(find.byTooltip('이전 해'));
+    await tester.pumpAndSettle();
+    expect(find.text('2024년'), findsOneWidget);
+    await tester.tap(find.text('3월'));
+    await tester.pumpAndSettle();
+
+    expect(s.vm.calendarMonth, DateTime(2024, 3));
+    expect(find.text('2024년 3월 캘린더'), findsOneWidget);
+    expect(find.textContaining('이 달 투두 0/1 완료'), findsOneWidget, reason: '골라서 이동한 달의 투두가 보인다');
+
+    // 취소하면 그대로, 이번 달 버튼은 오늘이 속한 달로 돌아온다
+    await tester.tap(find.text('2024년 3월 캘린더'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(s.vm.calendarMonth, DateTime(2024, 3));
+    await tester.tap(find.text('2024년 3월 캘린더'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('이번 달')));
+    await tester.pumpAndSettle();
+    final now = DateTime.now();
+    expect(s.vm.calendarMonth, DateTime(now.year, now.month));
+  });
+
   testWidgets('통계 화면에 투두와 계획 캘린더가 달력으로 나오고, 칸을 누르면 그날 내용이 보인다', (tester) async {
     final s = await _setup();
     s.vm.calendarMonth = DateTime(DateTime.now().year, DateTime.now().month);

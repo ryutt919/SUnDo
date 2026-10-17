@@ -78,6 +78,12 @@ class StatsViewModel extends RepoViewModel {
     notifyListeners();
   }
 
+  /// 보고 싶은 달로 바로 이동한다(연도와 월만 쓴다).
+  void setMonth(DateTime month) {
+    calendarMonth = DateTime(month.year, month.month);
+    notifyListeners();
+  }
+
   void shiftMonth(int delta) {
     calendarMonth = DateTime(calendarMonth.year, calendarMonth.month + delta);
     notifyListeners();

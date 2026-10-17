@@ -54,6 +54,13 @@ class StatsScreen extends StatelessWidget {
       ),
       _Card(
         title: '${vm.calendarMonth.year}년 ${vm.calendarMonth.month}월 캘린더',
+        onTitleTap: () async {
+          final picked = await showDialog<DateTime>(
+            context: context,
+            builder: (_) => _MonthPickerDialog(initial: vm.calendarMonth),
+          );
+          if (picked != null) vm.setMonth(picked);
+        },
         trailing: _MonthNav(vm: vm),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           SizedBox(
@@ -138,10 +145,11 @@ class StatsScreen extends StatelessWidget {
 }
 
 class _Card extends StatelessWidget {
-  const _Card({required this.title, required this.child, this.trailing});
+  const _Card({required this.title, required this.child, this.trailing, this.onTitleTap});
   final String title;
   final Widget child;
   final Widget? trailing;
+  final VoidCallback? onTitleTap; // 있으면 제목을 눌러 동작하고 화살표를 붙인다
 
   @override
   Widget build(BuildContext context) => Card(
@@ -149,7 +157,24 @@ class _Card extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Expanded(child: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+              Expanded(
+                child: onTitleTap == null
+                    ? Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))
+                    : Align(
+                        alignment: Alignment.centerLeft,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: onTitleTap,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(mainAxisSize: MainAxisSize.min, children: [
+                              Flexible(child: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+                              const Icon(Icons.arrow_drop_down),
+                            ]),
+                          ),
+                        ),
+                      ),
+              ),
               ?trailing,
             ]),
             const SizedBox(height: 10),
@@ -431,4 +456,68 @@ void _showPlanDay(BuildContext context, StatsViewModel vm, String date) {
       ),
     ),
   );
+}
+
+/// 연도 화살표와 12개월 격자로 보고 싶은 달을 고르는 창. 고른 달의 1일(DateTime)을 돌려준다.
+class _MonthPickerDialog extends StatefulWidget {
+  const _MonthPickerDialog({required this.initial});
+  final DateTime initial;
+
+  @override
+  State<_MonthPickerDialog> createState() => _MonthPickerDialogState();
+}
+
+class _MonthPickerDialogState extends State<_MonthPickerDialog> {
+  late int _year = widget.initial.year;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    return AlertDialog(
+      title: Row(children: [
+        IconButton(
+          tooltip: '이전 해',
+          icon: const Icon(Icons.chevron_left),
+          onPressed: _year > 2000 ? () => setState(() => _year--) : null,
+        ),
+        Expanded(child: Center(child: Text('$_year년', style: const TextStyle(fontWeight: FontWeight.w900)))),
+        IconButton(
+          tooltip: '다음 해',
+          icon: const Icon(Icons.chevron_right),
+          onPressed: _year < 2100 ? () => setState(() => _year++) : null,
+        ),
+      ]),
+      content: SizedBox(
+        width: 300,
+        child: GridView.count(
+          shrinkWrap: true,
+          crossAxisCount: 4,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 1.5,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            for (var m = 1; m <= 12; m++)
+              () {
+                final selected = _year == widget.initial.year && m == widget.initial.month;
+                final isNow = _year == now.year && m == now.month;
+                return OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    backgroundColor: selected ? AppColors.green.withValues(alpha: 0.25) : null,
+                    side: BorderSide(color: isNow ? AppColors.green : Theme.of(context).colorScheme.outlineVariant, width: isNow ? 2 : 1),
+                  ),
+                  onPressed: () => Navigator.pop(context, DateTime(_year, m)),
+                  child: Text('$m월', style: TextStyle(fontWeight: selected ? FontWeight.w900 : FontWeight.w500)),
+                );
+              }(),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, DateTime(now.year, now.month)), child: const Text('이번 달')),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+      ],
+    );
+  }
 }
