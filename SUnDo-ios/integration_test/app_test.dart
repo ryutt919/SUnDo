@@ -59,9 +59,13 @@ void main() {
     expect(find.textContaining('월 캘린더'), findsOneWidget);
     expect(find.textContaining('날짜가 잡힌 투두'), findsOneWidget, reason: '처음에는 투두 캘린더 탭');
     Finder tab(String label) => find.descendant(of: find.byType(SegmentedButton<StatsCalendarTab>), matching: find.text(label));
+    await tester.ensureVisible(tab('계획'));
+    await tester.pumpAndSettle();
     await tester.tap(tab('계획'));
     await tester.pumpAndSettle();
     expect(find.textContaining('월간 계획'), findsOneWidget);
+    await tester.ensureVisible(tab('무드'));
+    await tester.pumpAndSettle();
     await tester.tap(tab('무드'));
     await tester.pumpAndSettle();
     expect(find.textContaining('월간 계획'), findsNothing);
