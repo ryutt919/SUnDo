@@ -96,6 +96,7 @@ class _BulkDeleteScreen extends StatelessWidget {
           floatingActionButton: items.isEmpty
               ? null
               : FloatingActionButton.extended(
+                  heroTag: 'fab-bulk-delete',
                   onPressed: vm.selectedCount == 0 ? null : () => _confirmDelete(context, vm),
                   backgroundColor: vm.selectedCount == 0 ? cs.surfaceContainerHighest : AppColors.red,
                   foregroundColor: vm.selectedCount == 0 ? cs.outline : Colors.white,

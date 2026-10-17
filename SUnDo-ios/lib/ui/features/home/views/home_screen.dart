@@ -27,6 +27,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       floatingActionButton: vm.tab != HomeTab.review
           ? FloatingActionButton(
+              heroTag: 'fab-home',
               onPressed: () => showAddMenu(context, vm.selectedDate),
               backgroundColor: AppColors.green,
               foregroundColor: Colors.white,

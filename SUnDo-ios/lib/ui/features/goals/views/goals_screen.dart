@@ -17,6 +17,7 @@ class GoalsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('계획', style: TextStyle(fontWeight: FontWeight.w900))),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab-goals',
         backgroundColor: AppColors.green,
         foregroundColor: Colors.white,
         onPressed: () async {

@@ -69,6 +69,7 @@ class TodosScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-todos',
         onPressed: () => showTodoDialog(context, vm.today),
         icon: const Icon(Icons.add),
         label: const Text('추가하기'),
