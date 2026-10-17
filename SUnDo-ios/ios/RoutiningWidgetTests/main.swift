@@ -54,12 +54,13 @@ if #available(macOS 14.0, *) {
 if CommandLine.arguments.count > 2, #available(macOS 14.0, *) {
     let outDir = CommandLine.arguments[2]
     try FileManager.default.createDirectory(atPath: outDir, withIntermediateDirectories: true)
-    @MainActor func render(_ name: String, size: CGSize, limit: Int, page: Int, rows: [SnapshotRow], title: String, summary: String, kind: String, add: String) throws {
+    @MainActor func render(_ name: String, size: CGSize, limit: Int, page: Int, rows: [SnapshotRow], title: String, summary: String, kind: String, add: String, dark: Bool = false) throws {
         let view = RowsView(kind: kind, title: title, summary: summary, progress: 0.1, rows: rows, emptyText: "비었어요",
                             limit: limit, page: page, addURL: URL(string: add)!)
             .frame(width: size.width, height: size.height)
             .padding(12)
-            .background(Color(white: 0.95))
+            .background(Color(white: dark ? 0.1 : 0.95))
+            .environment(\.colorScheme, dark ? .dark : .light)
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2
         guard let image = renderer.nsImage, let tiff = image.tiffRepresentation,
@@ -75,6 +76,8 @@ if CommandLine.arguments.count > 2, #available(macOS 14.0, *) {
                    title: "투두", summary: "0/10", kind: "RoutiningTodo", add: "myroutine://add?kind=todo&homeWidget")
         try render("투두_큰_2쪽", size: CGSize(width: 338, height: 354), limit: rowLimit(.systemLarge), page: 1, rows: todos,
                    title: "투두", summary: "0/10", kind: "RoutiningTodo", add: "myroutine://add?kind=todo&homeWidget")
+        try render("투두_큰_2쪽_다크", size: CGSize(width: 338, height: 354), limit: rowLimit(.systemLarge), page: 1, rows: todos,
+                   title: "투두", summary: "0/10", kind: "RoutiningTodo", add: "myroutine://add?kind=todo&homeWidget", dark: true)
         try render("루틴_큰_1쪽", size: CGSize(width: 338, height: 354), limit: rowLimit(.systemLarge), page: 0, rows: snap.rows,
                    title: "오늘의 루틴", summary: "17%  1/5", kind: "RoutiningToday", add: "myroutine://add?kind=routine&homeWidget")
     }

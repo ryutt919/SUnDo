@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯 색(다크 모드). 기기가 다크 모드이면 자동으로 적용된다 -->
+<resources>
+    <color name="widget_bg">#1E1F22</color>
+    <color name="widget_text">#ECECEC</color>
+    <color name="widget_title">#A8C7AE</color>
+    <color name="widget_sub">#B8B8B8</color>
+    <color name="widget_muted">#9A9A9A</color>
+    <color name="widget_progress_bg">#3A3B3E</color>
+    <color name="widget_check_fill">#33FFFFFF</color>
+    <color name="widget_check_done_fill">#2A2B2E</color>
+    <color name="widget_none">#4A4B4E</color>
+    <color name="widget_row_0">#4A2E2E</color>
+    <color name="widget_row_1">#4A3F27</color>
+    <color name="widget_row_2">#444229</color>
+    <color name="widget_row_3">#27402F</color>
+    <color name="widget_row_4">#243D4D</color>
+    <color name="widget_row_5">#38324F</color>
+    <color name="widget_row_6">#4A2D3F</color>
+    <color name="widget_row_7">#3A3B3D</color>
+</resources>

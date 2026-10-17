@@ -22,7 +22,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="루티닝"
-                android:textColor="#475B4A"
+                android:textColor="@color/widget_title"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
@@ -30,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="1/2"
-                android:textColor="#222222"
+                android:textColor="@color/widget_text"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -65,7 +65,7 @@
                     android:layout_height="wrap_content"
                     android:singleLine="true"
                     android:text="오전 7:00"
-                    android:textColor="#6B6B6B"
+                    android:textColor="@color/widget_sub"
                     android:textSize="11sp" />
 
                 <TextView
@@ -73,7 +73,7 @@
                     android:layout_height="wrap_content"
                     android:singleLine="true"
                     android:text="물 한 잔 마시기"
-                    android:textColor="#222222"
+                    android:textColor="@color/widget_text"
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
@@ -108,7 +108,7 @@
                     android:layout_height="wrap_content"
                     android:singleLine="true"
                     android:text="언제든"
-                    android:textColor="#6B6B6B"
+                    android:textColor="@color/widget_sub"
                     android:textSize="11sp" />
 
                 <TextView
@@ -116,7 +116,7 @@
                     android:layout_height="wrap_content"
                     android:singleLine="true"
                     android:text="스트레칭"
-                    android:textColor="#222222"
+                    android:textColor="@color/widget_text"
                     android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
