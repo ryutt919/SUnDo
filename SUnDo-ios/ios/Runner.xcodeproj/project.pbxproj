@@ -481,6 +481,7 @@
 		};
 		2ECBBAC6132416C5DD7409F2 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = RoutiningWidget/RoutiningWidget.entitlements;
@@ -551,6 +552,7 @@
 		};
 		56893AB482790D4035E2005C /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = RoutiningWidget/RoutiningWidget.entitlements;
@@ -733,6 +735,7 @@
 		};
 		ED8CDB02107FD7364A991244 /* Profile */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = RoutiningWidget/RoutiningWidget.entitlements;
