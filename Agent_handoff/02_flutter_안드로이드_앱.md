@@ -104,7 +104,8 @@
 - **iOS 동일 반영**: Dart 코드와 테스트는 같은 파일을 SUnDo-ios에 복사(플랫폼별로 다른 5개 파일은 그대로). WidgetKit 위젯([RoutiningWidget.swift](../SUnDo-ios/ios/RoutiningWidget/RoutiningWidget.swift))은 손가락 스크롤이 불가능해 iOS 17 이상에서 위/아래 버튼으로 쪽을 넘기고, "+"는 Link로 같은 딥링크를 염. `Info.plist`에 `myroutine` URL 스킴 등록. 작은 크기 위젯은 Link를 둘 수 없어 제외
 - **검증**: 단위와 위젯 테스트 114건(Android, iOS 각각) 통과, `flutter analyze` 오류와 경고 없음(기존 info 제외). Android 에뮬레이터(Pixel 8, API 35)에서 투두 추가 대화상자, 일괄 삭제 화면, 통계 캘린더, 위젯 표시와 스크롤(23개 항목), 위젯 체크(앱을 열지 않고 완료), 위젯 "+"(앱이 꺼진 상태와 켜진 상태 모두) 확인. Swift는 macOS SDK로 `swiftc -typecheck` 통과
 - **Codex 검토 반영 (2026-10-17)**: 지적 5건 모두 수정. (1) 투두를 바꾸기 직전에 디스크 최신 목록을 읽어(`_refreshTodos`) 위젯이 방금 한 체크를 덮어쓰거나 지운 투두를 되살리지 않음, (2) 루틴 일괄 삭제는 루틴 저장 뒤에 최신 기록을 읽어 바로 고쳐 저장, (3) iOS 위젯 링크에 `homeWidget` 쿼리를 붙여 `home_widget` 플러그인이 `+` 링크를 앱에 전달, (4) 캘린더 시간 가져오기가 최신 투두에 적용돼 앱의 완료 처리를 되돌리지 않음, (5) iOS 위젯 쪽 번호를 목록 길이에 맞게 보정해 저장. 회귀 테스트 3건 추가. Android PendingIntent 템플릿 구조와 플래그, 스냅샷 호환은 문제 없음으로 확인
-- **미검증**: iOS 앱과 위젯은 Xcode가 설치되지 않은 환경이라 빌드와 실행을 못 함(Xcode가 있는 Mac이나 GitHub Actions `ios-build.yml` 수동 실행 필요). 위젯 Extension 타깃도 아직 Xcode 프로젝트에 없음. 갤럭시 실기기 미검증
+- **iOS 빌드 검증 (2026-10-17 15:41:02 KST)**: 이 Mac에는 Xcode가 없어(설치에 Apple ID 로그인 필요) `xcodeproj` gem으로 `RoutiningWidget` 확장 타깃(앱 확장, 최소 iOS 17, Info.plist, App Group 권한, Runner에 포함)을 프로젝트에 추가. 사용자 승인 후 main을 push하고 GitHub Actions `ios-build.yml`을 실행해 macOS에서 분석, 테스트 114건, `flutter build ios --release --no-codesign` 통과 확인(워크플로의 `flutter analyze`는 기존 info 경고 때문에 실패해 `--no-fatal-infos`로 바꿈)
+- **미검증**: iOS 시뮬레이터와 실기기 실행(위젯 쪽 넘김 버튼과 "+" 동작 포함), 갤럭시 실기기
 - **한계**: 위젯 행 본문 탭은 동작 없음(컬렉션은 템플릿 하나만 가질 수 있어 체크 버튼만 연결). "+" 버튼이 목록 위에 겹쳐 스크롤 중 오른쪽 아래 행의 체크 버튼을 가릴 수 있음(끝까지 내리면 여백 있음)
 
 ### 원본 대비 추가 구현
