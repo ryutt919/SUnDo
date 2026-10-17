@@ -25,6 +25,12 @@ jobs:
           echo "시뮬레이터: $UDID"
           xcrun simctl boot "$UDID"
           echo "UDID=$UDID" >> "$GITHUB_ENV"
+      - name: 위젯 Swift 로직 실행 확인(JSON 해석, 쪽 보정, 쪽 넘김 버튼)
+        run: |
+          mkdir -p /tmp/widget_test
+          sed 's/^@main$//' ios/RoutiningWidget/RoutiningWidget.swift > /tmp/widget_test/widget_nomain.swift
+          swiftc -target arm64-apple-macos14.0 -o /tmp/widget_test/logic_test /tmp/widget_test/widget_nomain.swift ios/RoutiningWidgetTests/main.swift
+          /tmp/widget_test/logic_test ios/RoutiningWidgetTests/snapshot_fixture.json
       - name: 통합 테스트(앱 실행)
         run: flutter test integration_test -d "$UDID"
       - name: 위젯 확장이 앱에 포함되는지 확인

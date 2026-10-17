@@ -1,0 +1,364 @@
+{
+  "month": {
+    "label": "2026년 10월",
+    "offset": 3,
+    "days": [
+      {
+        "day": 1,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 2,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 3,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 4,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 5,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 6,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 7,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 8,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 9,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 10,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 11,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 12,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 13,
+        "light": "red",
+        "today": false
+      },
+      {
+        "day": 14,
+        "light": "yellow",
+        "today": true
+      },
+      {
+        "day": 15,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 16,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 17,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 18,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 19,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 20,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 21,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 22,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 23,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 24,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 25,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 26,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 27,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 28,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 29,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 30,
+        "light": "none",
+        "today": false
+      },
+      {
+        "day": 31,
+        "light": "none",
+        "today": false
+      }
+    ]
+  },
+  "date": "2026-10-14",
+  "pct": 20,
+  "done": 1,
+  "due": 5,
+  "rest": false,
+  "light": "yellow",
+  "streak": 0,
+  "rows": [
+    {
+      "kind": "habit",
+      "id": "h0",
+      "emoji": "✅",
+      "name": "루틴0",
+      "time": "",
+      "done": true,
+      "color": "#E3F7E8"
+    },
+    {
+      "kind": "habit",
+      "id": "h1",
+      "emoji": "✅",
+      "name": "루틴1",
+      "time": "",
+      "done": false,
+      "color": "#E3F7E8"
+    },
+    {
+      "kind": "habit",
+      "id": "h2",
+      "emoji": "✅",
+      "name": "루틴2",
+      "time": "",
+      "done": false,
+      "color": "#E3F7E8"
+    },
+    {
+      "kind": "habit",
+      "id": "h3",
+      "emoji": "✅",
+      "name": "루틴3",
+      "time": "",
+      "done": false,
+      "color": "#E3F7E8"
+    },
+    {
+      "kind": "habit",
+      "id": "h4",
+      "emoji": "✅",
+      "name": "루틴4",
+      "time": "",
+      "done": false,
+      "color": "#E3F7E8"
+    },
+    {
+      "kind": "habit",
+      "id": "w",
+      "emoji": "✅",
+      "name": "주간",
+      "time": "주 2회 중 0",
+      "done": false,
+      "color": "#E3F7E8"
+    }
+  ],
+  "todoDone": 0,
+  "todoTotal": 10,
+  "todos": [
+    {
+      "kind": "todo",
+      "id": "jp8wh640",
+      "emoji": "✔",
+      "name": "밀린 일",
+      "time": "10-13 이월 20:15",
+      "done": false,
+      "color": "#DDF1FF"
+    },
+    {
+      "kind": "todo",
+      "id": "ng6cvs0k",
+      "emoji": "✔",
+      "name": "투두0",
+      "time": "오늘 09:30",
+      "done": false,
+      "color": "#DDF1FF"
+    },
+    {
+      "kind": "todo",
+      "id": "gw2tzt99",
+      "emoji": "✔",
+      "name": "투두1",
+      "time": "오늘",
+      "done": false,
+      "color": "#DDF1FF"
+    },
+    {
+      "kind": "todo",
+      "id": "8cug2x4b",
+      "emoji": "✔",
+      "name": "투두2",
+      "time": "오늘",
+      "done": false,
+      "color": "#DDF1FF"
+    },
+    {
+      "kind": "todo",
+      "id": "uc0u0asl",
+      "emoji": "✔",
+      "name": "투두3",
+      "time": "오늘",
+      "done": false,
+      "color": "#DDF1FF"
+    },
+    {
+      "kind": "todo",
+      "id": "8x7r7yhz",
+      "emoji": "✔",
+      "name": "투두4",
+      "time": "오늘",
+      "done": false,
+      "color": "#DDF1FF"
+    },
+    {
+      "kind": "todo",
+      "id": "lf8yd19t",
+      "emoji": "✔",
+      "name": "투두5",
+      "time": "오늘",
+      "done": false,
+      "color": "#DDF1FF"
+    },
+    {
+      "kind": "todo",
+      "id": "uxbl60uy",
+      "emoji": "✔",
+      "name": "투두6",
+      "time": "오늘",
+      "done": false,
+      "color": "#DDF1FF"
+    },
+    {
+      "kind": "todo",
+      "id": "2b70tido",
+      "emoji": "✔",
+      "name": "투두7",
+      "time": "오늘",
+      "done": false,
+      "color": "#DDF1FF"
+    },
+    {
+      "kind": "todo",
+      "id": "d8myza7k",
+      "emoji": "✔",
+      "name": "투두8",
+      "time": "오늘",
+      "done": false,
+      "color": "#DDF1FF"
+    }
+  ],
+  "week": [
+    {
+      "label": "월",
+      "day": 12,
+      "light": "red",
+      "today": false
+    },
+    {
+      "label": "화",
+      "day": 13,
+      "light": "red",
+      "today": false
+    },
+    {
+      "label": "수",
+      "day": 14,
+      "light": "yellow",
+      "today": true
+    },
+    {
+      "label": "목",
+      "day": 15,
+      "light": "none",
+      "today": false
+    },
+    {
+      "label": "금",
+      "day": 16,
+      "light": "none",
+      "today": false
+    },
+    {
+      "label": "토",
+      "day": 17,
+      "light": "none",
+      "today": false
+    },
+    {
+      "label": "일",
+      "day": 18,
+      "light": "none",
+      "today": false
+    }
+  ]
+}
