@@ -27,10 +27,19 @@ class GoalsViewModel extends RepoViewModel {
   String get periodTitle {
     final d = parseDateKey(anchor);
     return switch (period) {
-      GoalPeriod.week => '${weekStartKey(anchor).substring(5)} 주',
+      GoalPeriod.week => _weekRangeTitle(),
       GoalPeriod.month => '${d.year}년 ${d.month}월',
       GoalPeriod.year => '${d.year}년',
     };
+  }
+
+  /// 주간 계획의 기간 표시: "10월 12일 - 10월 18일"(월요일부터 일요일). 해가 바뀌는 주는 해도 함께 적는다.
+  String _weekRangeTitle() {
+    final start = parseDateKey(weekStartKey(anchor));
+    final end = parseDateKey(addDaysKey(weekStartKey(anchor), 6));
+    final cross = start.year != end.year;
+    String f(DateTime d, {bool year = false}) => '${year ? '${d.year}년 ' : ''}${d.month}월 ${d.day}일';
+    return '${f(start, year: cross)} - ${f(end, year: cross)}';
   }
 
   List<Goal> get goals => _journal.goalsFor(period, periodKey);

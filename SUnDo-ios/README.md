@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-- Dart 코드: `flutter analyze` 오류 없음, 단위 테스트 84건 통과(Windows에서 확인)
+- Dart 코드: `flutter analyze` 오류 없음, 단위 및 위젯 테스트 114건 통과(macOS에서 확인). iOS 앱 빌드는 Xcode가 있는 Mac이나 GitHub Actions에서 확인 필요
 - iOS 빌드와 실행: **macOS와 Xcode가 필요해서 아직 확인하지 못함**
 - 위젯: WidgetKit 소스는 작성했지만 Xcode 타깃 추가는 아직 안 됨
 
@@ -13,7 +13,11 @@
 - 알림은 예약 개수가 64개까지라서 상한을 60개로 둠(`AlarmPlanUseCase.maxAlarms`)
 - 알림 권한은 설정 화면 버튼에서 요청함(시작할 때 묻지 않음)
 - 위젯은 앱에서 추가할 수 없고, 홈 화면을 길게 눌러 추가함
-- iOS 위젯은 읽기 전용이며 누르면 앱이 열림. Android처럼 앱을 열지 않고 체크하는 동작은 iOS 17의 App Intents가 필요해서 아직 없음
+- iOS 위젯은 누르면 앱이 열림. Android처럼 앱을 열지 않고 체크하는 동작은 아직 없음
+- 위젯 스크롤: WidgetKit은 손가락 스크롤을 지원하지 않아서 iOS 17 이상에서는 위/아래 버튼으로 쪽을 넘겨 모든 항목을 봄(iOS 16 이하는 첫 쪽만 보임)
+- 위젯 오른쪽 아래 "+" 버튼: `myroutine://add?kind=todo|routine` 주소로 앱을 열고 투두 추가 대화상자나 루틴 추가 화면을 띄움. 이를 위해 `Info.plist`에 `myroutine` URL 스킴을 등록했음
+- 위젯 크기는 중간과 큰 것만 지원함(작은 크기는 "+" 버튼을 둘 수 없음)
+- 위젯에 보이는 투두와 루틴 개수는 제한이 없고, 투두에는 시간이 함께 보임
 - 캘린더, 카메라, 사진 접근 문구는 `ios/Runner/Info.plist`에 있음
 
 ## 빌드 순서 (Mac)

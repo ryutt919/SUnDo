@@ -4,6 +4,7 @@ import '../../../../data/repositories/settings_repository.dart';
 import '../../../../domain/models/date_key.dart';
 import '../../../../domain/models/habit.dart';
 import '../../../../domain/models/journal_models.dart';
+import '../../../../domain/models/repeat_rule.dart';
 import '../../../../domain/use_cases/routine_analyzer.dart';
 import '../../../core/repo_view_model.dart';
 
@@ -169,9 +170,8 @@ class HomeViewModel extends RepoViewModel {
 
   List<TodoRowData> get todoRows {
     final isToday = selectedDate == today;
-    var list = _journal.todos
-        .where((t) => t.date == selectedDate || (isToday && t.date.compareTo(selectedDate) < 0 && !t.done))
-        .toList();
+    var list = sortTodos(_journal.todos
+        .where((t) => t.date == selectedDate || (isToday && t.date.compareTo(selectedDate) < 0 && !t.done)));
     if (filter == HomeFilter.undone) list = list.where((t) => !t.done).toList();
     if (filter == HomeFilter.done) list = list.where((t) => t.done).toList();
     if (_settings.settings.doneToBottom) {
@@ -260,6 +260,18 @@ class HomeViewModel extends RepoViewModel {
     editing = !editing;
     notifyListeners();
   }
+
+  // ---- 일괄 삭제("관리") ----
+
+  /// 관리 화면에 보일 매일 루틴(요일과 날짜에 상관없이 전부).
+  List<Habit> get manageDailyHabits =>
+      _routine.habits.where((h) => !h.archived && h.repeat.type != RepeatType.weekly).toList();
+
+  /// 관리 화면에 보일 주간 루틴(주 N회).
+  List<Habit> get manageWeeklyHabits =>
+      _routine.habits.where((h) => !h.archived && h.repeat.type == RepeatType.weekly).toList();
+
+  Future<void> deleteHabits(Set<String> ids) => _routine.deleteHabits(ids);
 
   Future<void> toggleHabit(String id, [String? date]) => _routine.toggle(id, date ?? selectedDate);
 

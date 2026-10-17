@@ -8,4 +8,5 @@
     <string name="widget_todo_description">남은 투두를 홈 화면에서 바로 체크해요</string>
     <string name="widget_week_description">이번 주 달성 신호등을 한눈에 봐요</string>
     <string name="widget_month_description">이번 달 달성 신호등을 달력으로 봐요</string>
+    <string name="widget_add_description">추가</string>
 </resources>

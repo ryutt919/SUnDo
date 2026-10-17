@@ -13,12 +13,14 @@ import 'journal_repository.dart';
 ///  - 투두만 바뀌었으면 캘린더 이벤트를 고친다.
 ///  - 캘린더만 바뀌었으면 투두를 고친다(제목, 날짜, 완료 표시, 이벤트 삭제 포함, [pullChanges]가 켜진 경우).
 ///  - 둘 다 바뀌었으면 투두가 이긴다.
-/// 새 일정 가져오기([importNew])를 켜면 오늘부터 [importDays]일 안의 반복되지 않는 일정을 투두로 만든다.
+/// 새 일정 가져오기([importNew], 기본으로 켜짐)가 켜져 있으면 오늘부터 [importDays]일 안의 반복되지 않는 일정을
+/// 시각까지 포함해 투두로 만든다.
 /// 기기마다 다른 값이라 백업에는 넣지 않는다.
 class CalendarRepository extends ChangeNotifier {
   CalendarRepository(this._store, this._service, this._journal);
 
   static const _key = 'calendar';
+  static const _schema = 2; // 2: 새 일정 가져오기를 기본으로 켬
   static const importDays = 60;
   static const _doneMark = '✔ ';
 
@@ -28,7 +30,7 @@ class CalendarRepository extends ChangeNotifier {
 
   bool _enabled = false;
   bool _pullChanges = true;
-  bool _importNew = false;
+  bool _importNew = true; // 새로 연동하면 캘린더 일정이 자동으로 투두에 들어온다
   String _calendarId = '';
   String _calendarName = '';
   Map<String, _Link> _links = {};
@@ -48,7 +50,9 @@ class CalendarRepository extends ChangeNotifier {
     if (v is! Map) return;
     _enabled = v['enabled'] == true;
     _pullChanges = v['pullChanges'] != false;
-    _importNew = v['importNew'] == true;
+    // 예전에는 꺼진 채로 시작했다. 2판으로 올라올 때 한 번만 켜서, 캘린더 일정이 자동으로 투두에 들어오게 한다.
+    final migrate = ((v['schema'] as num?)?.toInt() ?? 1) < _schema;
+    _importNew = migrate || v['importNew'] != false;
     _calendarId = (v['calendarId'] as String?) ?? '';
     _calendarName = (v['calendarName'] as String?) ?? '';
     final links = v['links'];
@@ -66,6 +70,7 @@ class CalendarRepository extends ChangeNotifier {
   Future<void> _save() => _store.writeJson(_key, {
         'enabled': _enabled,
         'pullChanges': _pullChanges,
+        'schema': _schema,
         'importNew': _importNew,
         'calendarId': _calendarId,
         'calendarName': _calendarName,
@@ -227,6 +232,7 @@ class CalendarRepository extends ChangeNotifier {
     final pushDate = dateIsPushable && t.date != link.date;
     var newTitleBase = link.title;
     var newDateBase = link.date;
+    var newTimeBase = link.time;
     var changed = false;
 
     if (pushTitle || pushDate) {
@@ -245,24 +251,30 @@ class CalendarRepository extends ChangeNotifier {
     }
 
     // 캘린더에서 바뀐 필드를 가져온다. 방금 투두에서 보낸 필드는 건너뛴다.
+    // 시각은 앱으로 가져오기만 한다(앱이 만든 일정은 종일이라 시각이 없다).
+    final pullTime = _pullChanges && link.imported && ev.time != link.time;
     final pullTitle = _pullChanges && !pushTitle && ev.title != link.title;
     final pullDate = _pullChanges && !pushDate && evDate != link.date && (!dateIsPushable || t.date == link.date);
-    if (pullTitle || pullDate) {
+    if (pullTitle || pullDate || pullTime) {
       final parsed = _parseTitle(ev.title);
-      await _journal.updateTodo(t.copyWith(
+      // 캘린더를 기다리는 동안 앱에서 바뀐 투두(완료 등)를 되돌리지 않도록 최신 투두에 적용한다.
+      final latest = _journal.todos.where((x) => x.id == t.id).firstOrNull ?? t;
+      await _journal.updateTodo(latest.copyWith(
         text: pullTitle && parsed.text.isNotEmpty ? parsed.text : null,
         done: pullTitle && parsed.text.isNotEmpty ? parsed.done : null,
         date: pullDate ? evDate : null,
+        time: pullTime ? ev.time : null,
       ));
       if (pullTitle) newTitleBase = ev.title;
       if (pullDate) newDateBase = evDate;
+      if (pullTime) newTimeBase = ev.time;
       changed = true;
     }
 
     // 날짜를 보낼 수 없는 일정은 앱에서 날짜를 바꿔도 캘린더와 어긋난 채 두고, 캘린더 날짜를 기준으로 삼는다.
     if (!dateIsPushable && !pullDate) newDateBase = link.date;
 
-    if (changed) _links[t.id] = _Link(link.eventId, link.calendarId, title: newTitleBase, date: newDateBase, imported: link.imported);
+    if (changed) _links[t.id] = _Link(link.eventId, link.calendarId, title: newTitleBase, date: newDateBase, imported: link.imported, time: newTimeBase);
     return changed;
   }
 
@@ -280,8 +292,8 @@ class CalendarRepository extends ChangeNotifier {
       if (known.contains(e.id) || _ignored.contains(e.id)) continue;
       final parsed = _parseTitle(e.title);
       if (parsed.text.isEmpty) continue;
-      final todo = await _journal.addTodo(parsed.text, dateKey(e.day), done: parsed.done);
-      _links[todo.id] = _Link(e.id, _calendarId, title: e.title, date: dateKey(e.day), imported: true);
+      final todo = await _journal.addTodo(parsed.text, dateKey(e.day), done: parsed.done, time: e.time);
+      _links[todo.id] = _Link(e.id, _calendarId, title: e.title, date: dateKey(e.day), imported: true, time: e.time);
       known.add(e.id);
       changed = true;
     }
@@ -298,7 +310,7 @@ class CalendarChoice {
 }
 
 class _Link {
-  const _Link(this.eventId, this.calendarId, {required this.title, required this.date, required this.imported});
+  const _Link(this.eventId, this.calendarId, {required this.title, required this.date, required this.imported, this.time = ''});
   final String eventId;
   final String calendarId;
 
@@ -309,7 +321,17 @@ class _Link {
   /// 캘린더에서 가져온 일정(원래 캘린더 소유). 지우거나 날짜를 옮기지 않는다.
   final bool imported;
 
-  Map<String, dynamic> toJson() => {'event': eventId, 'calendar': calendarId, 'title': title, 'date': date, 'imported': imported};
+  /// 마지막으로 맞춘 시각(가져온 일정만 의미가 있다).
+  final String time;
+
+  Map<String, dynamic> toJson() => {
+        'event': eventId,
+        'calendar': calendarId,
+        'title': title,
+        'date': date,
+        'imported': imported,
+        if (time.isNotEmpty) 'time': time,
+      };
 
   factory _Link.fromJson(Map<String, dynamic> j) => _Link(
         (j['event'] as String?) ?? '',
@@ -317,5 +339,6 @@ class _Link {
         title: (j['title'] as String?) ?? '',
         date: (j['date'] as String?) ?? '',
         imported: j['imported'] == true,
+        time: (j['time'] as String?) ?? '',
       );
 }

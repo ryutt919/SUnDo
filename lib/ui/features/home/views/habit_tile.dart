@@ -129,7 +129,11 @@ class TodoTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(data.carriedFrom != null ? '${data.carriedFrom!.substring(5)} 에서 이월' : '투두',
+                Text(
+                    [
+                      data.carriedFrom != null ? '${data.carriedFrom!.substring(5)} 에서 이월' : '투두',
+                      if (t.hasTime) t.time,
+                    ].join('  '),
                     style: TextStyle(fontSize: 12, color: cs.outline)),
                 Text(t.text,
                     style: TextStyle(

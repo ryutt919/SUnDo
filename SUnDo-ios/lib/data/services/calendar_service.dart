@@ -1,6 +1,6 @@
 import 'package:device_calendar_plus/device_calendar_plus.dart';
 
-/// 캘린더에서 읽어 온 이벤트 한 개. 시각은 버리고 시작 날짜만 쓴다.
+/// 캘린더에서 읽어 온 이벤트 한 개. 시작 날짜와, 종일이 아니면 시작 시각('HH:mm')만 쓴다.
 class CalendarEvent {
   const CalendarEvent({
     required this.id,
@@ -8,6 +8,7 @@ class CalendarEvent {
     required this.day,
     required this.allDay,
     required this.recurring,
+    this.time = '',
   });
 
   final String id;
@@ -15,6 +16,7 @@ class CalendarEvent {
   final DateTime day; // 시작 날짜(시각 없음)
   final bool allDay;
   final bool recurring;
+  final String time; // 종일이 아닌 일정의 시작 시각 'HH:mm', 종일이면 빈 문자열
 }
 
 /// 기기 캘린더(Android CalendarProvider)를 감싼 서비스. 상태는 가지지 않는다.
@@ -43,6 +45,7 @@ class CalendarService {
         day: DateTime(e.startDate.year, e.startDate.month, e.startDate.day),
         allDay: e.isAllDay,
         recurring: e.isRecurring,
+        time: e.isAllDay ? '' : '${e.startDate.hour.toString().padLeft(2, '0')}:${e.startDate.minute.toString().padLeft(2, '0')}',
       );
 
   /// 이벤트 하나를 읽는다. 지워졌으면 null.

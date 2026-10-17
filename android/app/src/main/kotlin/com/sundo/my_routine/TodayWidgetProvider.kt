@@ -2,11 +2,9 @@ package com.sundo.my_routine
 
 /** 오늘 할 루틴(매일과 주간)을 보여 주고, 큰 체크 버튼을 누르면 앱을 열지 않고 체크한다. */
 class TodayWidgetProvider : RowWidgetProvider() {
+    override val kind = WidgetSnapshot.KIND_ROUTINE
+
     override val title = "오늘의 루틴"
-
-    override fun rowsOf(s: WidgetSnapshot) = s.rows
-
-    override fun hiddenCountOf(s: WidgetSnapshot, shown: Int) = (s.rows.size - shown) + s.more
 
     override fun summaryOf(s: WidgetSnapshot) = if (s.rest) "쉬는 날" else "${s.pct}%  ${s.done}/${s.due}"
 

@@ -10,6 +10,7 @@ class AppSync {
 
   final AppDependencies _deps;
   Timer? _debounce;
+  Timer? _calendarPoll;
   Future<void> _chain = Future.value();
 
   void start() {
@@ -17,11 +18,14 @@ class AppSync {
     _deps.journal.addListener(_schedule);
     _deps.settings.addListener(_schedule);
     _deps.calendar.addListener(_scheduleOnCalendarSettings);
+    // 캘린더에 새로 생긴 일정은 앱이 알 수 없으므로, 앱이 켜져 있는 동안 주기적으로 가져온다.
+    _calendarPoll = Timer.periodic(const Duration(minutes: 10), (_) => _deps.calendar.sync());
     syncNow();
   }
 
   void dispose() {
     _debounce?.cancel();
+    _calendarPoll?.cancel();
     _deps.routine.removeListener(_schedule);
     _deps.journal.removeListener(_schedule);
     _deps.settings.removeListener(_schedule);

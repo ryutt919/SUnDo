@@ -124,7 +124,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   SwitchListTile(
                     title: const Text('캘린더의 새 일정을 투두로 가져오기'),
-                    subtitle: const Text('오늘부터 60일 안의 반복되지 않는 일정을 투두로 만들어요. 캘린더 일정은 지우거나 옮기지 않아요'),
+                    subtitle: const Text('오늘부터 60일 안의 반복되지 않는 일정을 시간까지 투두로 자동으로 만들어요(앱을 켜 두면 10분마다 확인). 캘린더 일정은 지우거나 옮기지 않아요'),
                     value: vm.calendarImport,
                     onChanged: vm.setCalendarImport,
                   ),

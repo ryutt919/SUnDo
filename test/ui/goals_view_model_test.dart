@@ -15,6 +15,18 @@ Future<({GoalsViewModel vm, JournalRepository journal})> _setup() async {
 Goal _only(GoalsViewModel vm) => vm.goals.single;
 
 void main() {
+  test('주간 계획의 기간은 "10월 12일 - 10월 18일"처럼 월요일부터 일요일까지 보이고 넘기면 다음 주로 간다', () async {
+    final s = await _setup();
+    s.vm.anchor = '2026-10-14';
+    expect(s.vm.periodTitle, '10월 12일 - 10월 18일');
+    s.vm.shift(1);
+    expect(s.vm.periodTitle, '10월 19일 - 10월 25일');
+    s.vm.anchor = '2026-12-30';
+    expect(s.vm.periodTitle, '2026년 12월 28일 - 2027년 1월 3일', reason: '해가 바뀌는 주는 해도 적는다');
+    s.vm.setPeriod(GoalPeriod.month);
+    expect(s.vm.periodTitle, '2026년 12월');
+  });
+
   test('계획을 완료로 체크하면 진행률이 100%가 되고 세부 항목도 모두 끝난 것으로 본다', () async {
     final s = await _setup();
     await s.vm.addGoal('운동 계획');

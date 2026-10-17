@@ -59,22 +59,63 @@ class RoutineMode {
       RoutineMode(id: j['id'] as String, name: j['name'] as String);
 }
 
+/// 날짜 순, 같은 날이면 시간이 있는 투두를 시간 순으로 앞에 두고 종일 투두를 뒤에 둔다.
+/// 같은 조건이면 원래 순서를 지킨다.
+List<Todo> sortTodos(Iterable<Todo> todos, {bool newestFirst = false}) {
+  final indexed = todos.toList().asMap().entries.toList();
+  indexed.sort((a, b) {
+    var c = a.value.date.compareTo(b.value.date);
+    if (newestFirst) c = -c;
+    if (c != 0) return c;
+    final ta = a.value.time, tb = b.value.time;
+    if (ta.isNotEmpty && tb.isNotEmpty) {
+      c = ta.compareTo(tb);
+      if (c != 0) return c;
+    } else if (ta.isNotEmpty != tb.isNotEmpty) {
+      return ta.isNotEmpty ? -1 : 1;
+    }
+    return a.key.compareTo(b.key);
+  });
+  return [for (final e in indexed) e.value];
+}
+
+/// 투두의 날짜와 시간을 사람이 읽는 문구로. 시간이 없으면 날짜만(종일).
+String todoWhenLabel(Todo t, {bool showDate = true}) {
+  if (!t.hasTime) return t.date;
+  return showDate ? '${t.date} ${t.time}' : t.time;
+}
+
 class Todo {
-  const Todo({required this.id, required this.text, required this.date, this.done = false});
+  const Todo({required this.id, required this.text, required this.date, this.done = false, this.time = ''});
   final String id;
   final String text;
   final String date;
   final bool done;
+  final String time; // 'HH:mm' 또는 빈 문자열(종일)
 
-  Todo copyWith({String? text, String? date, bool? done}) =>
-      Todo(id: id, text: text ?? this.text, date: date ?? this.date, done: done ?? this.done);
+  bool get hasTime => time.isNotEmpty;
 
-  Map<String, dynamic> toJson() => {'id': id, 'text': text, 'date': date, 'done': done};
+  Todo copyWith({String? text, String? date, bool? done, String? time}) => Todo(
+        id: id,
+        text: text ?? this.text,
+        date: date ?? this.date,
+        done: done ?? this.done,
+        time: time ?? this.time,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'text': text,
+        'date': date,
+        'done': done,
+        if (time.isNotEmpty) 'time': time,
+      };
   factory Todo.fromJson(Map<String, dynamic> j) => Todo(
         id: j['id'] as String,
         text: (j['text'] as String?) ?? '',
         date: j['date'] as String,
         done: (j['done'] as bool?) ?? false,
+        time: (j['time'] as String?) ?? '',
       );
 }
 

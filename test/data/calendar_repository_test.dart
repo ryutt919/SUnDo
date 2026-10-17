@@ -9,11 +9,12 @@ import 'package:my_routine/domain/models/journal_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Ev {
-  _Ev(this.title, this.day, {this.recurring = false});
+  _Ev(this.title, this.day, {this.recurring = false, this.time = ''});
   String title;
   DateTime day;
   bool allDay = true;
   bool recurring;
+  String time;
 }
 
 /// 기기 캘린더 대신 이벤트를 메모리에 들고 있는 가짜 서비스.
@@ -35,7 +36,7 @@ class _FakeCalendar implements CalendarService {
   @override
   Future<CalendarEvent?> get(String eventId) async {
     final e = events[eventId];
-    return e == null ? null : CalendarEvent(id: eventId, title: e.title, day: e.day, allDay: e.allDay, recurring: e.recurring);
+    return e == null ? null : CalendarEvent(id: eventId, title: e.title, day: e.day, allDay: e.allDay, recurring: e.recurring, time: e.time);
   }
 
   @override
@@ -48,6 +49,7 @@ class _FakeCalendar implements CalendarService {
               day: entry.value.day,
               allDay: entry.value.allDay,
               recurring: entry.value.recurring,
+              time: entry.value.time,
             )
       ];
 
@@ -255,9 +257,65 @@ void main() {
   });
 
   group('새 일정 가져오기', () {
+    test('연동을 켜기만 해도 캘린더의 새 일정이 자동으로 투두가 된다', () async {
+      final s = await _setup();
+      await s.repo.enable(_cal);
+      expect(s.repo.importNew, isTrue);
+      s.fake.events['x'] = _Ev('치과', DateTime.parse('${_future(3)}T00:00:00'));
+      await s.repo.sync();
+      expect(s.journal.todos.single.text, '치과');
+    });
+
+    test('예전에 꺼진 채 저장된 설정도 한 번 켜지고, 그 뒤 직접 끄면 유지된다', () async {
+      SharedPreferences.setMockInitialValues({
+        'calendar': '{"enabled":true,"calendarId":"c1","calendarName":"내 캘린더","importNew":false,"links":{}}',
+      });
+      final store = await StorageService.create();
+      final journal = JournalRepository(store);
+      await journal.load();
+      final fake = _FakeCalendar();
+      var repo = CalendarRepository(store, fake, journal);
+      await repo.load();
+      expect(repo.importNew, isTrue, reason: '예전 기본값(꺼짐)에서 올라오면 한 번 켠다');
+      await repo.setImportNew(false);
+      repo = CalendarRepository(store, fake, journal);
+      await repo.load();
+      expect(repo.importNew, isFalse, reason: '사용자가 직접 끈 것은 존중한다');
+    });
+
+    test('시각이 있는 일정은 시간까지 투두로 가져오고, 캘린더에서 시간을 바꾸면 따라간다', () async {
+      final s = await _setup();
+      await s.repo.enable(_cal);
+      final day = DateTime.parse('${_future(3)}T00:00:00');
+      s.fake.events['x'] = _Ev('회의', day, time: '14:30')..allDay = false;
+      s.fake.events['y'] = _Ev('종일 일정', day);
+      await s.repo.sync();
+      expect(s.journal.todos.firstWhere((t) => t.text == '회의').time, '14:30');
+      expect(s.journal.todos.firstWhere((t) => t.text == '종일 일정').time, '');
+      s.fake.events['x']!.time = '16:00';
+      await s.repo.sync();
+      expect(s.journal.todos.firstWhere((t) => t.text == '회의').time, '16:00');
+    });
+
+    test('캘린더 시간을 가져오는 사이 앱에서 바꾼 완료 상태를 되돌리지 않는다', () async {
+      final s = await _setup();
+      await s.repo.enable(_cal);
+      final day = DateTime.parse('${_future(3)}T00:00:00');
+      s.fake.events['x'] = _Ev('회의', day, time: '14:30')..allDay = false;
+      await s.repo.sync();
+      final t = s.journal.todos.single;
+      s.fake.events['x']!.time = '16:00';
+      await s.journal.updateTodo(t.copyWith(done: true)); // 앱에서 완료 처리
+      await s.repo.sync();
+      final cur = s.journal.todos.single;
+      expect(cur.time, '16:00');
+      expect(cur.done, isTrue, reason: '시간을 가져오며 완료 상태를 미완료로 되돌리면 안 된다');
+    });
+
     test('꺼져 있으면 가져오지 않는다', () async {
       final s = await _setup();
       await s.repo.enable(_cal);
+      await s.repo.setImportNew(false);
       s.fake.events['x'] = _Ev('치과', DateTime.parse('${_future(3)}T00:00:00'));
       await s.repo.sync();
       expect(s.journal.todos, isEmpty);

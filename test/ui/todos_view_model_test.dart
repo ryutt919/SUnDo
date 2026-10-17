@@ -14,14 +14,6 @@ Future<({TodosViewModel vm, JournalRepository journal})> _setup() async {
 }
 
 void main() {
-  test('빠른 추가는 오늘 할 일로 들어가고 빈 글자는 무시한다', () async {
-    final s = await _setup();
-    await s.vm.quickAdd('  우유 사기  ');
-    await s.vm.quickAdd('   ');
-    expect(s.vm.todayOpen.map((t) => t.text), ['우유 사기']);
-    expect(s.journal.todos.length, 1);
-  });
-
   test('투두는 지난 미완료, 오늘, 예정, 완료로 나뉜다', () async {
     final s = await _setup();
     final today = todayKey();

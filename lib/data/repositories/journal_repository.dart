@@ -56,8 +56,17 @@ class JournalRepository extends ChangeNotifier {
   }
 
   // ---- 투두 ----
-  Future<Todo> addTodo(String text, String date, {bool done = false}) async {
-    final todo = Todo(id: newId(), text: text, date: date, done: done);
+  /// 투두를 바꾸기 직전에 디스크의 최신 목록을 읽는다. 위젯(다른 isolate)이 방금 바꾼 투두를
+  /// 앱의 오래된 목록으로 덮어쓰거나, 앱에서 지운 투두를 되살리지 않기 위해서다.
+  Future<void> _refreshTodos() async {
+    await _store.reload();
+    final v = _store.readJson('todos');
+    _todos = v is List ? v.map((e) => Todo.fromJson((e as Map).cast<String, dynamic>())).toList() : <Todo>[];
+  }
+
+  Future<Todo> addTodo(String text, String date, {bool done = false, String time = ''}) async {
+    await _refreshTodos();
+    final todo = Todo(id: newId(), text: text, date: date, done: done, time: time);
     _todos = [..._todos, todo];
     await _save('todos');
     notifyListeners();
@@ -65,12 +74,23 @@ class JournalRepository extends ChangeNotifier {
   }
 
   Future<void> updateTodo(Todo t) async {
+    await _refreshTodos();
     _todos = [for (final x in _todos) x.id == t.id ? t : x];
     await _save('todos');
     notifyListeners();
   }
 
+  /// 여러 투두를 한 번에 지운다(저장은 한 번).
+  Future<void> deleteTodos(Set<String> ids) async {
+    if (ids.isEmpty) return;
+    await _refreshTodos();
+    _todos = _todos.where((t) => !ids.contains(t.id)).toList();
+    await _save('todos');
+    notifyListeners();
+  }
+
   Future<void> deleteTodo(String id) async {
+    await _refreshTodos();
     _todos = _todos.where((t) => t.id != id).toList();
     await _save('todos');
     notifyListeners();

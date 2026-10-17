@@ -4,7 +4,11 @@ import 'package:provider/provider.dart';
 import '../../../../domain/models/date_key.dart';
 import '../../../core/app_theme.dart';
 import '../../../core/widgets.dart';
+import '../../../../domain/models/habit.dart';
+import '../../../../domain/models/repeat_rule.dart';
 import '../../habit_form/views/habit_form_screen.dart';
+import '../../manage/view_models/bulk_delete_view_model.dart';
+import '../../manage/views/bulk_delete_screen.dart';
 import '../../habit_form/views/add_menu_sheet.dart';
 import '../../habit_detail/views/habit_detail_sheet.dart';
 import '../../review/views/review_view.dart';
@@ -269,6 +273,27 @@ class _Tabs extends StatelessWidget {
   const _Tabs({required this.vm});
   final HomeViewModel vm;
 
+  /// 지금 보고 있는 탭(매일/주간)의 루틴을 여러 개 골라 한 번에 지우는 화면을 연다.
+  void _openManage(BuildContext context) {
+    final weekly = vm.tab == HomeTab.weekly;
+    openBulkDelete(
+      context,
+      title: weekly ? '주간 루틴 관리' : '매일 루틴 관리',
+      emptyText: weekly ? '주간 루틴이 없어요' : '매일 루틴이 없어요',
+      changes: vm,
+      items: () => [
+        for (final h in weekly ? vm.manageWeeklyHabits : vm.manageDailyHabits)
+          ManageItem(id: h.id, title: h.name, leading: h.emoji, subtitle: _habitSubtitle(h)),
+      ],
+      onDelete: vm.deleteHabits,
+    );
+  }
+
+  static String _habitSubtitle(Habit h) {
+    if (h.repeat.type == RepeatType.weekly) return '주 ${h.repeat.times}회';
+    return [if (h.time.isNotEmpty) h.time, if (h.context.isNotEmpty) h.context].join('  ');
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget tab(String label, HomeTab t) {
@@ -293,7 +318,18 @@ class _Tabs extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(children: [tab('매일 루틴', HomeTab.routine), tab('주간 루틴', HomeTab.weekly), tab('회고', HomeTab.review)]),
+      child: Row(children: [
+        tab('매일 루틴', HomeTab.routine),
+        tab('주간 루틴', HomeTab.weekly),
+        tab('회고', HomeTab.review),
+        const Spacer(),
+        if (vm.tab != HomeTab.review)
+          TextButton.icon(
+            icon: const Icon(Icons.checklist_rtl, size: 18),
+            label: const Text('관리'),
+            onPressed: () => _openManage(context),
+          ),
+      ]),
     );
   }
 }

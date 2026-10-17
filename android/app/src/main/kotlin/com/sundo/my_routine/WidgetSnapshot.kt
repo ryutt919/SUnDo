@@ -32,19 +32,22 @@ data class WidgetSnapshot(
     val due: Int,
     val rest: Boolean,
     val streak: Int,
-    val more: Int,
     val rows: List<WidgetRow>,
     val week: List<WidgetWeekDay>,
     val todos: List<WidgetRow> = emptyList(),
     val todoDone: Int = 0,
     val todoTotal: Int = 0,
-    val todoMore: Int = 0,
 ) {
     /** 저장된 데이터가 오늘 것이 아니면 true (자정이 지났는데 아직 새로 만들지 못한 경우). */
     val isStale: Boolean get() = date != todayString()
 
+    /** 목록형 위젯 종류(KIND_ROUTINE 또는 KIND_TODO)에 맞는 행 전체. */
+    fun rowsFor(kind: String): List<WidgetRow> = if (kind == KIND_TODO) todos else rows
+
     companion object {
         private const val TAG = "MyRoutineWidget"
+        const val KIND_ROUTINE = "routine"
+        const val KIND_TODO = "todo"
 
         fun todayString(): String = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
 
@@ -68,14 +71,12 @@ data class WidgetSnapshot(
                     todos = if (todos == null) emptyList() else (0 until todos.length()).map { row(todos.getJSONObject(it)) },
                     todoDone = o.optInt("todoDone", 0),
                     todoTotal = o.optInt("todoTotal", 0),
-                    todoMore = o.optInt("todoMore", 0),
                     date = o.getString("date"),
                     pct = o.getInt("pct"),
                     done = o.getInt("done"),
                     due = o.getInt("due"),
                     rest = o.getBoolean("rest"),
                     streak = o.getInt("streak"),
-                    more = o.getInt("more"),
                     rows = (0 until rows.length()).map { row(rows.getJSONObject(it)) },
                     week = (0 until week.length()).map {
                         val d = week.getJSONObject(it)

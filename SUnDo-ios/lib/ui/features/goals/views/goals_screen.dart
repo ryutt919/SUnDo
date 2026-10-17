@@ -40,14 +40,14 @@ class GoalsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Row(children: [
-                  IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => vm.shift(-1)),
+                  IconButton(iconSize: 32, tooltip: '이전', icon: const Icon(Icons.arrow_left), onPressed: () => vm.shift(-1)),
                   Expanded(
                     child: InkWell(
                       onTap: vm.goCurrent,
                       child: Center(child: Text(vm.periodTitle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900))),
                     ),
                   ),
-                  IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => vm.shift(1)),
+                  IconButton(iconSize: 32, tooltip: '다음', icon: const Icon(Icons.arrow_right), onPressed: () => vm.shift(1)),
                 ]),
                 if (goals.isNotEmpty)
                   Padding(

@@ -6,6 +6,7 @@ import '../models/repeat_rule.dart';
 import 'routine_analyzer.dart';
 
 /// 홈 화면 위젯이 그릴 데이터를 JSON으로 만든다. 네이티브(Kotlin) 위젯이 이 형식을 읽는다.
+/// 위젯 안에서 스크롤해 볼 수 있도록 루틴과 투두는 개수 제한 없이 모두 담는다.
 class WidgetSnapshotUseCase {
   WidgetSnapshotUseCase(this._routine, this._analyzer, {JournalRepository? journal}) : _journal = journal;
 
@@ -13,13 +14,17 @@ class WidgetSnapshotUseCase {
   final RoutineAnalyzer _analyzer;
   final JournalRepository? _journal;
 
-  static const maxRows = 8;
-
   /// 위젯에 보일 투두: 오늘 투두와 지난 미완료 투두. 안 한 것이 먼저.
   List<Todo> _widgetTodos(String today) {
     final all = _journal?.todos ?? const <Todo>[];
-    final list = all.where((t) => t.date == today || (!t.done && t.date.compareTo(today) < 0)).toList();
+    final list = sortTodos(all.where((t) => t.date == today || (!t.done && t.date.compareTo(today) < 0)));
     return [...list.where((t) => !t.done), ...list.where((t) => t.done)];
+  }
+
+  /// 위젯 행에 보일 투두의 날짜와 시간 문구: "오늘", "오늘 14:30", "10-16 이월 14:30".
+  static String _todoWhen(Todo t, String today) {
+    final base = t.date == today ? '오늘' : '${t.date.substring(5)} 이월';
+    return t.hasTime ? '$base ${t.time}' : base;
   }
 
   Map<String, dynamic> build() {
@@ -35,7 +40,6 @@ class WidgetSnapshotUseCase {
     final habits = [...due, ...weekly];
     final todos = _widgetTodos(today);
     final todoDone = todos.where((t) => t.done).length;
-    final shownTodos = todos.take(maxRows).toList();
 
     final ws = weekStartKey(today);
     final week = [
@@ -80,9 +84,8 @@ class WidgetSnapshotUseCase {
       'rest': st.rest,
       'light': _analyzer.lightOf(st, today).name,
       'streak': _analyzer.streak(),
-      'more': habits.length > maxRows ? habits.length - maxRows : 0,
       'rows': [
-        for (final h in habits.take(maxRows))
+        for (final h in habits)
           {
             'kind': 'habit',
             'id': h.id,
@@ -97,15 +100,14 @@ class WidgetSnapshotUseCase {
       ],
       'todoDone': todoDone,
       'todoTotal': todos.length,
-      'todoMore': todos.length - shownTodos.length,
       'todos': [
-        for (final t in shownTodos)
+        for (final t in todos)
           {
             'kind': 'todo',
             'id': t.id,
             'emoji': '✔',
             'name': t.text,
-            'time': t.date == today ? '오늘' : '${t.date.substring(5)} 이월',
+            'time': _todoWhen(t, today),
             'done': t.done,
             'color': '#DDF1FF',
           },

@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 
 import '../../../app/app_dependencies.dart';
+import '../../../app/widget_link.dart';
+import '../../../domain/models/date_key.dart';
 import '../goals/views/goals_screen_entry.dart';
+import '../habit_form/views/add_menu_sheet.dart';
+import '../habit_form/views/habit_form_screen.dart';
 import '../home/view_models/home_view_model.dart';
 import '../home/views/home_screen.dart';
 import '../settings/view_models/settings_view_model.dart';
@@ -23,6 +30,38 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
+  StreamSubscription<Uri?>? _linkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // 위젯의 "+" 버튼으로 앱이 열리면(꺼져 있던 경우와 켜져 있던 경우 모두) 해당 추가 화면을 연다.
+    HomeWidget.initiallyLaunchedFromHomeWidget().then(_onWidgetLink);
+    _linkSub = HomeWidget.widgetClicked.listen(_onWidgetLink);
+  }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  void _onWidgetLink(Uri? uri) {
+    final target = parseWidgetLink(uri);
+    if (target == null) return;
+    // 첫 화면이 그려진 뒤에 대화상자나 화면을 연다
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      switch (target) {
+        case WidgetAddTarget.todo:
+          setState(() => _index = 1);
+          showTodoDialog(context, todayKey());
+        case WidgetAddTarget.routine:
+          setState(() => _index = 0);
+          openHabitForm(context);
+      }
+    });
+  }
 
   static const _items = [
     (Icons.home_outlined, Icons.home, '홈'),

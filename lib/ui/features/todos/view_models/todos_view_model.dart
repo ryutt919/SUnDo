@@ -14,30 +14,27 @@ class TodosViewModel extends RepoViewModel {
   List<Todo> get _all => _journal.todos;
 
   /// 오늘보다 앞선 날짜에 남은 미완료 투두. 날짜가 오래된 것부터.
-  List<Todo> get overdue =>
-      (_all.where((t) => !t.done && t.date.compareTo(today) < 0).toList()..sort((a, b) => a.date.compareTo(b.date)));
+  List<Todo> get overdue => sortTodos(_all.where((t) => !t.done && t.date.compareTo(today) < 0));
 
-  List<Todo> get todayOpen => _all.where((t) => !t.done && t.date == today).toList();
+  /// 오늘 미완료 투두. 시간이 있는 것을 시간 순으로 먼저.
+  List<Todo> get todayOpen => sortTodos(_all.where((t) => !t.done && t.date == today));
 
   /// 오늘 이후 날짜의 미완료 투두. 가까운 날짜부터.
-  List<Todo> get upcoming =>
-      (_all.where((t) => !t.done && t.date.compareTo(today) > 0).toList()..sort((a, b) => a.date.compareTo(b.date)));
+  List<Todo> get upcoming => sortTodos(_all.where((t) => !t.done && t.date.compareTo(today) > 0));
 
   /// 완료한 투두. 최근 날짜부터.
-  List<Todo> get done =>
-      (_all.where((t) => t.done).toList()..sort((a, b) => b.date.compareTo(a.date)));
+  List<Todo> get done => sortTodos(_all.where((t) => t.done), newestFirst: true);
+
+  /// 일괄 삭제 화면에 보일 전체 투두(남은 것은 날짜 순, 완료는 뒤).
+  List<Todo> get manageList => [...overdue, ...todayOpen, ...upcoming, ...done];
 
   int get openCount => overdue.length + todayOpen.length + upcoming.length;
-
-  Future<void> quickAdd(String text) {
-    final t = text.trim();
-    if (t.isEmpty) return Future.value();
-    return _journal.addTodo(t, today);
-  }
 
   Future<void> toggle(Todo t) => _journal.updateTodo(t.copyWith(done: !t.done));
 
   Future<void> delete(Todo t) => _journal.deleteTodo(t.id);
+
+  Future<void> deleteMany(Set<String> ids) => _journal.deleteTodos(ids);
 
   /// 오늘로 옮긴다(지난 미완료 정리용).
   Future<void> moveToToday(Todo t) => _journal.updateTodo(t.copyWith(date: today));

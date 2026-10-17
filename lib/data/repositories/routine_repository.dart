@@ -178,13 +178,18 @@ class RoutineRepository extends ChangeNotifier {
     ));
   }
 
-  Future<void> deleteHabit(String id) async {
-    await _refreshLogsAndRest(); // 위젯이 방금 한 체크를 지우지 않도록 최신 기록에서 시작
-    _habits = _habits.where((h) => h.id != id).toList();
-    for (final day in _logs.values) {
-      day.remove(id);
-    }
+  Future<void> deleteHabit(String id) => deleteHabits({id});
+
+  /// 여러 루틴과 그 기록을 한 번에 지운다(저장은 한 번).
+  Future<void> deleteHabits(Set<String> ids) async {
+    if (ids.isEmpty) return;
+    _habits = _habits.where((h) => !ids.contains(h.id)).toList();
     await _persistHabits();
+    // 위젯이 방금 한 체크를 지우지 않도록, 기록은 루틴 저장이 끝난 뒤 최신값을 읽어 바로 고쳐 저장한다.
+    await _refreshLogsAndRest();
+    for (final day in _logs.values) {
+      day.removeWhere((habitId, _) => ids.contains(habitId));
+    }
     await _persistLogs();
     notifyListeners();
   }

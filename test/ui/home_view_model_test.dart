@@ -115,7 +115,7 @@ void main() {
     expect(rows.last['time'], '주 2회 중 0');
     expect(snap['pct'], 0, reason: '주간 루틴은 매일 달성률에 들어가지 않는다');
     final todos = (snap['todos'] as List).cast<Map>();
-    expect(todos.map((r) => r['name']), ['오늘 할 일', '어제 못한 일', '끝낸 일'], reason: '안 한 것이 먼저, 내일 투두는 제외');
+    expect(todos.map((r) => r['name']), ['어제 못한 일', '오늘 할 일', '끝낸 일'], reason: '안 한 것이 먼저(날짜 순), 내일 투두는 제외');
     expect(snap['todoDone'], 1);
     expect(snap['todoTotal'], 3);
   });

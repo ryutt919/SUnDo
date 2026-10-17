@@ -72,12 +72,33 @@ Future<void> showTodoDialog(BuildContext context, String date, {Todo? existing})
 class _TodoDialog extends StatelessWidget {
   const _TodoDialog();
 
+  static String _two(int n) => n.toString().padLeft(2, '0');
+
+  Future<void> _pickTime(BuildContext context, TodoEditorViewModel vm) async {
+    final parts = vm.hasTime ? vm.time.split(':') : null;
+    final initial = parts == null
+        ? TimeOfDay.now()
+        : TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    final p = await showTimePicker(context: context, initialTime: initial);
+    if (p != null) vm.setTime('${_two(p.hour)}:${_two(p.minute)}');
+  }
+
+  Future<void> _pickDate(BuildContext context, TodoEditorViewModel vm) async {
+    final p = await showDatePicker(
+      context: context,
+      initialDate: parseDateKey(vm.date),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (p != null) vm.setDate(dateKey(p));
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<TodoEditorViewModel>();
     return AlertDialog(
-      title: Text(vm.isNew ? '새 투두' : '투두 편집'),
-      content: Column(mainAxisSize: MainAxisSize.min, children: [
+      title: Text(vm.isNew ? '투두 추가' : '투두 편집'),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         TextFormField(
           initialValue: vm.text,
           autofocus: true,
@@ -88,16 +109,26 @@ class _TodoDialog extends StatelessWidget {
         OutlinedButton.icon(
           icon: const Icon(Icons.event),
           label: Text(vm.date),
-          onPressed: () async {
-            final p = await showDatePicker(
-              context: context,
-              initialDate: parseDateKey(vm.date),
-              firstDate: DateTime(2020),
-              lastDate: DateTime(2100),
-            );
-            if (p != null) vm.setDate(dateKey(p));
-          },
+          onPressed: () => _pickDate(context, vm),
         ),
+        const SizedBox(height: 8),
+        if (vm.hasTime)
+          Row(children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.schedule),
+                label: Text(vm.time),
+                onPressed: () => _pickTime(context, vm),
+              ),
+            ),
+            IconButton(tooltip: '시간 지우기(종일)', icon: const Icon(Icons.close), onPressed: vm.clearTime),
+          ])
+        else
+          OutlinedButton.icon(
+            icon: const Icon(Icons.more_time),
+            label: const Text('시간 추가 (없으면 종일)'),
+            onPressed: () => _pickTime(context, vm),
+          ),
       ]),
       actions: [
         if (!vm.isNew)
@@ -113,7 +144,7 @@ class _TodoDialog extends StatelessWidget {
           onPressed: () async {
             if (await vm.save() && context.mounted) Navigator.pop(context);
           },
-          child: const Text('저장'),
+          child: Text(vm.isNew ? '추가' : '저장'),
         ),
       ],
     );

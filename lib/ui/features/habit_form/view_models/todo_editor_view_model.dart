@@ -7,20 +7,30 @@ import '../../../../domain/models/journal_models.dart';
 class TodoEditorViewModel extends ChangeNotifier {
   TodoEditorViewModel(this._journal, {required String defaultDate, this.existing})
       : text = existing?.text ?? '',
-        date = existing?.date ?? defaultDate;
+        date = existing?.date ?? defaultDate,
+        time = existing?.time ?? '';
 
   final JournalRepository _journal;
   final Todo? existing;
 
   String text;
   String date;
+  String time; // 'HH:mm' 또는 빈 문자열(종일)
 
   bool get isNew => existing == null;
+  bool get hasTime => time.isNotEmpty;
 
   void setDate(String d) {
     date = d;
     notifyListeners();
   }
+
+  void setTime(String t) {
+    time = t;
+    notifyListeners();
+  }
+
+  void clearTime() => setTime('');
 
   /// 내용이 비어 있으면 저장하지 않고 false를 돌려준다.
   Future<bool> save() async {
@@ -28,9 +38,9 @@ class TodoEditorViewModel extends ChangeNotifier {
     if (t.isEmpty) return false;
     final e = existing;
     if (e == null) {
-      await _journal.addTodo(t, date);
+      await _journal.addTodo(t, date, time: time);
     } else {
-      await _journal.updateTodo(e.copyWith(text: t, date: date));
+      await _journal.updateTodo(e.copyWith(text: t, date: date, time: time));
     }
     return true;
   }

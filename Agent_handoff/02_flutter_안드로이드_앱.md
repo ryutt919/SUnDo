@@ -1,9 +1,10 @@
 # Flutter 안드로이드 앱과 홈 화면 위젯 — 내 루틴
 
 ## Task Metadata
-- **Created/updated at**: 2026-10-16 21:40:00 KST
+- **Created/updated at**: 2026-10-17 15:24:49 KST
 - **Model used**: `claude-sonnet-5-5`
 - **User requirements**: 웹페이지가 아니라 갤럭시 안드로이드 앱이 목표. 웹 파일은 SUnDo-web으로 옮기고, 그것을 바탕으로 Flutter 앱을 만든다(flutter-apply-architecture-best-practices 적용). 필요한 의존성 설치, 홈 화면 위젯, 구현하지 못한 것 재검토, 서브에이전트와 codex 활용, 마지막에 /codex:rescue로 요구사항과 구현 검토.
+  - 2026-10-17 추가 요구: 위젯 스크롤과 "+" 버튼, 투두 날짜와 시간, "추가하기" 버튼, 투두와 루틴 일괄 삭제("관리"), 캘린더 일정의 투두 자동 추가, 통계의 투두와 계획 캘린더, 주간 계획 기간 표시. 같은 내용을 iOS(SUnDo-ios)에도 동일하게 반영하고 의존성과 SDK를 설치해 테스트 완료. 마지막에 Codex 검토.
 
 ## Component Status
 
@@ -92,6 +93,20 @@
 - **검증**: 에뮬레이터에서 투두 일정 생성, 체크 해제 시 제목 갱신, 완료 지우기 시 삭제, 위젯 체크 후 앱 복귀 시 반영을 확인(로컬 테스트 캘린더 사용). 구글 계정 동기화와 갤럭시 실기기는 미검증
 - **테스트**: 71건 통과(주간 루틴 3건, 캘린더 6건 추가)
 
+### 투두 시간, 위젯 스크롤, 일괄 삭제, 통계 캘린더 (2026-10-17, 모델 `claude-sonnet-5-5`)
+- **위젯 스크롤과 "+" 버튼**: 오늘의 루틴과 투두 위젯을 ListView 컬렉션으로 바꿔 위젯 안에서 위아래로 밀어 모든 항목을 봄(고정 8행, "외 n개 더 보기", 행 수 계산 삭제). 구현 [RowWidgetProvider.kt](../android/app/src/main/kotlin/com/sundo/my_routine/RowWidgetProvider.kt), [RowWidgetService.kt](../android/app/src/main/kotlin/com/sundo/my_routine/RowWidgetService.kt), [widget_row_item.xml](../android/app/src/main/res/layout/widget_row_item.xml). 체크는 PendingIntent 템플릿(MUTABLE 브로드캐스트)과 행별 fill-in intent(`myroutine://toggle`, `toggletodo`)로 앱을 열지 않고 처리. 오른쪽 아래 "+" 버튼은 `myroutine://add?kind=todo|routine` 딥링크로 앱을 열고 [widget_link.dart](../lib/app/widget_link.dart)가 해석해 [app_shell.dart](../lib/ui/features/shell/app_shell.dart)가 투두 추가 대화상자 또는 새 루틴 화면을 염. [MainActivity.kt](../android/app/src/main/kotlin/com/sundo/my_routine/MainActivity.kt)는 새 인텐트를 `setIntent`로 보관해 앱이 준비되기 전에 도착한 링크도 읽음. 스냅샷 JSON에서 `more`, `todoMore`를 없애고 루틴과 투두를 개수 제한 없이 담음
+- **투두 시간**: `Todo.time`('HH:mm', 빈 문자열이면 종일, 예전 데이터와 호환). 추가와 수정 대화상자에서 날짜를 고르고 "시간 추가"를 누르면 시간을 고름(지우면 종일). 같은 날은 시간 있는 것을 시간 순으로 먼저 정렬(`sortTodos`). 위젯 행에는 "오늘 14:30"처럼 표시. 시간을 넣은 투두에 알림은 만들지 않음(사용자 기본값)
+- **투두 추가 방식**: 위쪽 입력칸과 엔터 추가를 없애고 오른쪽 아래 "추가하기" 버튼으로 대체([todos_screen.dart](../lib/ui/features/todos/views/todos_screen.dart)). 날짜는 기존처럼 항상 보이는 날짜 버튼(사용자가 "그대로"라고 확인)
+- **일괄 삭제("관리")**: 투두 탭, 홈의 매일 루틴 탭, 주간 루틴 탭에 "관리" 버튼. 공용 화면 [bulk_delete_screen.dart](../lib/ui/features/manage/views/bulk_delete_screen.dart)에서 여러 개를 고르고 전체 선택, 확인 대화상자 후 삭제. 저장소에 `deleteTodos`, `deleteHabits`(저장 한 번, 위젯이 방금 한 체크를 지우지 않도록 최신 기록에서 시작) 추가
+- **캘린더 일정 자동 투두**: 원인은 "새 일정 가져오기"가 기본 꺼짐이어서 설정에서 직접 켜야 했던 것. 기본값을 켬으로 바꾸고, 예전에 꺼진 채 저장된 설정은 스키마 2로 올라올 때 한 번만 켬(그 뒤 직접 끈 것은 유지). 시각이 있는 일정은 시간까지 투두로 가져오고 캘린더에서 시간을 바꾸면 따라감. 앱이 켜져 있으면 10분마다 확인([app_sync.dart](../lib/app/app_sync.dart)). 반복 일정은 여전히 가져오지 않음. 캘린더로 나가는 일정은 종일 그대로(투두 시간은 캘린더에 보내지 않음)
+- **통계 캘린더**: [stats_screen.dart](../lib/ui/features/stats/views/stats_screen.dart)에 투두 캘린더(날마다 완료/전체 개수, 모두 완료/일부/못 한 날/예정 색, 칸을 누르면 그날 투두를 보고 체크)와 계획 캘린더(칸 색은 그 주 주간 계획 평균 진행률, 월간과 연간 계획 진행률 막대, 칸을 누르면 그날을 덮는 주간, 월간, 연간 계획)를 추가. 모든 캘린더가 같은 달 이동 버튼을 씀
+- **주간 계획 기간 표시**: "10월 12일 - 10월 18일"(월요일부터 일요일, 해가 바뀌는 주는 연도 포함), 좌우 삼각형 화살표
+- **iOS 동일 반영**: Dart 코드와 테스트는 같은 파일을 SUnDo-ios에 복사(플랫폼별로 다른 5개 파일은 그대로). WidgetKit 위젯([RoutiningWidget.swift](../SUnDo-ios/ios/RoutiningWidget/RoutiningWidget.swift))은 손가락 스크롤이 불가능해 iOS 17 이상에서 위/아래 버튼으로 쪽을 넘기고, "+"는 Link로 같은 딥링크를 염. `Info.plist`에 `myroutine` URL 스킴 등록. 작은 크기 위젯은 Link를 둘 수 없어 제외
+- **검증**: 단위와 위젯 테스트 114건(Android, iOS 각각) 통과, `flutter analyze` 오류와 경고 없음(기존 info 제외). Android 에뮬레이터(Pixel 8, API 35)에서 투두 추가 대화상자, 일괄 삭제 화면, 통계 캘린더, 위젯 표시와 스크롤(23개 항목), 위젯 체크(앱을 열지 않고 완료), 위젯 "+"(앱이 꺼진 상태와 켜진 상태 모두) 확인. Swift는 macOS SDK로 `swiftc -typecheck` 통과
+- **Codex 검토 반영 (2026-10-17)**: 지적 5건 모두 수정. (1) 투두를 바꾸기 직전에 디스크 최신 목록을 읽어(`_refreshTodos`) 위젯이 방금 한 체크를 덮어쓰거나 지운 투두를 되살리지 않음, (2) 루틴 일괄 삭제는 루틴 저장 뒤에 최신 기록을 읽어 바로 고쳐 저장, (3) iOS 위젯 링크에 `homeWidget` 쿼리를 붙여 `home_widget` 플러그인이 `+` 링크를 앱에 전달, (4) 캘린더 시간 가져오기가 최신 투두에 적용돼 앱의 완료 처리를 되돌리지 않음, (5) iOS 위젯 쪽 번호를 목록 길이에 맞게 보정해 저장. 회귀 테스트 3건 추가. Android PendingIntent 템플릿 구조와 플래그, 스냅샷 호환은 문제 없음으로 확인
+- **미검증**: iOS 앱과 위젯은 Xcode가 설치되지 않은 환경이라 빌드와 실행을 못 함(Xcode가 있는 Mac이나 GitHub Actions `ios-build.yml` 수동 실행 필요). 위젯 Extension 타깃도 아직 Xcode 프로젝트에 없음. 갤럭시 실기기 미검증
+- **한계**: 위젯 행 본문 탭은 동작 없음(컬렉션은 템플릿 하나만 가질 수 있어 체크 버튼만 연결). "+" 버튼이 목록 위에 겹쳐 스크롤 중 오른쪽 아래 행의 체크 버튼을 가릴 수 있음(끝까지 내리면 여백 있음)
+
 ### 원본 대비 추가 구현
 - 사진 인증, 수치 그래프, 템플릿, 계획(주/월/연), 주차 회고, 습관 복제/종료/보관, 기간 쉬기, 시간순 보기, 레벨과 배지
 - 제외: 소셜(팔로우, 리액션, 비밀루틴), 결제, 계정 동기화, Apple Watch(iOS 전용)
@@ -102,6 +117,7 @@
 
 | Timestamp | Model | User Requirements | Task | Change Summary |
 |-----------|-------|-------------------|------|----------------|
+| 2026-10-17 15:24:49 KST | `claude-sonnet-5-5` | 위젯 스크롤과 +, 투두 날짜와 시간, 추가하기 버튼, 일괄 삭제, 캘린더 자동 투두, 통계 캘린더, 주간 계획 기간, iOS 동일 반영 | 투두와 위젯 개편 | 위젯 8행 고정 → 스크롤 목록, 투두 시간 추가, 입력칸 → 추가하기 버튼, 관리 화면, 캘린더 가져오기 기본 꺼짐 → 켜짐, 통계 캘린더 2종, 테스트 84 → 114건, Codex 검토 5건 반영, iOS 동일 반영 |
 | 2026-10-17 17:40:00 KST | `claude-sonnet-5-5` | 앱 이름 루티닝, 위젯 투두, 체크 버튼 2배, 주간 루틴, 캘린더 연동 | 루티닝 개편 | 이름 변경, 주간 루틴 탭, 투두 위젯, 큰 체크 버튼, 기기 캘린더 한 방향 동기화, 테스트 62 → 71건 |
 | 2026-10-17 15:40:00 KST | `claude-sonnet-5-5` | 프리미엄 전부 사용, 제한 없애기, 투두가 가장 중요 | 모드 상한 제거, 투두 탭, 위젯 투두 | 모드 10개 상한 → 무제한, 투두 전용 탭 신설, 위젯에 투두 3칸과 체크 추가, 테스트 58 → 62건 |
 | 2026-10-16 22:40:00 KST | `claude-sonnet-5-5` | codex 최종 검토 | 검토 지적 반영 | 백업 원자성, 동시 저장, 보관, 알람, 위젯 자정 갱신, MVVM 정리, 테스트 34건 |
