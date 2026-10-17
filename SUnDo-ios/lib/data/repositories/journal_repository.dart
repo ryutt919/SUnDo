@@ -15,7 +15,11 @@ class JournalRepository extends ChangeNotifier {
   List<Memo> _memos = [];
   List<Goal> _goals = [];
 
+  /// 모든 투두(숨긴 것 포함). 통계와 캘린더 동기화가 쓴다.
   List<Todo> get todos => List.unmodifiable(_todos);
+
+  /// "완료 숨기기"로 감추지 않은 투두. 투두 탭, 홈, 위젯이 쓴다.
+  List<Todo> get visibleTodos => List.unmodifiable(_todos.where((t) => !t.hidden));
   List<Memo> get memos => List.unmodifiable(_memos);
   List<Goal> get goals => List.unmodifiable(_goals);
   Map<String, DayReview> get reviews => Map.unmodifiable(_reviews);
@@ -85,6 +89,15 @@ class JournalRepository extends ChangeNotifier {
     if (ids.isEmpty) return;
     await _refreshTodos();
     _todos = _todos.where((t) => !ids.contains(t.id)).toList();
+    await _save('todos');
+    notifyListeners();
+  }
+
+  /// 투두를 지우지 않고 목록에서만 감춘다(통계에는 남는다). 저장은 한 번.
+  Future<void> hideTodos(Set<String> ids) async {
+    if (ids.isEmpty) return;
+    await _refreshTodos();
+    _todos = [for (final t in _todos) ids.contains(t.id) ? t.copyWith(hidden: true) : t];
     await _save('todos');
     notifyListeners();
   }

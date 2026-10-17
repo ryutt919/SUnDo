@@ -170,7 +170,7 @@ class HomeViewModel extends RepoViewModel {
 
   List<TodoRowData> get todoRows {
     final isToday = selectedDate == today;
-    var list = sortTodos(_journal.todos
+    var list = sortTodos(_journal.visibleTodos
         .where((t) => t.date == selectedDate || (isToday && t.date.compareTo(selectedDate) < 0 && !t.done)));
     if (filter == HomeFilter.undone) list = list.where((t) => !t.done).toList();
     if (filter == HomeFilter.done) list = list.where((t) => t.done).toList();

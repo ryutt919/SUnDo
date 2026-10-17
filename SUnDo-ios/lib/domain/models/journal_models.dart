@@ -86,21 +86,25 @@ String todoWhenLabel(Todo t, {bool showDate = true}) {
 }
 
 class Todo {
-  const Todo({required this.id, required this.text, required this.date, this.done = false, this.time = ''});
+  const Todo({required this.id, required this.text, required this.date, this.done = false, this.time = '', this.hidden = false});
   final String id;
   final String text;
   final String date;
   final bool done;
   final String time; // 'HH:mm' 또는 빈 문자열(종일)
 
+  /// "완료 숨기기"로 목록에서만 감춘 투두. 지워진 것이 아니라서 통계에는 그대로 남는다.
+  final bool hidden;
+
   bool get hasTime => time.isNotEmpty;
 
-  Todo copyWith({String? text, String? date, bool? done, String? time}) => Todo(
+  Todo copyWith({String? text, String? date, bool? done, String? time, bool? hidden}) => Todo(
         id: id,
         text: text ?? this.text,
         date: date ?? this.date,
         done: done ?? this.done,
         time: time ?? this.time,
+        hidden: hidden ?? this.hidden,
       );
 
   Map<String, dynamic> toJson() => {
@@ -109,6 +113,7 @@ class Todo {
         'date': date,
         'done': done,
         if (time.isNotEmpty) 'time': time,
+        if (hidden) 'hidden': true,
       };
   factory Todo.fromJson(Map<String, dynamic> j) => Todo(
         id: j['id'] as String,
@@ -116,6 +121,7 @@ class Todo {
         date: j['date'] as String,
         done: (j['done'] as bool?) ?? false,
         time: (j['time'] as String?) ?? '',
+        hidden: (j['hidden'] as bool?) ?? false,
       );
 }
 

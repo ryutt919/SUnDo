@@ -79,6 +79,16 @@ void main() {
     expect(rows.single.carriedFrom, '2026-10-10');
   });
 
+  test('숨긴 투두는 홈 목록과 위젯 데이터에서 빠진다', () async {
+    final s = await _setup();
+    final a = await s.journal.addTodo('끝낸 일', _today, done: true);
+    await s.journal.addTodo('남은 일', _today);
+    await s.journal.hideTodos({a.id});
+    expect(s.vm.todoRows.map((r) => r.todo.text), ['남은 일']);
+    final snap = WidgetSnapshotUseCase(s.routine, s.analyzer, journal: s.journal).build();
+    expect((snap['todos'] as List).cast<Map>().map((r) => r['name']), ['남은 일']);
+  });
+
   test('주간 이동은 7일씩 움직인다', () async {
     final s = await _setup();
     s.vm.shiftWeek(1);

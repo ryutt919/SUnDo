@@ -63,6 +63,20 @@ void main() {
       expect(_todoDay(s.vm, 5).tone, CalendarTone.done);
     });
 
+    test('완료 숨기기로 감춘 투두도 통계 캘린더와 합계에는 그대로 남고, 통계에서 미완료로 돌리면 다시 보인다', () async {
+      final s = await _setup();
+      final a = await s.journal.addTodo('끝낸 일', '2026-10-05', done: true);
+      await s.journal.addTodo('남은 일', '2026-10-05');
+      await s.journal.hideTodos({a.id});
+      expect(s.journal.visibleTodos.map((t) => t.text), ['남은 일']);
+      expect(s.vm.todoMonthTotals, (done: 1, total: 2), reason: '감춘 완료 투두도 통계에 센다');
+      expect(_todoDay(s.vm, 5).done, 1);
+      expect(s.vm.todosOn('2026-10-05').length, 2, reason: '그날 목록에도 보인다');
+      await s.vm.toggleTodo(s.vm.todosOn('2026-10-05').firstWhere((t) => t.id == a.id)); // 미완료로 돌림
+      final back = s.journal.todos.firstWhere((t) => t.id == a.id);
+      expect((back.done, back.hidden), (false, false), reason: '미완료로 돌리면 목록에 다시 나타난다');
+    });
+
     test('날짜가 지난 미완료 투두만 있으면 못 한 날, 일부만 하면 일부 완료', () async {
       final s = await _setup();
       s.vm.calendarMonth = DateTime(2020, 1);

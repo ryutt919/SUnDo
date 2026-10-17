@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../domain/models/journal_models.dart';
 import '../../../core/app_theme.dart';
+import '../../../core/widgets.dart';
 import '../../habit_form/views/add_menu_sheet.dart';
 import '../../manage/view_models/bulk_delete_view_model.dart';
 import '../../manage/views/bulk_delete_screen.dart';
@@ -16,15 +17,18 @@ class TodosScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<TodosViewModel>();
     final cs = Theme.of(context).colorScheme;
-    final empty = vm.overdue.isEmpty && vm.todayOpen.isEmpty && vm.upcoming.isEmpty && vm.done.isEmpty;
+    final empty = vm.todayOpen.isEmpty && vm.upcoming.isEmpty && vm.done.isEmpty;
     return Scaffold(
       appBar: AppBar(
         title: Text('투두 (남은 ${vm.openCount}개)'),
         actions: [
           if (vm.done.isNotEmpty)
             TextButton(
-              onPressed: () => vm.clearDone(),
-              child: const Text('완료 지우기'),
+              onPressed: () async {
+                final n = await vm.hideDone();
+                if (context.mounted) showToast(context, '완료 $n개를 숨겼어요. 통계에는 그대로 남아요');
+              },
+              child: const Text('완료 숨기기'),
             ),
           if (!empty)
             TextButton.icon(
@@ -60,7 +64,6 @@ class TodosScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 48),
                   child: Center(child: Text('투두가 없어요\n아래 "추가하기"를 눌러 만들어 보세요', textAlign: TextAlign.center, style: TextStyle(color: cs.outline))),
                 ),
-              _Section(title: '지난 미완료', todos: vm.overdue, vm: vm, showDate: true, canMove: true),
               _Section(title: '오늘', todos: vm.todayOpen, vm: vm),
               _Section(title: '예정', todos: vm.upcoming, vm: vm, showDate: true),
               _Section(title: '완료', todos: vm.done, vm: vm, showDate: true),
@@ -79,12 +82,11 @@ class TodosScreen extends StatelessWidget {
 }
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.todos, required this.vm, this.showDate = false, this.canMove = false});
+  const _Section({required this.title, required this.todos, required this.vm, this.showDate = false});
   final String title;
   final List<Todo> todos;
   final TodosViewModel vm;
   final bool showDate;
-  final bool canMove;
 
   @override
   Widget build(BuildContext context) {
@@ -116,13 +118,6 @@ class _Section extends StatelessWidget {
                 style: TextStyle(decoration: t.done ? TextDecoration.lineThrough : null, color: t.done ? cs.outline : null),
               ),
               subtitle: (showDate || t.hasTime) ? Text(todoWhenLabel(t, showDate: showDate)) : null,
-              trailing: canMove
-                  ? IconButton(
-                      tooltip: '오늘로 옮기기',
-                      icon: const Icon(Icons.today),
-                      onPressed: () => vm.moveToToday(t),
-                    )
-                  : null,
               onTap: () => showTodoDialog(context, t.date, existing: t),
             ),
           ),

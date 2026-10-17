@@ -147,7 +147,8 @@ class StatsViewModel extends RepoViewModel {
   /// 그 날의 투두(시간 있는 것을 시간 순으로 먼저).
   List<Todo> todosOn(String date) => sortTodos(_journal.todos.where((t) => t.date == date));
 
-  Future<void> toggleTodo(Todo t) => _journal.updateTodo(t.copyWith(done: !t.done));
+  /// 통계 시트에서 체크한다. 끝낸 투두를 다시 미완료로 돌리면 목록에도 다시 보이게 한다.
+  Future<void> toggleTodo(Todo t) => _journal.updateTodo(t.copyWith(done: !t.done, hidden: t.done ? false : t.hidden));
 
   /// 그 날을 덮는 계획: 그 주 주간 계획, 그 달 월간 계획, 그 해 연간 계획.
   List<Goal> goalsCovering(String date) {

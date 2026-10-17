@@ -11,10 +11,9 @@ class TodosViewModel extends RepoViewModel {
 
   String get today => dateKey(DateTime.now());
 
-  List<Todo> get _all => _journal.todos;
-
-  /// 오늘보다 앞선 날짜에 남은 미완료 투두. 날짜가 오래된 것부터.
-  List<Todo> get overdue => sortTodos(_all.where((t) => !t.done && t.date.compareTo(today) < 0));
+  /// 투두 탭에는 오늘과 오늘 이후의 투두만 보인다. 지난 날짜의 투두는 자동으로 안 보이지만
+  /// 지워진 것이 아니라서 통계에는 남는다. "완료 숨기기"로 감춘 투두도 마찬가지다.
+  List<Todo> get _all => _journal.visibleTodos.where((t) => t.date.compareTo(today) >= 0).toList();
 
   /// 오늘 미완료 투두. 시간이 있는 것을 시간 순으로 먼저.
   List<Todo> get todayOpen => sortTodos(_all.where((t) => !t.done && t.date == today));
@@ -22,13 +21,13 @@ class TodosViewModel extends RepoViewModel {
   /// 오늘 이후 날짜의 미완료 투두. 가까운 날짜부터.
   List<Todo> get upcoming => sortTodos(_all.where((t) => !t.done && t.date.compareTo(today) > 0));
 
-  /// 완료한 투두. 최근 날짜부터.
-  List<Todo> get done => sortTodos(_all.where((t) => t.done), newestFirst: true);
+  /// 오늘 이후 날짜에 이미 끝낸 투두(오늘 끝낸 것 포함). 날짜가 가까운 것부터.
+  List<Todo> get done => sortTodos(_all.where((t) => t.done));
 
-  /// 일괄 삭제 화면에 보일 전체 투두(남은 것은 날짜 순, 완료는 뒤).
-  List<Todo> get manageList => [...overdue, ...todayOpen, ...upcoming, ...done];
+  /// 일괄 삭제 화면에 보일 투두(남은 것은 날짜 순, 완료는 뒤).
+  List<Todo> get manageList => [...todayOpen, ...upcoming, ...done];
 
-  int get openCount => overdue.length + todayOpen.length + upcoming.length;
+  int get openCount => todayOpen.length + upcoming.length;
 
   Future<void> toggle(Todo t) => _journal.updateTodo(t.copyWith(done: !t.done));
 
@@ -36,12 +35,11 @@ class TodosViewModel extends RepoViewModel {
 
   Future<void> deleteMany(Set<String> ids) => _journal.deleteTodos(ids);
 
-  /// 오늘로 옮긴다(지난 미완료 정리용).
-  Future<void> moveToToday(Todo t) => _journal.updateTodo(t.copyWith(date: today));
-
-  Future<void> clearDone() async {
-    for (final t in done) {
-      await _journal.deleteTodo(t.id);
-    }
+  /// 끝낸 투두를 목록에서 감춘다. 지우는 것이 아니라서 통계 캘린더에는 그대로 남는다.
+  /// 감춘 개수를 돌려준다.
+  Future<int> hideDone() async {
+    final ids = {for (final t in done) t.id};
+    await _journal.hideTodos(ids);
+    return ids.length;
   }
 }

@@ -16,7 +16,7 @@ class WidgetSnapshotUseCase {
 
   /// 위젯에 보일 투두: 오늘 투두와 지난 미완료 투두. 안 한 것이 먼저.
   List<Todo> _widgetTodos(String today) {
-    final all = _journal?.todos ?? const <Todo>[];
+    final all = _journal?.visibleTodos ?? const <Todo>[];
     final list = sortTodos(all.where((t) => t.date == today || (!t.done && t.date.compareTo(today) < 0)));
     return [...list.where((t) => !t.done), ...list.where((t) => t.done)];
   }

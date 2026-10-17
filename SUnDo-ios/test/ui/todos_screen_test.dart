@@ -119,4 +119,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(journal.todos.length, 1);
   });
+
+  testWidgets('"완료 숨기기"는 목록에서만 감추고 투두는 남긴다', (tester) async {
+    final journal = await _pump(tester);
+    await journal.addTodo('끝낸 일', todayKey(), done: true);
+    await journal.addTodo('남은 일', todayKey());
+    await tester.pumpAndSettle();
+    expect(find.text('끝낸 일'), findsOneWidget);
+    await tester.tap(find.text('완료 숨기기'));
+    await tester.pumpAndSettle();
+    expect(find.text('끝낸 일'), findsNothing);
+    expect(find.text('남은 일'), findsOneWidget);
+    expect(journal.todos.length, 2, reason: '지워지지 않는다');
+    expect(find.textContaining('통계에는 그대로 남아요'), findsOneWidget);
+  });
+
+  testWidgets('지난 날짜의 투두는 투두 탭에 보이지 않는다', (tester) async {
+    final journal = await _pump(tester);
+    await journal.addTodo('어제 일', addDaysKey(todayKey(), -1));
+    await journal.addTodo('내일 일', addDaysKey(todayKey(), 1));
+    await tester.pumpAndSettle();
+    expect(find.text('어제 일'), findsNothing);
+    expect(find.text('내일 일'), findsOneWidget);
+    expect(find.text('지난 미완료 1'), findsNothing);
+  });
 }
