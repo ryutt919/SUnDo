@@ -6,7 +6,7 @@
 
 - Dart 코드: `flutter analyze` 오류 없음, 단위 및 위젯 테스트 114건 통과(macOS에서 확인). iOS 앱 빌드는 Xcode가 있는 Mac이나 GitHub Actions에서 확인 필요
 - iOS 빌드와 실행: **macOS와 Xcode가 필요해서 아직 확인하지 못함**
-- 위젯: WidgetKit 소스는 작성했지만 Xcode 타깃 추가는 아직 안 됨
+- 위젯: WidgetKit 소스와 `RoutiningWidget` 확장 타깃(Info.plist, App Group 권한, Runner에 포함)을 Xcode 프로젝트에 넣어 둠. 실제 빌드 확인은 CI 결과 참고
 
 ## Android와 달라지는 부분
 
@@ -28,12 +28,11 @@
 4. Signing & Capabilities에서 `App Groups`를 추가하고 `group.com.sundo.myRoutine`을 입력함
 5. 시뮬레이터나 연결한 iPhone으로 `flutter run`
 
-## 위젯 추가 (Xcode)
+## 위젯 (Xcode)
 
-1. File, New, Target, Widget Extension을 고르고 이름을 `RoutiningWidget`으로 함(Include Live Activity와 Configuration App Intent는 끔)
-2. 생성된 Swift 파일을 `ios/RoutiningWidget/RoutiningWidget.swift`의 내용으로 교체함
-3. `RoutiningWidget` 타깃에도 같은 App Group(`group.com.sundo.myRoutine`)을 추가함
-4. 앱을 한 번 실행해 데이터를 저장한 뒤 홈 화면에서 위젯을 추가함
+- `RoutiningWidget` 타깃이 이미 프로젝트에 있고 Runner 앱에 포함됨(최소 iOS 17). 앱과 위젯 모두 `ios/Runner/Runner.entitlements`, `ios/RoutiningWidget/RoutiningWidget.entitlements`로 App Group `group.com.sundo.myRoutine`을 씀
+- 실기기에 설치하려면 Xcode의 Signing에서 Runner와 RoutiningWidget 두 타깃 모두 Team을 고르고, App Group 권한이 두 타깃에 있는지 확인함
+- 앱을 한 번 실행해 데이터를 저장한 뒤 홈 화면을 길게 눌러 위젯(루티닝 오늘의 루틴, 루티닝 투두)을 추가함
 
 ## Mac이 없을 때
 
