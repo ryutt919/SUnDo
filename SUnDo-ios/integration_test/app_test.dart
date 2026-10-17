@@ -57,7 +57,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.textContaining('월 캘린더'), 300, scrollable: find.byType(Scrollable).first);
     expect(find.textContaining('월 캘린더'), findsOneWidget);
-    expect(find.textContaining('이 달 투두'), findsOneWidget, reason: '처음에는 투두 캘린더 탭');
+    expect(find.textContaining('날짜가 잡힌 투두'), findsOneWidget, reason: '처음에는 투두 캘린더 탭');
     Finder tab(String label) => find.descendant(of: find.byType(SegmentedButton<StatsCalendarTab>), matching: find.text(label));
     await tester.tap(tab('계획'));
     await tester.pumpAndSettle();
@@ -65,7 +65,7 @@ void main() {
     await tester.tap(tab('무드'));
     await tester.pumpAndSettle();
     expect(find.textContaining('월간 계획'), findsNothing);
-    expect(find.textContaining('이 달 투두'), findsNothing);
+    expect(find.textContaining('날짜가 잡힌 투두'), findsNothing);
   });
 
   testWidgets('위젯 "+" 링크: 투두 위젯은 투두 추가 창, 오늘의 루틴 위젯은 새 루틴 화면을 연다', (tester) async {
