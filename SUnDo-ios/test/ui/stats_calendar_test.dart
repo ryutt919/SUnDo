@@ -136,8 +136,12 @@ void main() {
       home: ChangeNotifierProvider.value(value: s.vm, child: const StatsScreen()),
     ));
     await tester.pumpAndSettle();
-    expect(find.textContaining('투두 캘린더'), findsOneWidget);
-    expect(find.textContaining('계획 캘린더'), findsOneWidget);
+    // 캘린더 섹션은 하나이고 탭(투두, 계획, 무드)으로 고른다. 처음에는 투두 캘린더가 보인다
+    expect(find.textContaining('월 캘린더'), findsOneWidget);
+    expect(find.text('투두'), findsOneWidget);
+    expect(find.text('계획'), findsOneWidget);
+    expect(find.text('무드'), findsOneWidget);
+    expect(find.textContaining('월간 계획'), findsNothing, reason: '계획 캘린더는 계획 탭을 눌러야 보인다');
     expect(find.textContaining('이 달 투두 1/2 완료'), findsOneWidget);
     expect(find.text('1/2'), findsOneWidget);
 
@@ -148,5 +152,17 @@ void main() {
     await tester.tap(find.text('장보기'));
     await tester.pumpAndSettle();
     expect(s.journal.todos.every((t) => t.done), isTrue, reason: '시트에서 체크하면 투두가 완료로 바뀐다');
+    await tester.tapAt(const Offset(10, 10)); // 시트 닫기
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('계획'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('월간 계획'), findsOneWidget);
+    expect(find.textContaining('이 달 투두'), findsNothing, reason: '탭을 바꾸면 투두 캘린더는 숨는다');
+
+    await tester.tap(find.text('무드'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('월간 계획'), findsNothing);
+    expect(find.text('월'), findsWidgets, reason: '무드 캘린더의 요일 머리글');
   });
 }

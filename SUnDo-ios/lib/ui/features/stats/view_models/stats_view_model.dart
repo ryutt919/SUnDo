@@ -15,6 +15,17 @@ class BadgeInfo {
 /// 달력 한 칸의 상태. 투두는 끝낸 것과 전체 개수, 계획은 그 주 주간 계획의 평균 진행률로 색을 정한다.
 enum CalendarTone { none, done, partial, missed, pending }
 
+/// 통계 화면의 캘린더 섹션에서 고르는 탭.
+enum StatsCalendarTab { todo, plan, mood }
+
+extension StatsCalendarTabLabel on StatsCalendarTab {
+  String get label => switch (this) {
+        StatsCalendarTab.todo => '투두',
+        StatsCalendarTab.plan => '계획',
+        StatsCalendarTab.mood => '무드',
+      };
+}
+
 class TodoDayStat {
   const TodoDayStat({required this.date, required this.day, required this.done, required this.total, required this.tone});
   final String date;
@@ -52,9 +63,15 @@ class StatsViewModel extends RepoViewModel {
   final StatsUseCase _stats;
 
   StatsRange range = StatsRange.rolling7;
+  StatsCalendarTab calendarTab = StatsCalendarTab.todo;
   DateTime calendarMonth;
 
   StatsSummary get summary => _stats.summarize(range);
+
+  void setCalendarTab(StatsCalendarTab t) {
+    calendarTab = t;
+    notifyListeners();
+  }
 
   void setRange(StatsRange r) {
     range = r;

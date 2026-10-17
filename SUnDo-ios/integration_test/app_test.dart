@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:my_routine/main.dart' as app;
+import 'package:my_routine/ui/features/stats/view_models/stats_view_model.dart' show StatsCalendarTab;
 
 /// iOS 시뮬레이터에서 앱을 실제로 띄워 투두 추가(시간 포함), 일괄 삭제, 통계 캘린더를 확인한다.
 void main() {
@@ -54,10 +55,17 @@ void main() {
     // 통계: 투두 캘린더와 계획 캘린더
     await tester.tap(find.text('통계'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.textContaining('투두 캘린더'), 300, scrollable: find.byType(Scrollable).first);
-    expect(find.textContaining('투두 캘린더'), findsOneWidget);
-    await tester.scrollUntilVisible(find.textContaining('계획 캘린더'), 300, scrollable: find.byType(Scrollable).first);
-    expect(find.textContaining('계획 캘린더'), findsOneWidget);
+    await tester.scrollUntilVisible(find.textContaining('월 캘린더'), 300, scrollable: find.byType(Scrollable).first);
+    expect(find.textContaining('월 캘린더'), findsOneWidget);
+    expect(find.textContaining('이 달 투두'), findsOneWidget, reason: '처음에는 투두 캘린더 탭');
+    Finder tab(String label) => find.descendant(of: find.byType(SegmentedButton<StatsCalendarTab>), matching: find.text(label));
+    await tester.tap(tab('계획'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('월간 계획'), findsOneWidget);
+    await tester.tap(tab('무드'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('월간 계획'), findsNothing);
+    expect(find.textContaining('이 달 투두'), findsNothing);
   });
 
   testWidgets('위젯 "+" 링크: 투두 위젯은 투두 추가 창, 오늘의 루틴 위젯은 새 루틴 화면을 연다', (tester) async {

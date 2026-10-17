@@ -53,19 +53,25 @@ class StatsScreen extends StatelessWidget {
               ]),
       ),
       _Card(
-        title: '${vm.calendarMonth.year}년 ${vm.calendarMonth.month}월 투두 캘린더',
+        title: '${vm.calendarMonth.year}년 ${vm.calendarMonth.month}월 캘린더',
         trailing: _MonthNav(vm: vm),
-        child: _TodoCalendarBody(vm: vm),
-      ),
-      _Card(
-        title: '${vm.calendarMonth.year}년 ${vm.calendarMonth.month}월 계획 캘린더',
-        trailing: _MonthNav(vm: vm),
-        child: _PlanCalendarBody(vm: vm),
-      ),
-      _Card(
-        title: '${vm.calendarMonth.year}년 ${vm.calendarMonth.month}월 무드 캘린더',
-        trailing: _MonthNav(vm: vm),
-        child: _MoodCalendar(cells: vm.moodCalendar),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<StatsCalendarTab>(
+              showSelectedIcon: false,
+              segments: [for (final t in StatsCalendarTab.values) ButtonSegment(value: t, label: Text(t.label))],
+              selected: {vm.calendarTab},
+              onSelectionChanged: (v) => vm.setCalendarTab(v.first),
+            ),
+          ),
+          const SizedBox(height: 12),
+          switch (vm.calendarTab) {
+            StatsCalendarTab.todo => _TodoCalendarBody(vm: vm),
+            StatsCalendarTab.plan => _PlanCalendarBody(vm: vm),
+            StatsCalendarTab.mood => _MoodCalendar(cells: vm.moodCalendar),
+          },
+        ]),
       ),
       _Card(
         title: '배지 (누적 체크 ${vm.totalChecks}회)',
