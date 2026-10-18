@@ -87,6 +87,16 @@ class SettingsViewModel extends RepoViewModel {
     await _calendar.sync();
   }
 
+  /// 직접 고른 가져올 캘린더(null이면 기본값: 쓰기 가능한 모든 캘린더).
+  Set<String>? get calendarImportIds => _calendar.importCalendarIds;
+
+  Future<List<CalendarChoice>> loadImportChoices() => _calendar.importChoices();
+
+  Future<void> setCalendarImportIds(Set<String>? ids) async {
+    await _calendar.setImportCalendars(ids);
+    await _calendar.sync();
+  }
+
   Future<void> syncCalendarNow() => _calendar.sync();
 
   /// 권한을 받고 쓸 수 있는 캘린더 목록을 돌려준다. 권한이 없으면 null.

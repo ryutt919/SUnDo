@@ -9,12 +9,13 @@ import 'package:my_routine/domain/models/journal_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Ev {
-  _Ev(this.title, this.day, {this.recurring = false, this.time = ''});
+  _Ev(this.title, this.day, {this.recurring = false, this.time = '', this.calendarId = 'c1'});
   String title;
   DateTime day;
   bool allDay = true;
   bool recurring;
   String time;
+  String calendarId;
 }
 
 /// 기기 캘린더 대신 이벤트를 메모리에 들고 있는 가짜 서비스.
@@ -24,6 +25,14 @@ class _FakeCalendar implements CalendarService {
   final Map<String, _Ev> events = {};
   final List<String> log = [];
 
+  /// 기기에 있는 캘린더들. 개인(c1)은 연동 대상, 업무(c2)는 다른 쓰기 가능 캘린더, 공휴일(c3)은 읽기 전용.
+  final List<Calendar> calendars = const [
+    Calendar(id: 'c1', name: '개인', readOnly: false, isPrimary: true),
+    Calendar(id: 'c2', name: '업무', readOnly: false),
+    Calendar(id: 'c3', name: '공휴일', readOnly: true),
+    Calendar(id: 'c4', name: '숨김', readOnly: false, hidden: true),
+  ];
+
   @override
   Future<bool> hasPermission() async => permission;
 
@@ -31,18 +40,23 @@ class _FakeCalendar implements CalendarService {
   Future<bool> requestPermission() async => permission;
 
   @override
-  Future<List<Calendar>> writableCalendars() async => [];
+  Future<List<Calendar>> writableCalendars() async => [for (final c in calendars) if (!c.readOnly && !c.hidden) c];
+
+  @override
+  Future<List<Calendar>> visibleCalendars() async => [for (final c in calendars) if (!c.hidden) c];
 
   @override
   Future<CalendarEvent?> get(String eventId) async {
     final e = events[eventId];
-    return e == null ? null : CalendarEvent(id: eventId, title: e.title, day: e.day, allDay: e.allDay, recurring: e.recurring, time: e.time);
+    return e == null
+        ? null
+        : CalendarEvent(id: eventId, title: e.title, day: e.day, allDay: e.allDay, recurring: e.recurring, time: e.time, calendarId: e.calendarId);
   }
 
   @override
-  Future<List<CalendarEvent>> listBetween({required String calendarId, required DateTime from, required DateTime to}) async => [
+  Future<List<CalendarEvent>> listBetween({required List<String> calendarIds, required DateTime from, required DateTime to}) async => [
         for (final entry in events.entries)
-          if (!entry.value.day.isBefore(from) && entry.value.day.isBefore(to))
+          if (calendarIds.contains(entry.value.calendarId) && !entry.value.day.isBefore(from) && entry.value.day.isBefore(to))
             CalendarEvent(
               id: entry.key,
               title: entry.value.title,
@@ -50,6 +64,7 @@ class _FakeCalendar implements CalendarService {
               allDay: entry.value.allDay,
               recurring: entry.value.recurring,
               time: entry.value.time,
+              calendarId: entry.value.calendarId,
             )
       ];
 
@@ -310,6 +325,44 @@ void main() {
       final cur = s.journal.todos.single;
       expect(cur.time, '16:00');
       expect(cur.done, isTrue, reason: '시간을 가져오며 완료 상태를 미완료로 되돌리면 안 된다');
+    });
+
+    test('연동한 캘린더가 아닌 다른 쓰기 가능 캘린더의 일정도 기본으로 가져오고, 공휴일 같은 읽기 전용과 숨긴 캘린더는 가져오지 않는다', () async {
+      final s = await _setup();
+      await s.repo.enable(_cal);
+      final day = DateTime.parse('${_future(3)}T00:00:00');
+      s.fake.events['a'] = _Ev('개인 일정', day);
+      s.fake.events['b'] = _Ev('업무 일정', day, calendarId: 'c2');
+      s.fake.events['c'] = _Ev('추석 연휴', day, calendarId: 'c3');
+      s.fake.events['d'] = _Ev('숨긴 캘린더 일정', day, calendarId: 'c4');
+      await s.repo.sync();
+      expect(s.journal.todos.map((t) => t.text).toSet(), {'개인 일정', '업무 일정'});
+      await s.repo.sync();
+      await s.repo.sync();
+      expect(s.journal.todos.length, 2, reason: '다른 캘린더에서 가져온 일정이 매번 다시 만들어지거나 연결이 끊기면 안 된다');
+    });
+
+    test('가져올 캘린더를 직접 고르면 그 캘린더만 가져오고, 설정은 다시 읽어도 유지되며, 기본값으로 되돌릴 수 있다', () async {
+      final s = await _setup();
+      await s.repo.enable(_cal);
+      final day = DateTime.parse('${_future(3)}T00:00:00');
+      s.fake.events['a'] = _Ev('개인 일정', day);
+      s.fake.events['b'] = _Ev('업무 일정', day, calendarId: 'c2');
+      s.fake.events['c'] = _Ev('추석 연휴', day, calendarId: 'c3');
+      await s.repo.setImportCalendars({'c3'});
+      await s.repo.sync();
+      expect(s.journal.todos.map((t) => t.text).toSet(), {'개인 일정', '추석 연휴'}, reason: '고른 캘린더와 연동 캘린더(항상 포함)');
+      expect(s.repo.importCalendarIds, {'c3'});
+      final choices = await s.repo.importChoices();
+      expect(choices.map((c) => c.id), ['c1', 'c2', 'c3'], reason: '숨긴 캘린더는 목록에서 뺀다');
+      expect(choices.firstWhere((c) => c.id == 'c3').readOnly, isTrue);
+
+      final store = await StorageService.create();
+      final again = CalendarRepository(store, s.fake, s.journal);
+      await again.load();
+      expect(again.importCalendarIds, {'c3'}, reason: '설정이 유지된다');
+      await again.setImportCalendars(null);
+      expect(again.importCalendarIds, isNull);
     });
 
     test('꺼져 있으면 가져오지 않는다', () async {

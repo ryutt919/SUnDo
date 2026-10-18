@@ -128,6 +128,15 @@ class SettingsScreen extends StatelessWidget {
                     value: vm.calendarImport,
                     onChanged: vm.setCalendarImport,
                   ),
+                  if (vm.calendarImport)
+                    ListTile(
+                      title: const Text('가져올 캘린더'),
+                      subtitle: Text(vm.calendarImportIds == null
+                          ? '기본: 쓰기 가능한 모든 캘린더 (공휴일 같은 읽기 전용은 제외)'
+                          : '${vm.calendarImportIds!.length}개 캘린더에서 가져와요'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _pickImportCalendars(context, vm),
+                    ),
                   ListTile(
                     title: const Text('지금 동기화'),
                     subtitle: const Text('앱을 열 때와 투두를 바꿀 때 자동으로 맞춰요'),
@@ -246,6 +255,48 @@ class SettingsScreen extends StatelessWidget {
     if (picked != null) await vm.enableCalendar(picked);
   }
 
+  /// 새 일정을 투두로 가져올 캘린더를 여러 개 고른다.
+  Future<void> _pickImportCalendars(BuildContext context, SettingsViewModel vm) async {
+    final choices = await vm.loadImportChoices();
+    if (!context.mounted) return;
+    if (choices.isEmpty) {
+      showToast(context, '캘린더를 찾지 못했어요. 권한을 확인해 주세요');
+      return;
+    }
+    final defaults = {for (final c in choices) if (!c.readOnly) c.id};
+    final selected = <String>{...(vm.calendarImportIds ?? defaults)};
+    // 결과: 고른 ID들(저장), 빈 값 객체는 사용하지 않고 별도 신호로 기본값 복원을 알린다
+    final result = await showDialog<_ImportPick>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('어느 캘린더에서 가져올까요?'),
+          content: SizedBox(
+            width: 320,
+            child: ListView(shrinkWrap: true, children: [
+              for (final c in choices)
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: selected.contains(c.id),
+                  onChanged: (v) => setState(() => v == true ? selected.add(c.id) : selected.remove(c.id)),
+                  title: Text(c.name),
+                  subtitle: Text([if (c.account.isNotEmpty) c.account, if (c.readOnly) '읽기 전용'].join('  ')),
+                ),
+            ]),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, const _ImportPick.defaults()), child: const Text('기본값')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('취소')),
+            TextButton(onPressed: () => Navigator.pop(dialogContext, _ImportPick(selected)), child: const Text('확인')),
+          ],
+        ),
+      ),
+    );
+    if (result == null) return;
+    await vm.setCalendarImportIds(result.ids);
+    if (context.mounted) showToast(context, '가져올 캘린더를 바꿨어요');
+  }
+
   void _widgetSheet(BuildContext context, SettingsViewModel vm) {
     showModalBottomSheet<void>(
       context: context,
@@ -334,4 +385,11 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 가져올 캘린더 선택 결과. [ids]가 null이면 기본값으로 되돌린다.
+class _ImportPick {
+  const _ImportPick(Set<String> this.ids);
+  const _ImportPick.defaults() : ids = null;
+  final Set<String>? ids;
 }

@@ -35,6 +35,7 @@ class CalendarRepository extends ChangeNotifier {
   String _calendarName = '';
   Map<String, _Link> _links = {};
   Set<String> _ignored = {}; // 사용자가 투두를 지워서 다시 가져오지 않을 캘린더 일정
+  Set<String>? _importIds; // 새 일정을 가져올 캘린더. null이면 기본값(쓰기 가능한 모든 캘린더)
   Future<void> _running = Future.value();
 
   bool get enabled => _enabled;
@@ -43,6 +44,9 @@ class CalendarRepository extends ChangeNotifier {
   String get calendarId => _calendarId;
   String get calendarName => _calendarName;
   int get linkedCount => _links.length;
+
+  /// 직접 고른 가져올 캘린더. null이면 기본값(쓰기 가능한 모든 캘린더, 공휴일 같은 읽기 전용은 제외).
+  Set<String>? get importCalendarIds => _importIds == null ? null : Set.unmodifiable(_importIds!);
 
   Future<void> load() async {
     await _store.reload();
@@ -64,6 +68,8 @@ class CalendarRepository extends ChangeNotifier {
         : {};
     final ignored = v['ignored'];
     _ignored = ignored is List ? {for (final e in ignored) '$e'} : {};
+    final ids = v['importIds'];
+    _importIds = ids is List ? {for (final e in ids) '$e'} : null;
     notifyListeners();
   }
 
@@ -76,6 +82,7 @@ class CalendarRepository extends ChangeNotifier {
         'calendarName': _calendarName,
         'links': _links.map((k, v) => MapEntry(k, v.toJson())),
         'ignored': _ignored.toList(),
+        if (_importIds != null) 'importIds': _importIds!.toList(),
       });
 
   Future<bool> requestPermission() => _service.requestPermission();
@@ -84,6 +91,19 @@ class CalendarRepository extends ChangeNotifier {
         for (final c in await _service.writableCalendars())
           CalendarChoice(id: c.id, name: c.name, account: c.accountName ?? '', isPrimary: c.isPrimary)
       ];
+
+  /// 가져올 캘린더를 고르는 화면에 보일 목록(숨기지 않은 모든 캘린더).
+  Future<List<CalendarChoice>> importChoices() async => [
+        for (final c in await _service.visibleCalendars())
+          CalendarChoice(id: c.id, name: c.name, account: c.accountName ?? '', isPrimary: c.isPrimary, readOnly: c.readOnly)
+      ];
+
+  /// 가져올 캘린더를 정한다. null이면 기본값(쓰기 가능한 모든 캘린더)으로 돌아간다.
+  Future<void> setImportCalendars(Set<String>? ids) async {
+    _importIds = ids == null ? null : {...ids};
+    await _save();
+    notifyListeners();
+  }
 
   /// 연동 대상 캘린더를 정하고 켠다.
   Future<void> enable(CalendarChoice c) async {
@@ -172,9 +192,9 @@ class CalendarRepository extends ChangeNotifier {
       final link = _links[t.id];
       if (link == null) continue;
       try {
-        if (link.calendarId != _calendarId) {
-          // 대상 캘린더를 바꿨다. 우리가 만든 이벤트는 지우고 새 캘린더에 다시 만들며(3번), 가져온 것은 연결만 끊는다.
-          if (!link.imported) await _service.delete(link.eventId);
+        if (link.calendarId != _calendarId && !link.imported) {
+          // 대상 캘린더를 바꿨다. 우리가 만든 이벤트는 지우고 새 캘린더에 다시 만든다(3번). 다른 캘린더에서 가져온 것은 해당하지 않는다.
+          await _service.delete(link.eventId);
           _links.remove(t.id);
           changed = true;
           continue;
@@ -278,10 +298,16 @@ class CalendarRepository extends ChangeNotifier {
     return changed;
   }
 
+  /// 가져올 캘린더 ID들. 직접 고른 것이 없으면 쓰기 가능한 모든 캘린더. 연동 캘린더는 항상 포함한다.
+  Future<List<String>> _importCalendarIds() async {
+    final ids = _importIds ?? {for (final c in await _service.writableCalendars()) c.id};
+    return {...ids, _calendarId}.toList();
+  }
+
   Future<bool> _importFromCalendar() async {
     final today = parseDateKey(todayKey());
     final events = await _service.listBetween(
-      calendarId: _calendarId,
+      calendarIds: await _importCalendarIds(),
       from: today,
       to: DateTime(today.year, today.month, today.day + importDays),
     );
@@ -293,7 +319,7 @@ class CalendarRepository extends ChangeNotifier {
       final parsed = _parseTitle(e.title);
       if (parsed.text.isEmpty) continue;
       final todo = await _journal.addTodo(parsed.text, dateKey(e.day), done: parsed.done, time: e.time);
-      _links[todo.id] = _Link(e.id, _calendarId, title: e.title, date: dateKey(e.day), imported: true, time: e.time);
+      _links[todo.id] = _Link(e.id, e.calendarId.isEmpty ? _calendarId : e.calendarId, title: e.title, date: dateKey(e.day), imported: true, time: e.time);
       known.add(e.id);
       changed = true;
     }
@@ -302,11 +328,12 @@ class CalendarRepository extends ChangeNotifier {
 }
 
 class CalendarChoice {
-  const CalendarChoice({required this.id, required this.name, required this.account, required this.isPrimary});
+  const CalendarChoice({required this.id, required this.name, required this.account, required this.isPrimary, this.readOnly = false});
   final String id;
   final String name;
   final String account;
   final bool isPrimary;
+  final bool readOnly; // 공휴일 같은 읽기 전용 캘린더
 }
 
 class _Link {

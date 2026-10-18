@@ -9,6 +9,7 @@ class CalendarEvent {
     required this.allDay,
     required this.recurring,
     this.time = '',
+    this.calendarId = '',
   });
 
   final String id;
@@ -17,6 +18,7 @@ class CalendarEvent {
   final bool allDay;
   final bool recurring;
   final String time; // 종일이 아닌 일정의 시작 시각 'HH:mm', 종일이면 빈 문자열
+  final String calendarId; // 이 일정이 들어 있는 캘린더
 }
 
 /// 기기 캘린더(Android CalendarProvider)를 감싼 서비스. 상태는 가지지 않는다.
@@ -39,12 +41,22 @@ class CalendarService {
     ];
   }
 
+  /// 가져올 캘린더를 고르는 데 쓰는 목록: 숨기지 않은 모든 캘린더(공휴일 같은 읽기 전용 포함).
+  Future<List<Calendar>> visibleCalendars() async {
+    final all = await _plugin.listCalendars();
+    return [
+      for (final c in all)
+        if (!c.hidden) c
+    ];
+  }
+
   static CalendarEvent _convert(Event e, {String? id}) => CalendarEvent(
         id: id ?? e.instanceId,
         title: e.title,
         day: DateTime(e.startDate.year, e.startDate.month, e.startDate.day),
         allDay: e.isAllDay,
         recurring: e.isRecurring,
+        calendarId: e.calendarId,
         time: e.isAllDay ? '' : '${e.startDate.hour.toString().padLeft(2, '0')}:${e.startDate.minute.toString().padLeft(2, '0')}',
       );
 
@@ -54,9 +66,10 @@ class CalendarService {
     return e == null ? null : _convert(e, id: eventId);
   }
 
-  /// [calendarId]에서 [from] 이상 [to] 미만에 걸친 이벤트(반복 일정은 회차마다 한 개).
-  Future<List<CalendarEvent>> listBetween({required String calendarId, required DateTime from, required DateTime to}) async {
-    final events = await _plugin.listEvents(from, to, calendarIds: [calendarId]);
+  /// [calendarIds]의 캘린더들에서 [from] 이상 [to] 미만에 걸친 이벤트(반복 일정은 회차마다 한 개).
+  Future<List<CalendarEvent>> listBetween({required List<String> calendarIds, required DateTime from, required DateTime to}) async {
+    if (calendarIds.isEmpty) return const [];
+    final events = await _plugin.listEvents(from, to, calendarIds: calendarIds);
     return [for (final e in events) _convert(e)];
   }
 
