@@ -4,9 +4,17 @@
 
 ## 현재 상태
 
-- Dart 코드: `flutter analyze` 오류 없음, 단위 및 위젯 테스트 114건 통과(macOS에서 확인). iOS 앱 빌드는 Xcode가 있는 Mac이나 GitHub Actions에서 확인 필요
+- Dart 코드: `flutter analyze` 오류 없음, 단위 및 위젯 테스트 151건 통과. 최신 빌드 결과는 GitHub Actions에서 확인
 - iOS 빌드: GitHub Actions(macOS)에서 분석, 테스트, `flutter build ios --release --no-codesign`(위젯 확장 포함) 통과. 시뮬레이터 통합 테스트(`ios-simulator.yml`, iPhone 17 Pro iOS 26.2)로 앱 실행과 위젯 확장 포함까지 확인함. 위젯 Swift 로직(JSON 해석, 쪽 보정, 쪽 넘김 버튼)은 `ios/RoutiningWidgetTests`로 macOS에서 실행해 확인함. 위젯 화면은 이미지로 렌더링해 레이아웃을 확인함(CI 산출물 `ios-widget-images`). 홈 화면에서 실제로 누르는 동작과 실기기 실행은 아직 확인하지 못함
 - 위젯: WidgetKit 소스와 `RoutiningWidget` 확장 타깃(Info.plist, App Group 권한, Runner에 포함)을 Xcode 프로젝트에 넣어 둠. 실제 빌드 확인은 CI 결과 참고
+
+## 캘린더 시간 연동
+
+- 투두 시간 생성/수정과 종일 전환을 반영하며 신규 시간 일정의 기본 길이는 60분임.
+- 기존 종일 연결은 같은 이벤트 ID로 보정하고 외부 일정의 기존 길이를 유지함.
+- 날짜와 시간을 함께 비교하며 동시 변경은 앱을 우선함. 읽기 전용 일정은 날짜/시간 편집을 막음.
+- 설정에서 실제 동기화 결과와 마지막 성공 시각을 확인함.
+- `integration_test/02_calendar_sync_test.dart`는 임시 캘린더로 실제 EventKit 경로를 확인하며, CI에서 캘린더 권한을 미리 부여함.
 
 ## Android와 달라지는 부분
 
