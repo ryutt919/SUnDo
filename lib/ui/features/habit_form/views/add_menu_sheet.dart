@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../data/repositories/journal_repository.dart';
+import '../../../../data/repositories/calendar_repository.dart';
 import '../../../../domain/models/date_key.dart';
 import '../../../../domain/models/journal_models.dart';
 import '../../templates/views/templates_screen.dart';
+import '../../../core/widgets.dart';
 import '../../../../domain/models/repeat_rule.dart';
 import '../view_models/todo_editor_view_model.dart';
 import 'habit_form_screen.dart';
@@ -63,7 +65,7 @@ Future<void> showTodoDialog(BuildContext context, String date, {Todo? existing})
   return showDialog<void>(
     context: context,
     builder: (_) => ChangeNotifierProvider(
-      create: (c) => TodoEditorViewModel(c.read<JournalRepository>(), defaultDate: date, existing: existing),
+      create: (c) => TodoEditorViewModel(c.read<JournalRepository>(), defaultDate: date, existing: existing, calendar: c.read<CalendarRepository?>()),
       child: const _TodoDialog(),
     ),
   );
@@ -109,7 +111,7 @@ class _TodoDialog extends StatelessWidget {
         OutlinedButton.icon(
           icon: const Icon(Icons.event),
           label: Text(vm.date),
-          onPressed: () => _pickDate(context, vm),
+          onPressed: vm.scheduleReadOnly ? null : () => _pickDate(context, vm),
         ),
         const SizedBox(height: 8),
         if (vm.hasTime)
@@ -118,17 +120,21 @@ class _TodoDialog extends StatelessWidget {
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.schedule),
                 label: Text(vm.time),
-                onPressed: () => _pickTime(context, vm),
+                onPressed: vm.scheduleReadOnly ? null : () => _pickTime(context, vm),
               ),
             ),
-            IconButton(tooltip: '시간 지우기(종일)', icon: const Icon(Icons.close), onPressed: vm.clearTime),
+            IconButton(tooltip: '시간 지우기(종일)', icon: const Icon(Icons.close), onPressed: vm.scheduleReadOnly ? null : vm.clearTime),
           ])
         else
           OutlinedButton.icon(
             icon: const Icon(Icons.more_time),
             label: const Text('시간 추가 (없으면 종일)'),
-            onPressed: () => _pickTime(context, vm),
+            onPressed: vm.scheduleReadOnly ? null : () => _pickTime(context, vm),
           ),
+        if (vm.scheduleReadOnly) ...[
+          const SizedBox(height: 8),
+          const Text('읽기 전용 캘린더 일정이에요. 날짜와 시간은 원본 캘린더에서 바꿔 주세요'),
+        ],
       ]),
       actions: [
         if (!vm.isNew)
@@ -142,7 +148,13 @@ class _TodoDialog extends StatelessWidget {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
         TextButton(
           onPressed: () async {
-            if (await vm.save() && context.mounted) Navigator.pop(context);
+            final saved = await vm.save();
+            if (!context.mounted) return;
+            if (saved) {
+              Navigator.pop(context);
+            } else if (vm.saveError != null) {
+              showToast(context, vm.saveError!);
+            }
           },
           child: Text(vm.isNew ? '추가' : '저장'),
         ),

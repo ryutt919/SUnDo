@@ -16,13 +16,13 @@ class SettingsViewModel extends RepoViewModel {
     required NotificationService notifications,
     required HomeWidgetService widgets,
     required CalendarRepository calendar,
-  })  : _settings = settings,
-        _routine = routine,
-        _backup = backup,
-        _notifications = notifications,
-        _widgets = widgets,
-        _calendar = calendar,
-        super([settings, routine, calendar]) {
+  }) : _settings = settings,
+       _routine = routine,
+       _backup = backup,
+       _notifications = notifications,
+       _widgets = widgets,
+       _calendar = calendar,
+       super([settings, routine, calendar]) {
     refreshNotificationState();
   }
 
@@ -44,13 +44,17 @@ class SettingsViewModel extends RepoViewModel {
     notifyListeners();
   }
 
-  Future<void> setTheme(String t) => _settings.update(settings.copyWith(theme: t));
+  Future<void> setTheme(String t) =>
+      _settings.update(settings.copyWith(theme: t));
 
-  Future<void> setDoneToBottom(bool v) => _settings.update(settings.copyWith(doneToBottom: v));
+  Future<void> setDoneToBottom(bool v) =>
+      _settings.update(settings.copyWith(doneToBottom: v));
 
-  Future<void> setMorningAlarm(String hhmm) => _settings.update(settings.copyWith(morningAlarm: hhmm));
+  Future<void> setMorningAlarm(String hhmm) =>
+      _settings.update(settings.copyWith(morningAlarm: hhmm));
 
-  Future<void> setEveningAlarm(String hhmm) => _settings.update(settings.copyWith(eveningAlarm: hhmm));
+  Future<void> setEveningAlarm(String hhmm) =>
+      _settings.update(settings.copyWith(eveningAlarm: hhmm));
 
   Future<bool> requestNotifications() async {
     final ok = await _notifications.requestPermission();
@@ -62,13 +66,17 @@ class SettingsViewModel extends RepoViewModel {
 
   Future<bool> get canPinWidget => _widgets.supportsPinning;
 
-  Future<void> pinTodayWidget() => _widgets.requestPin(HomeWidgetService.todayProvider);
+  Future<void> pinTodayWidget() =>
+      _widgets.requestPin(HomeWidgetService.todayProvider);
 
-  Future<void> pinTodoWidget() => _widgets.requestPin(HomeWidgetService.todoProvider);
+  Future<void> pinTodoWidget() =>
+      _widgets.requestPin(HomeWidgetService.todoProvider);
 
-  Future<void> pinWeekWidget() => _widgets.requestPin(HomeWidgetService.weekProvider);
+  Future<void> pinWeekWidget() =>
+      _widgets.requestPin(HomeWidgetService.weekProvider);
 
-  Future<void> pinMonthWidget() => _widgets.requestPin(HomeWidgetService.monthProvider);
+  Future<void> pinMonthWidget() =>
+      _widgets.requestPin(HomeWidgetService.monthProvider);
 
   // ---- 캘린더 연동 ----
   bool get calendarOn => _calendar.enabled;
@@ -97,7 +105,56 @@ class SettingsViewModel extends RepoViewModel {
     await _calendar.sync();
   }
 
-  Future<void> syncCalendarNow() => _calendar.sync();
+  bool get calendarSyncing => _calendar.isSyncing;
+  DateTime? get calendarLastSuccessAt => _calendar.lastSuccessAt;
+  CalendarSyncResult? get calendarLastResult => _calendar.lastResult;
+
+  Future<CalendarSyncResult> syncCalendarNow() => _calendar.sync();
+
+  String calendarSyncMessage(CalendarSyncResult result) {
+    final message = switch (result.status) {
+      CalendarSyncStatus.success =>
+        result.processedCount == 0
+            ? '캘린더와 맞췄어요. 변경 사항이 없어요'
+            : '${result.processedCount}개 반영했어요',
+      CalendarSyncStatus.partialFailure =>
+        '${result.processedCount}개 반영, ${result.failedCount}개 실패했어요. 다시 동기화해 주세요',
+      CalendarSyncStatus.permissionDenied => '기기 설정에서 캘린더 권한을 허용해 주세요',
+      CalendarSyncStatus.disabled => '캘린더 연동이 꺼져 있어요',
+      CalendarSyncStatus.failure => '캘린더를 맞추지 못했어요. 다시 시도해 주세요',
+    };
+    final detail = result.detail;
+    if (detail != null &&
+        detail.isNotEmpty &&
+        (result.status == CalendarSyncStatus.failure ||
+            result.status == CalendarSyncStatus.partialFailure)) {
+      return '$message\n$detail';
+    }
+    return message;
+  }
+
+  String get calendarSyncDescription {
+    final lastSuccess = calendarLastSuccessAt;
+    final last = calendarLastResult;
+    final lines = <String>[
+      '앱을 열 때와 투두를 바꿀 때 자동으로 맞춰요',
+      if (lastSuccess == null)
+        '아직 성공한 동기화가 없어요'
+      else
+        '마지막 성공: ${_formatSyncTime(lastSuccess)}',
+      if (last != null &&
+          last.status != CalendarSyncStatus.success &&
+          last.status != CalendarSyncStatus.disabled)
+        '최근 실패 (${_formatSyncTime(last.completedAt)}): ${calendarSyncMessage(last)}',
+    ];
+    return lines.join('\n');
+  }
+
+  static String _formatSyncTime(DateTime value) {
+    final t = value.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${t.year}-${two(t.month)}-${two(t.day)} ${two(t.hour)}:${two(t.minute)}';
+  }
 
   /// 권한을 받고 쓸 수 있는 캘린더 목록을 돌려준다. 권한이 없으면 null.
   Future<List<CalendarChoice>?> loadCalendarChoices() async {
@@ -117,7 +174,11 @@ class SettingsViewModel extends RepoViewModel {
 
   Future<void> restore(String id) async {
     final h = _routine.habitById(id);
-    if (h != null) await _routine.updateHabit(h.copyWith(archived: false, clearFinished: true));
+    if (h != null) {
+      await _routine.updateHabit(
+        h.copyWith(archived: false, clearFinished: true),
+      );
+    }
   }
 
   Future<void> purge(String id) => _routine.deleteHabit(id);

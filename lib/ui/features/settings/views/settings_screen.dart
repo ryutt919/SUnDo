@@ -110,23 +110,23 @@ class SettingsScreen extends StatelessWidget {
                 ListTile(
                   title: const Text('투두를 캘린더에 연동'),
                   subtitle: Text(vm.calendarOn
-                      ? '${vm.calendarName}과 동기화 중 (${vm.calendarLinked}개)'
+                      ? '${vm.calendarName}과 연동 중 (${vm.calendarLinked}개)'
                       : '투두를 기기 캘린더 일정과 양방향으로 맞춰요. 구글/삼성 캘린더 계정과 동기화돼요'),
-                  trailing: Switch(value: vm.calendarOn, onChanged: (v) => _toggleCalendar(context, vm, v)),
-                  onTap: () => _toggleCalendar(context, vm, !vm.calendarOn),
+                  trailing: Switch(value: vm.calendarOn, onChanged: vm.calendarSyncing ? null : (v) => _toggleCalendar(context, vm, v)),
+                  onTap: vm.calendarSyncing ? null : () => _toggleCalendar(context, vm, !vm.calendarOn),
                 ),
                 if (vm.calendarOn) ...[
                   SwitchListTile(
                     title: const Text('캘린더에서 바꾼 내용을 투두에 반영'),
-                    subtitle: const Text('제목, 날짜, 완료 표시(제목 앞 ✔), 일정 삭제가 투두에도 적용돼요. 일정을 지우면 투두도 지워져요'),
+                    subtitle: const Text('제목, 날짜, 시간, 완료 표시(제목 앞 ✔), 일정 삭제가 투두에도 적용돼요. 일정을 지우면 투두도 지워져요'),
                     value: vm.calendarPull,
-                    onChanged: vm.setCalendarPull,
+                    onChanged: vm.calendarSyncing ? null : vm.setCalendarPull,
                   ),
                   SwitchListTile(
                     title: const Text('캘린더의 새 일정을 투두로 가져오기'),
-                    subtitle: const Text('오늘부터 60일 안의 반복되지 않는 일정을 시간까지 투두로 자동으로 만들어요(앱을 켜 두면 10분마다 확인). 캘린더 일정은 지우거나 옮기지 않아요'),
+                    subtitle: const Text('오늘부터 60일 안의 반복되지 않는 일정을 시간까지 투두로 자동으로 만들어요(앱을 켜 두면 10분마다 확인). 읽기 전용 일정의 날짜와 시간은 원본에서 바꿔 주세요'),
                     value: vm.calendarImport,
-                    onChanged: vm.setCalendarImport,
+                    onChanged: vm.calendarSyncing ? null : vm.setCalendarImport,
                   ),
                   if (vm.calendarImport)
                     ListTile(
@@ -135,22 +135,24 @@ class SettingsScreen extends StatelessWidget {
                           ? '기본: 쓰기 가능한 모든 캘린더 (공휴일 같은 읽기 전용은 제외)'
                           : '${vm.calendarImportIds!.length}개 캘린더에서 가져와요'),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _pickImportCalendars(context, vm),
+                      onTap: vm.calendarSyncing ? null : () => _pickImportCalendars(context, vm),
                     ),
                   ListTile(
-                    title: const Text('지금 동기화'),
-                    subtitle: const Text('앱을 열 때와 투두를 바꿀 때 자동으로 맞춰요'),
-                    trailing: const Icon(Icons.sync),
-                    onTap: () async {
-                      await vm.syncCalendarNow();
-                      if (context.mounted) showToast(context, '캘린더와 맞췄어요');
+                    title: Text(vm.calendarSyncing ? '동기화 중' : '지금 동기화'),
+                    subtitle: Text(vm.calendarSyncDescription),
+                    trailing: vm.calendarSyncing
+                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.sync),
+                    onTap: vm.calendarSyncing ? null : () async {
+                      final result = await vm.syncCalendarNow();
+                      if (context.mounted) showToast(context, vm.calendarSyncMessage(result));
                     },
                   ),
                   ListTile(
                     title: const Text('캘린더에서 루티닝 일정 모두 지우기'),
                     subtitle: const Text('연동은 유지돼요. 다음 동기화 때 다시 만들어져요'),
                     trailing: const Icon(Icons.delete_sweep_outlined),
-                    onTap: () async {
+                    onTap: vm.calendarSyncing ? null : () async {
                       if (!await confirmDialog(context, '루티닝이 만든 캘린더 일정을 모두 지울까요?', ok: '지우기')) return;
                       await vm.removeCalendarEvents();
                       if (context.mounted) showToast(context, '지웠어요');

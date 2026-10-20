@@ -19,20 +19,24 @@ class JournalRepository extends ChangeNotifier {
   List<Todo> get todos => List.unmodifiable(_todos);
 
   /// "완료 숨기기"로 감추지 않은 투두. 투두 탭, 홈, 위젯이 쓴다.
-  List<Todo> get visibleTodos => List.unmodifiable(_todos.where((t) => !t.hidden));
+  List<Todo> get visibleTodos =>
+      List.unmodifiable(_todos.where((t) => !t.hidden));
   List<Memo> get memos => List.unmodifiable(_memos);
   List<Goal> get goals => List.unmodifiable(_goals);
   Map<String, DayReview> get reviews => Map.unmodifiable(_reviews);
 
   DayReview reviewOf(String date) => _reviews[date] ?? const DayReview();
-  List<Memo> memosOf(String date) => _memos.where((m) => m.date == date).toList();
+  List<Memo> memosOf(String date) =>
+      _memos.where((m) => m.date == date).toList();
   int get reviewDays => _reviews.values.where((r) => !r.isEmpty).length;
 
   Future<void> load() async {
     await _store.reload();
     List<T> list<T>(String key, T Function(Map<String, dynamic>) f) {
       final v = _store.readJson(key);
-      return v is List ? v.map((e) => f((e as Map).cast<String, dynamic>())).toList() : <T>[];
+      return v is List
+          ? v.map((e) => f((e as Map).cast<String, dynamic>())).toList()
+          : <T>[];
     }
 
     _todos = list('todos', Todo.fromJson);
@@ -40,7 +44,12 @@ class JournalRepository extends ChangeNotifier {
     _goals = list('goals', Goal.fromJson);
     final r = _store.readJson('reviews');
     _reviews = r is Map
-        ? r.map((k, v) => MapEntry('$k', DayReview.fromJson((v as Map).cast<String, dynamic>())))
+        ? r.map(
+            (k, v) => MapEntry(
+              '$k',
+              DayReview.fromJson((v as Map).cast<String, dynamic>()),
+            ),
+          )
         : {};
     notifyListeners();
   }
@@ -54,7 +63,10 @@ class JournalRepository extends ChangeNotifier {
       case 'goals':
         return _store.writeJson(key, _goals.map((e) => e.toJson()).toList());
       case 'reviews':
-        return _store.writeJson(key, _reviews.map((k, v) => MapEntry(k, v.toJson())));
+        return _store.writeJson(
+          key,
+          _reviews.map((k, v) => MapEntry(k, v.toJson())),
+        );
     }
     throw ArgumentError('알 수 없는 저장 키: $key');
   }
@@ -65,12 +77,27 @@ class JournalRepository extends ChangeNotifier {
   Future<void> _refreshTodos() async {
     await _store.reload();
     final v = _store.readJson('todos');
-    _todos = v is List ? v.map((e) => Todo.fromJson((e as Map).cast<String, dynamic>())).toList() : <Todo>[];
+    _todos = v is List
+        ? v
+              .map((e) => Todo.fromJson((e as Map).cast<String, dynamic>()))
+              .toList()
+        : <Todo>[];
   }
 
-  Future<Todo> addTodo(String text, String date, {bool done = false, String time = ''}) async {
+  Future<Todo> addTodo(
+    String text,
+    String date, {
+    bool done = false,
+    String time = '',
+  }) async {
     await _refreshTodos();
-    final todo = Todo(id: newId(), text: text, date: date, done: done, time: time);
+    final todo = Todo(
+      id: newId(),
+      text: text,
+      date: date,
+      done: done,
+      time: time,
+    );
     _todos = [..._todos, todo];
     await _save('todos');
     notifyListeners();
@@ -82,6 +109,40 @@ class JournalRepository extends ChangeNotifier {
     _todos = [for (final x in _todos) x.id == t.id ? t : x];
     await _save('todos');
     notifyListeners();
+  }
+
+  /// 최신 투두의 지정한 필드만 바꾼다. 삭제된 투두는 되살리지 않는다.
+  /// [expected]가 있으면 기다리는 동안 바뀐 필드는 유지하고, 날짜와 시간은 함께 비교한다.
+  Future<Todo?> patchTodo(
+    String id, {
+    String? text,
+    bool? done,
+    String? date,
+    String? time,
+    Todo? expected,
+  }) async {
+    await _refreshTodos();
+    final latest = _todos.where((t) => t.id == id).firstOrNull;
+    if (latest == null) return null;
+    final scheduleMatches =
+        expected == null ||
+        (latest.date == expected.date && latest.time == expected.time);
+    final patched = latest.copyWith(
+      text: expected == null || latest.text == expected.text ? text : null,
+      done: expected == null || latest.done == expected.done ? done : null,
+      date: scheduleMatches ? date : null,
+      time: scheduleMatches ? time : null,
+    );
+    final previous = _todos;
+    _todos = [for (final t in _todos) t.id == id ? patched : t];
+    try {
+      await _save('todos');
+    } on Exception {
+      _todos = previous;
+      rethrow;
+    }
+    notifyListeners();
+    return patched;
   }
 
   /// 여러 투두를 한 번에 지운다(저장은 한 번).
@@ -97,7 +158,9 @@ class JournalRepository extends ChangeNotifier {
   Future<void> hideTodos(Set<String> ids) async {
     if (ids.isEmpty) return;
     await _refreshTodos();
-    _todos = [for (final t in _todos) ids.contains(t.id) ? t.copyWith(hidden: true) : t];
+    _todos = [
+      for (final t in _todos) ids.contains(t.id) ? t.copyWith(hidden: true) : t,
+    ];
     await _save('todos');
     notifyListeners();
   }
@@ -107,6 +170,30 @@ class JournalRepository extends ChangeNotifier {
     _todos = _todos.where((t) => t.id != id).toList();
     await _save('todos');
     notifyListeners();
+  }
+
+  /// 외부 삭제를 기다리는 동안 앱이나 위젯에서 수정한 투두는 유지한다.
+  Future<bool> deleteTodoIfUnchanged(String id, Todo expected) async {
+    await _refreshTodos();
+    final latest = _todos.where((t) => t.id == id).firstOrNull;
+    if (latest == null ||
+        latest.text != expected.text ||
+        latest.date != expected.date ||
+        latest.time != expected.time ||
+        latest.done != expected.done ||
+        latest.hidden != expected.hidden) {
+      return false;
+    }
+    final previous = _todos;
+    _todos = _todos.where((t) => t.id != id).toList();
+    try {
+      await _save('todos');
+    } on Exception {
+      _todos = previous;
+      rethrow;
+    }
+    notifyListeners();
+    return true;
   }
 
   // ---- 회고 ----
@@ -119,7 +206,9 @@ class JournalRepository extends ChangeNotifier {
   // ---- 메모 ----
   Future<void> saveMemo(Memo m) async {
     final exists = _memos.any((x) => x.id == m.id);
-    _memos = exists ? [for (final x in _memos) x.id == m.id ? m : x] : [..._memos, m];
+    _memos = exists
+        ? [for (final x in _memos) x.id == m.id ? m : x]
+        : [..._memos, m];
     await _save('memos');
     notifyListeners();
   }
@@ -136,7 +225,9 @@ class JournalRepository extends ChangeNotifier {
 
   Future<void> saveGoal(Goal g) async {
     final exists = _goals.any((x) => x.id == g.id);
-    _goals = exists ? [for (final x in _goals) x.id == g.id ? g : x] : [..._goals, g];
+    _goals = exists
+        ? [for (final x in _goals) x.id == g.id ? g : x]
+        : [..._goals, g];
     await _save('goals');
     notifyListeners();
   }
@@ -149,25 +240,37 @@ class JournalRepository extends ChangeNotifier {
 
   // ---- 백업 ----
   Map<String, dynamic> exportJson() => {
-        'todos': _todos.map((e) => e.toJson()).toList(),
-        'memos': _memos.map((e) => e.toJson()).toList(),
-        'goals': _goals.map((e) => e.toJson()).toList(),
-        'reviews': _reviews.map((k, v) => MapEntry(k, v.toJson())),
-      };
+    'todos': _todos.map((e) => e.toJson()).toList(),
+    'memos': _memos.map((e) => e.toJson()).toList(),
+    'goals': _goals.map((e) => e.toJson()).toList(),
+    'reviews': _reviews.map((k, v) => MapEntry(k, v.toJson())),
+  };
 
   /// 백업 JSON을 모두 해석해 본다. 형식이 틀리면 FormatException을 던지고 상태는 바꾸지 않는다.
-  ({List<Todo> todos, List<Memo> memos, List<Goal> goals, Map<String, DayReview> reviews}) _parseImport(
-      Map<String, dynamic> j) {
+  ({
+    List<Todo> todos,
+    List<Memo> memos,
+    List<Goal> goals,
+    Map<String, DayReview> reviews,
+  })
+  _parseImport(Map<String, dynamic> j) {
     try {
       List<T> list<T>(String key, T Function(Map<String, dynamic>) f) =>
-          ((j[key] as List?) ?? const []).map((e) => f((e as Map).cast<String, dynamic>())).toList();
+          ((j[key] as List?) ?? const [])
+              .map((e) => f((e as Map).cast<String, dynamic>()))
+              .toList();
       final r = j['reviews'];
       return (
         todos: list('todos', Todo.fromJson),
         memos: list('memos', Memo.fromJson),
         goals: list('goals', Goal.fromJson),
         reviews: r is Map
-            ? r.map((k, v) => MapEntry('$k', DayReview.fromJson((v as Map).cast<String, dynamic>())))
+            ? r.map(
+                (k, v) => MapEntry(
+                  '$k',
+                  DayReview.fromJson((v as Map).cast<String, dynamic>()),
+                ),
+              )
             : <String, DayReview>{},
       );
     } on TypeError catch (e) {

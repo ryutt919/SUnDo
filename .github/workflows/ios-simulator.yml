@@ -36,6 +36,11 @@ jobs:
         with:
           name: ios-widget-images
           path: /tmp/widget_test/images/*.png
+      - name: 캘린더 통합 테스트 권한 준비
+        run: |
+          flutter build ios --simulator --debug --no-codesign --target integration_test/02_calendar_sync_test.dart
+          xcrun simctl install "$UDID" build/ios/iphonesimulator/Runner.app
+          xcrun simctl privacy "$UDID" grant calendar com.sundo.myRoutine
       - name: 통합 테스트(앱 실행)
         run: flutter test integration_test -d "$UDID"
       - name: 위젯 확장이 앱에 포함되는지 확인

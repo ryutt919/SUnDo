@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:device_calendar_plus/device_calendar_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_routine/data/repositories/calendar_repository.dart';
@@ -9,7 +11,13 @@ import 'package:my_routine/domain/models/journal_models.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _Ev {
-  _Ev(this.title, this.day, {this.recurring = false, this.time = '', this.calendarId = 'c1'});
+  _Ev(
+    this.title,
+    this.day, {
+    this.recurring = false,
+    this.time = '',
+    this.calendarId = 'c1',
+  });
   String title;
   DateTime day;
   bool allDay = true;
@@ -22,6 +30,9 @@ class _Ev {
 class _FakeCalendar implements CalendarService {
   bool permission = true;
   int nextId = 1;
+  String? failCreateTitle;
+  Completer<void>? readGate;
+  Completer<void>? readStarted;
   final Map<String, _Ev> events = {};
   final List<String> log = [];
 
@@ -40,50 +51,89 @@ class _FakeCalendar implements CalendarService {
   Future<bool> requestPermission() async => permission;
 
   @override
-  Future<List<Calendar>> writableCalendars() async => [for (final c in calendars) if (!c.readOnly && !c.hidden) c];
+  Future<List<Calendar>> writableCalendars() async => [
+    for (final c in calendars)
+      if (!c.readOnly && !c.hidden) c,
+  ];
 
   @override
-  Future<List<Calendar>> visibleCalendars() async => [for (final c in calendars) if (!c.hidden) c];
+  Future<List<Calendar>> visibleCalendars() async => [
+    for (final c in calendars)
+      if (!c.hidden) c,
+  ];
 
   @override
   Future<CalendarEvent?> get(String eventId) async {
+    readStarted?.complete();
+    readStarted = null;
+    await readGate?.future;
     final e = events[eventId];
     return e == null
         ? null
-        : CalendarEvent(id: eventId, title: e.title, day: e.day, allDay: e.allDay, recurring: e.recurring, time: e.time, calendarId: e.calendarId);
+        : CalendarEvent(
+            id: eventId,
+            title: e.title,
+            day: e.day,
+            allDay: e.allDay,
+            recurring: e.recurring,
+            time: e.time,
+            calendarId: e.calendarId,
+          );
   }
 
   @override
-  Future<List<CalendarEvent>> listBetween({required List<String> calendarIds, required DateTime from, required DateTime to}) async => [
-        for (final entry in events.entries)
-          if (calendarIds.contains(entry.value.calendarId) && !entry.value.day.isBefore(from) && entry.value.day.isBefore(to))
-            CalendarEvent(
-              id: entry.key,
-              title: entry.value.title,
-              day: entry.value.day,
-              allDay: entry.value.allDay,
-              recurring: entry.value.recurring,
-              time: entry.value.time,
-              calendarId: entry.value.calendarId,
-            )
-      ];
+  Future<List<CalendarEvent>> listBetween({
+    required List<String> calendarIds,
+    required DateTime from,
+    required DateTime to,
+  }) async => [
+    for (final entry in events.entries)
+      if (calendarIds.contains(entry.value.calendarId) &&
+          !entry.value.day.isBefore(from) &&
+          entry.value.day.isBefore(to))
+        CalendarEvent(
+          id: entry.key,
+          title: entry.value.title,
+          day: entry.value.day,
+          allDay: entry.value.allDay,
+          recurring: entry.value.recurring,
+          time: entry.value.time,
+          calendarId: entry.value.calendarId,
+        ),
+  ];
 
   @override
-  Future<String> create({required String calendarId, required String title, required DateTime day}) async {
+  Future<String> create({
+    required String calendarId,
+    required String title,
+    required DateTime day,
+    String time = '',
+  }) async {
+    if (title == failCreateTitle) throw Exception('주입된 생성 실패');
     final id = 'e${nextId++}';
-    events[id] = _Ev(title, day);
+    events[id] = _Ev(title, day, time: time, calendarId: calendarId)
+      ..allDay = time.isEmpty;
     log.add('create $id');
     return id;
   }
 
   @override
-  Future<bool> update({required String eventId, String? title, DateTime? day}) async {
+  Future<bool> update({
+    required String eventId,
+    String? title,
+    DateTime? day,
+    String? time,
+  }) async {
     final e = events[eventId];
     if (e == null) return false;
     if (title != null) e.title = title;
     if (day != null) {
       e.day = day;
-      e.allDay = true;
+      e.allDay = (time ?? e.time).isEmpty;
+    }
+    if (time != null) {
+      e.time = time;
+      e.allDay = time.isEmpty;
     }
     log.add('update $eventId');
     return true;
@@ -96,9 +146,31 @@ class _FakeCalendar implements CalendarService {
   }
 }
 
-const _cal = CalendarChoice(id: 'c1', name: '개인', account: 'me@example.com', isPrimary: true);
+class _FailingStore extends StorageService {
+  _FailingStore(super.prefs);
+  int writes = 0;
+  int? failAt;
+  @override
+  Future<void> writeJson(String key, Object value) async {
+    if (key == 'calendar' && ++writes == failAt) {
+      throw StorageWriteException(key);
+    }
+    await super.writeJson(key, value);
+  }
+}
 
-typedef _Setup = ({CalendarRepository repo, JournalRepository journal, _FakeCalendar fake});
+const _cal = CalendarChoice(
+  id: 'c1',
+  name: '개인',
+  account: 'me@example.com',
+  isPrimary: true,
+);
+
+typedef _Setup = ({
+  CalendarRepository repo,
+  JournalRepository journal,
+  _FakeCalendar fake,
+});
 
 Future<_Setup> _setup() async {
   SharedPreferences.setMockInitialValues({});
@@ -111,13 +183,240 @@ Future<_Setup> _setup() async {
   return (repo: repo, journal: journal, fake: fake);
 }
 
-Future<Todo> _addTodo(_Setup s, String text, String date) => s.journal.addTodo(text, date);
+Future<Todo> _addTodo(_Setup s, String text, String date) =>
+    s.journal.addTodo(text, date);
 
-Todo _todoOf(_Setup s, String id) => s.journal.todos.firstWhere((t) => t.id == id);
+Todo _todoOf(_Setup s, String id) =>
+    s.journal.todos.firstWhere((t) => t.id == id);
 
 String _future(int days) => addDaysKey(todayKey(), days);
 
 void main() {
+  test('결과 저장 실패를 성공 시각으로 기록하지 않으며 재시도는 성공한다', () async {
+    SharedPreferences.setMockInitialValues({});
+    final store = _FailingStore(await SharedPreferences.getInstance());
+    final journal = JournalRepository(store);
+    await journal.load();
+    final repo = CalendarRepository(store, _FakeCalendar(), journal);
+    await repo.enable(_cal);
+    await repo.sync();
+    final previousSuccessAt = repo.lastSuccessAt;
+    store.writes = 0;
+    store.failAt = 2;
+    final failed = await repo.sync();
+    expect(failed.status, CalendarSyncStatus.failure);
+    expect(repo.lastSuccessAt, previousSuccessAt);
+    store.failAt = null;
+    expect((await repo.sync()).status, CalendarSyncStatus.success);
+  });
+
+  test('외부 삭제와 앱 수정 충돌은 앱 값을 보존해 새 일정으로 연결한다', () async {
+    final s = await _setup();
+    await s.repo.enable(_cal);
+    final t = await s.journal.addTodo('회의', _future(1), time: '14:30');
+    await s.repo.sync();
+    s.fake.events.clear();
+    await s.journal.patchTodo(t.id, time: '16:00');
+    await s.repo.sync();
+    expect(s.journal.todos.single.time, '16:00');
+    expect(s.fake.events.values.single.time, '16:00');
+    expect(s.repo.linkedCount, 1);
+  });
+
+  test('읽기 전용 오류 후 큐는 복구되고 성공 결과는 재시작 뒤에도 남는다', () async {
+    final s = await _setup();
+    await s.repo.enable(_cal);
+    await s.repo.setImportCalendars({'c3'});
+    s.fake.events['x'] = _Ev('공휴일', parseDateKey(_future(1)), calendarId: 'c3');
+    await s.repo.sync();
+    final t = s.journal.todos.single;
+    await s.journal.patchTodo(t.id, time: '14:30');
+    expect((await s.repo.sync()).status, CalendarSyncStatus.failure);
+    await s.journal.patchTodo(t.id, time: '');
+    expect((await s.repo.sync()).status, CalendarSyncStatus.success);
+    final again = CalendarRepository(
+      await StorageService.create(),
+      s.fake,
+      s.journal,
+    );
+    await again.load();
+    expect(again.lastResult!.status, CalendarSyncStatus.success);
+    expect(again.lastSuccessAt, s.repo.lastSuccessAt);
+    await again.disable();
+    expect(again.isTodoScheduleReadOnly(t.id), false);
+  });
+
+  test('시간 수정과 날짜 이동 및 시간 삭제가 같은 이벤트에 반영된다', () async {
+    final s = await _setup();
+    await s.repo.enable(_cal);
+    final t = await s.journal.addTodo('회의', _future(1), time: '14:30');
+    await s.repo.sync();
+    await s.journal.patchTodo(t.id, date: _future(2), time: '16:00');
+    await s.repo.sync();
+    expect(s.fake.events['e1']!.time, '16:00');
+    expect(dateKey(s.fake.events['e1']!.day), _future(2));
+    await s.journal.patchTodo(t.id, time: '');
+    await s.repo.sync();
+    expect(s.fake.events['e1']!.allDay, true);
+    expect(s.fake.events.length, 1);
+  });
+
+  test('앱 생성 일정도 외부 시각을 가져오고 동시 일정 변경은 앱이 이긴다', () async {
+    final s = await _setup();
+    await s.repo.enable(_cal);
+    final t = await s.journal.addTodo('회의', _future(1), time: '14:30');
+    await s.repo.sync();
+    s.fake.events['e1']!
+      ..time = '15:00'
+      ..allDay = false;
+    await s.repo.sync();
+    expect(_todoOf(s, t.id).time, '15:00');
+    await s.journal.patchTodo(t.id, time: '16:00');
+    s.fake.events['e1']!
+      ..time = '17:00'
+      ..day = parseDateKey(_future(3));
+    await s.repo.sync();
+    expect(s.fake.events['e1']!.time, '16:00');
+    expect(dateKey(s.fake.events['e1']!.day), _future(1));
+    await s.repo.sync();
+    expect(_todoOf(s, t.id).time, '16:00');
+  });
+
+  test('읽기 전용 일정에는 완료와 시각을 쓰지 않고 실패를 반환한다', () async {
+    final s = await _setup();
+    await s.repo.enable(_cal);
+    await s.repo.setImportCalendars({'c3'});
+    s.fake.events['x'] = _Ev('공휴일', parseDateKey(_future(1)), calendarId: 'c3');
+    await s.repo.sync();
+    final t = s.journal.todos.single;
+    expect(s.repo.isTodoScheduleReadOnly(t.id), true);
+    await s.journal.patchTodo(t.id, done: true, time: '14:00');
+    final result = await s.repo.sync();
+    expect(result.status, CalendarSyncStatus.failure);
+    expect(result.failedCount, 1);
+    expect(result.detail, contains('쓰기 권한'));
+    expect(s.fake.log, isEmpty);
+    expect(s.fake.events['x']!.time, '');
+  });
+
+  test('권한 부족과 부분 실패를 구분하고 재시도 후 성공 시각을 갱신한다', () async {
+    final s = await _setup();
+    expect((await s.repo.sync()).status, CalendarSyncStatus.disabled);
+    await s.repo.enable(_cal);
+    s.fake.permission = false;
+    expect((await s.repo.sync()).status, CalendarSyncStatus.permissionDenied);
+    expect(s.repo.lastSuccessAt, isNull);
+    s.fake.permission = true;
+    s.fake.failCreateTitle = '실패';
+    await s.journal.addTodo('실패', _future(1));
+    await s.journal.addTodo('정상', _future(1));
+    final result = await s.repo.sync();
+    expect(result.status, CalendarSyncStatus.partialFailure);
+    expect(result.failedCount, 1);
+    expect(result.processedCount, 1);
+    s.fake.failCreateTitle = null;
+    expect((await s.repo.sync()).status, CalendarSyncStatus.success);
+    expect(s.repo.lastSuccessAt, isNotNull);
+    expect(s.repo.isSyncing, false);
+    expect(s.fake.events.length, 2);
+  });
+
+  test('기존 시간 기준이 없는 종일 링크는 같은 ID로 보정하고 가져오기 꺼짐을 유지한다', () async {
+    final s = await _setup();
+    final t = await s.journal.addTodo('회의', _future(1), time: '14:30');
+    final store = await StorageService.create();
+    await store.writeJson('calendar', {
+      'schema': 2,
+      'enabled': true,
+      'calendarId': 'c1',
+      'importNew': false,
+      'links': {
+        t.id: {
+          'event': 'old',
+          'calendar': 'c1',
+          'title': '회의',
+          'date': t.date,
+          'imported': false,
+        },
+      },
+    });
+    s.fake.events['old'] = _Ev('회의', parseDateKey(t.date));
+    await s.repo.load();
+    await s.repo.sync();
+    expect(s.fake.events.keys, ['old']);
+    expect(s.fake.events['old']!.time, '14:30');
+    expect(s.repo.importNew, false);
+    await s.repo.sync();
+    expect(s.fake.log, ['update old']);
+  });
+
+  test('기존 링크의 외부 일정도 바뀌었으면 추정 보정을 멈추고 실패로 남긴다', () async {
+    final s = await _setup();
+    final t = await s.journal.addTodo('회의', _future(1), time: '14:30');
+    final store = await StorageService.create();
+    await store.writeJson('calendar', {
+      'schema': 2,
+      'enabled': true,
+      'calendarId': 'c1',
+      'importNew': false,
+      'links': {
+        t.id: {
+          'event': 'old',
+          'calendar': 'c1',
+          'title': '회의',
+          'date': t.date,
+          'imported': false,
+        },
+      },
+    });
+    s.fake.events['old'] = _Ev('회의', parseDateKey(_future(2)), time: '17:00')
+      ..allDay = false;
+    await s.repo.load();
+    final result = await s.repo.sync();
+    expect(result.status, CalendarSyncStatus.failure);
+    expect(result.detail, contains('같은 값으로 맞춰'));
+    expect(result.detail, isNot(contains('회의')));
+    expect(s.fake.log, isEmpty);
+    expect(_todoOf(s, t.id).time, '14:30');
+  });
+
+  test('기기 읽기 대기 중 앱 편집과 삭제를 덮거나 되살리지 않는다', () async {
+    final s = await _setup();
+    await s.repo.enable(_cal);
+    final t = await s.journal.addTodo('회의', _future(1), time: '14:30');
+    await s.repo.sync();
+    s.fake.events['e1']!.time = '15:00';
+    s.fake.readGate = Completer<void>();
+    final started = s.fake.readStarted = Completer<void>();
+    final syncing = s.repo.sync();
+    await started.future;
+    await s.journal.patchTodo(t.id, time: '16:00');
+    s.fake.readGate!.complete();
+    await syncing;
+    expect(_todoOf(s, t.id).time, '16:00');
+    expect(s.fake.events['e1']!.time, '16:00');
+    s.fake.readGate = Completer<void>();
+    final startedDelete = s.fake.readStarted = Completer<void>();
+    final deleting = s.repo.sync();
+    await startedDelete.future;
+    await s.journal.deleteTodo(t.id);
+    s.fake.readGate!.complete();
+    await deleting;
+    expect(s.journal.todos, isEmpty);
+    s.fake.readGate = null;
+    await s.repo.sync();
+    expect(s.fake.events, isEmpty);
+  });
+
+  test('시간 지정 신규 투두의 시각을 캘린더로 보낸다', () async {
+    final s = await _setup();
+    await s.repo.enable(_cal);
+    await s.journal.addTodo('회의', _future(1), time: '14:30');
+    await s.repo.sync();
+    expect(s.fake.events.values.single.time, '14:30');
+    expect(s.fake.events.values.single.allDay, false);
+  });
+
   group('앱에서 캘린더로', () {
     test('연동을 켜기 전에는 캘린더를 건드리지 않는다', () async {
       final s = await _setup();
@@ -155,7 +454,14 @@ void main() {
       await s.repo.enable(_cal);
       await _addTodo(s, '회의', '2026-10-20');
       await s.repo.sync();
-      await s.repo.enable(const CalendarChoice(id: 'c2', name: '업무', account: '', isPrimary: false));
+      await s.repo.enable(
+        const CalendarChoice(
+          id: 'c2',
+          name: '업무',
+          account: '',
+          isPrimary: false,
+        ),
+      );
       await s.repo.sync();
       expect(s.fake.events.length, 1);
       expect(s.fake.log, ['create e1', 'delete e1', 'create e2']);
@@ -172,7 +478,11 @@ void main() {
 
       s.fake.permission = true;
       await s.repo.sync();
-      final again = CalendarRepository(await StorageService.create(), s.fake, s.journal);
+      final again = CalendarRepository(
+        await StorageService.create(),
+        s.fake,
+        s.journal,
+      );
       await again.load();
       expect(again.enabled, isTrue);
       expect(again.importNew, isTrue);
@@ -327,43 +637,60 @@ void main() {
       expect(cur.done, isTrue, reason: '시간을 가져오며 완료 상태를 미완료로 되돌리면 안 된다');
     });
 
-    test('연동한 캘린더가 아닌 다른 쓰기 가능 캘린더의 일정도 기본으로 가져오고, 공휴일 같은 읽기 전용과 숨긴 캘린더는 가져오지 않는다', () async {
-      final s = await _setup();
-      await s.repo.enable(_cal);
-      final day = DateTime.parse('${_future(3)}T00:00:00');
-      s.fake.events['a'] = _Ev('개인 일정', day);
-      s.fake.events['b'] = _Ev('업무 일정', day, calendarId: 'c2');
-      s.fake.events['c'] = _Ev('추석 연휴', day, calendarId: 'c3');
-      s.fake.events['d'] = _Ev('숨긴 캘린더 일정', day, calendarId: 'c4');
-      await s.repo.sync();
-      expect(s.journal.todos.map((t) => t.text).toSet(), {'개인 일정', '업무 일정'});
-      await s.repo.sync();
-      await s.repo.sync();
-      expect(s.journal.todos.length, 2, reason: '다른 캘린더에서 가져온 일정이 매번 다시 만들어지거나 연결이 끊기면 안 된다');
-    });
+    test(
+      '연동한 캘린더가 아닌 다른 쓰기 가능 캘린더의 일정도 기본으로 가져오고, 공휴일 같은 읽기 전용과 숨긴 캘린더는 가져오지 않는다',
+      () async {
+        final s = await _setup();
+        await s.repo.enable(_cal);
+        final day = DateTime.parse('${_future(3)}T00:00:00');
+        s.fake.events['a'] = _Ev('개인 일정', day);
+        s.fake.events['b'] = _Ev('업무 일정', day, calendarId: 'c2');
+        s.fake.events['c'] = _Ev('추석 연휴', day, calendarId: 'c3');
+        s.fake.events['d'] = _Ev('숨긴 캘린더 일정', day, calendarId: 'c4');
+        await s.repo.sync();
+        expect(s.journal.todos.map((t) => t.text).toSet(), {'개인 일정', '업무 일정'});
+        await s.repo.sync();
+        await s.repo.sync();
+        expect(
+          s.journal.todos.length,
+          2,
+          reason: '다른 캘린더에서 가져온 일정이 매번 다시 만들어지거나 연결이 끊기면 안 된다',
+        );
+      },
+    );
 
-    test('가져올 캘린더를 직접 고르면 그 캘린더만 가져오고, 설정은 다시 읽어도 유지되며, 기본값으로 되돌릴 수 있다', () async {
-      final s = await _setup();
-      await s.repo.enable(_cal);
-      final day = DateTime.parse('${_future(3)}T00:00:00');
-      s.fake.events['a'] = _Ev('개인 일정', day);
-      s.fake.events['b'] = _Ev('업무 일정', day, calendarId: 'c2');
-      s.fake.events['c'] = _Ev('추석 연휴', day, calendarId: 'c3');
-      await s.repo.setImportCalendars({'c3'});
-      await s.repo.sync();
-      expect(s.journal.todos.map((t) => t.text).toSet(), {'개인 일정', '추석 연휴'}, reason: '고른 캘린더와 연동 캘린더(항상 포함)');
-      expect(s.repo.importCalendarIds, {'c3'});
-      final choices = await s.repo.importChoices();
-      expect(choices.map((c) => c.id), ['c1', 'c2', 'c3'], reason: '숨긴 캘린더는 목록에서 뺀다');
-      expect(choices.firstWhere((c) => c.id == 'c3').readOnly, isTrue);
+    test(
+      '가져올 캘린더를 직접 고르면 그 캘린더만 가져오고, 설정은 다시 읽어도 유지되며, 기본값으로 되돌릴 수 있다',
+      () async {
+        final s = await _setup();
+        await s.repo.enable(_cal);
+        final day = DateTime.parse('${_future(3)}T00:00:00');
+        s.fake.events['a'] = _Ev('개인 일정', day);
+        s.fake.events['b'] = _Ev('업무 일정', day, calendarId: 'c2');
+        s.fake.events['c'] = _Ev('추석 연휴', day, calendarId: 'c3');
+        await s.repo.setImportCalendars({'c3'});
+        await s.repo.sync();
+        expect(s.journal.todos.map((t) => t.text).toSet(), {
+          '개인 일정',
+          '추석 연휴',
+        }, reason: '고른 캘린더와 연동 캘린더(항상 포함)');
+        expect(s.repo.importCalendarIds, {'c3'});
+        final choices = await s.repo.importChoices();
+        expect(choices.map((c) => c.id), [
+          'c1',
+          'c2',
+          'c3',
+        ], reason: '숨긴 캘린더는 목록에서 뺀다');
+        expect(choices.firstWhere((c) => c.id == 'c3').readOnly, isTrue);
 
-      final store = await StorageService.create();
-      final again = CalendarRepository(store, s.fake, s.journal);
-      await again.load();
-      expect(again.importCalendarIds, {'c3'}, reason: '설정이 유지된다');
-      await again.setImportCalendars(null);
-      expect(again.importCalendarIds, isNull);
-    });
+        final store = await StorageService.create();
+        final again = CalendarRepository(store, s.fake, s.journal);
+        await again.load();
+        expect(again.importCalendarIds, {'c3'}, reason: '설정이 유지된다');
+        await again.setImportCalendars(null);
+        expect(again.importCalendarIds, isNull);
+      },
+    );
 
     test('꺼져 있으면 가져오지 않는다', () async {
       final s = await _setup();
@@ -379,14 +706,30 @@ void main() {
       await s.repo.enable(_cal);
       await s.repo.setImportNew(true);
       s.fake.events['x'] = _Ev('치과', DateTime.parse('${_future(3)}T00:00:00'));
-      s.fake.events['far'] = _Ev('먼 일정', DateTime.parse('${_future(200)}T00:00:00'));
-      s.fake.events['rec'] = _Ev('주간 회의', DateTime.parse('${_future(2)}T00:00:00'), recurring: true);
-      s.fake.events['blank'] = _Ev('  ', DateTime.parse('${_future(2)}T00:00:00'));
-      s.fake.events['done'] = _Ev('✔ 끝낸 일', DateTime.parse('${_future(1)}T00:00:00'));
+      s.fake.events['far'] = _Ev(
+        '먼 일정',
+        DateTime.parse('${_future(200)}T00:00:00'),
+      );
+      s.fake.events['rec'] = _Ev(
+        '주간 회의',
+        DateTime.parse('${_future(2)}T00:00:00'),
+        recurring: true,
+      );
+      s.fake.events['blank'] = _Ev(
+        '  ',
+        DateTime.parse('${_future(2)}T00:00:00'),
+      );
+      s.fake.events['done'] = _Ev(
+        '✔ 끝낸 일',
+        DateTime.parse('${_future(1)}T00:00:00'),
+      );
       await s.repo.sync();
       expect(s.journal.todos.map((t) => t.text).toSet(), {'치과', '끝낸 일'});
       expect(s.journal.todos.firstWhere((t) => t.text == '끝낸 일').done, isTrue);
-      expect(s.journal.todos.firstWhere((t) => t.text == '치과').date, _future(3));
+      expect(
+        s.journal.todos.firstWhere((t) => t.text == '치과').date,
+        _future(3),
+      );
 
       await s.repo.sync();
       expect(s.journal.todos.length, 2, reason: '한 번 가져온 일정은 다시 만들지 않는다');
@@ -407,7 +750,7 @@ void main() {
       expect(s.journal.todos, isEmpty, reason: '다시 가져오지 않는다');
     });
 
-    test('가져온 투두의 완료 표시는 캘린더 제목에 붙이고, 날짜는 옮기지 않는다', () async {
+    test('가져온 쓰기 가능 일정의 날짜와 완료를 수정한다', () async {
       final s = await _setup();
       await s.repo.enable(_cal);
       await s.repo.setImportNew(true);
@@ -418,7 +761,7 @@ void main() {
       await s.journal.updateTodo(t.copyWith(done: true, date: _future(9)));
       await s.repo.sync();
       expect(s.fake.events['x']!.title, '✔ 치과');
-      expect(s.fake.events['x']!.day, day, reason: '가져온 일정은 날짜를 옮기지 않는다');
+      expect(s.fake.events['x']!.day, DateTime.parse('${_future(9)}T00:00:00'));
 
       s.fake.log.clear();
       await s.repo.sync();
