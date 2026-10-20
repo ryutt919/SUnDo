@@ -252,13 +252,21 @@ class CalendarRepository extends ChangeNotifier {
     }
   }
 
-  static String _title(Todo t) => t.done ? '$_doneMark${t.text}' : t.text;
+  static String _title(Todo t) =>
+      t.done ? '$_doneMark${t.text.trim()}' : t.text.trim();
 
-  /// 이벤트 제목을 투두 내용으로 바꾼다. 제목 앞의 체크 표시는 완료 상태로 읽는다.
-  static ({String text, bool done}) _parseTitle(String title) =>
-      title.startsWith(_doneMark)
-      ? (text: title.substring(_doneMark.length).trim(), done: true)
-      : (text: title.trim(), done: false);
+  /// 앞뒤 공백은 제목 변경으로 보지 않고, 체크 표시는 완료 상태로 읽는다.
+  static ({String text, bool done}) _parseTitle(String title) {
+    final trimmed = title.trim();
+    return trimmed.startsWith(_doneMark)
+        ? (text: trimmed.substring(_doneMark.length).trim(), done: true)
+        : (text: trimmed, done: false);
+  }
+
+  static String _normalizedTitle(String title) {
+    final parsed = _parseTitle(title);
+    return parsed.done ? '$_doneMark${parsed.text}' : parsed.text;
+  }
 
   /// 투두와 캘린더를 맞춘다. 한 번에 하나씩만 실행하고, 항목 하나가 실패해도 나머지는 계속한다.
   Future<CalendarSyncResult> sync() {
@@ -387,7 +395,7 @@ class CalendarRepository extends ChangeNotifier {
             // 기기 읽기를 기다리는 동안 수정한 투두는 삭제하지 않는다.
             if (_pullChanges &&
                 _sameTodo(snapshot, latest) &&
-                _title(latest) == link.title &&
+                _title(latest) == _normalizedTitle(link.title) &&
                 latest.date == link.date &&
                 latest.time == link.time) {
               await _journal.deleteTodoIfUnchanged(snapshot.id, snapshot);
@@ -484,14 +492,17 @@ class CalendarRepository extends ChangeNotifier {
         '기존 연결의 날짜와 시간이 충돌해요. 투두와 캘린더 일정의 날짜와 시간을 확인하고 같은 값으로 맞춰 주세요.',
       );
     }
-    final pushTitle = todoTitle != link.title;
+    final titleBaseBefore = _normalizedTitle(link.title);
+    final remoteTitle = _normalizedTitle(ev.title);
+    final pushTitle = todoTitle != titleBaseBefore;
     final pushSchedule =
         appScheduleChanged &&
         !(legacy && t.date == remoteDate && t.time == remoteTime);
-    final pullTitle = _pullChanges && !pushTitle && ev.title != link.title;
+    final pullTitle =
+        _pullChanges && !pushTitle && remoteTitle != titleBaseBefore;
     final pullSchedule =
         _pullChanges && !appScheduleChanged && remoteScheduleChanged;
-    var titleBase = link.title;
+    var titleBase = titleBaseBefore;
     var dateBase = link.date;
     var timeBase = link.time;
     var changed = false;
@@ -528,8 +539,10 @@ class CalendarRepository extends ChangeNotifier {
             date: acceptSchedule ? remoteDate : null,
             time: acceptSchedule ? remoteTime : null,
           );
-          if (applied != null && acceptTitle && _title(applied) == ev.title) {
-            titleBase = ev.title;
+          if (applied != null &&
+              acceptTitle &&
+              _title(applied) == remoteTitle) {
+            titleBase = remoteTitle;
           }
           if (applied != null &&
               acceptSchedule &&
@@ -594,7 +607,7 @@ class CalendarRepository extends ChangeNotifier {
         _links[todo.id] = _Link(
           e.id,
           e.calendarId.isEmpty ? _calendarId : e.calendarId,
-          title: e.title,
+          title: _normalizedTitle(e.title),
           date: dateKey(e.day),
           imported: true,
           time: e.time,
@@ -663,7 +676,7 @@ class _Link {
   factory _Link.fromJson(Map<String, dynamic> j) => _Link(
     (j['event'] as String?) ?? '',
     (j['calendar'] as String?) ?? '',
-    title: (j['title'] as String?) ?? '',
+    title: CalendarRepository._normalizedTitle((j['title'] as String?) ?? ''),
     date: (j['date'] as String?) ?? '',
     imported: j['imported'] == true,
     time: (j['time'] as String?) ?? '',

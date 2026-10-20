@@ -192,6 +192,46 @@ Todo _todoOf(_Setup s, String id) =>
 String _future(int days) => addDaysKey(todayKey(), days);
 
 void main() {
+  test('공백 있는 외부 제목 변경은 한 번만 가져오고 사용자 제목 변경은 전송한다', () async {
+    final s = await _setup();
+    await s.repo.enable(_cal);
+    s.fake.events['x'] = _Ev('  원본  ', parseDateKey(_future(1)));
+    await s.repo.sync();
+    s.fake.events['x']!.title = '  외부 수정  ';
+    expect((await s.repo.sync()).processedCount, 1);
+    expect(s.journal.todos.single.text, '외부 수정');
+    expect((await s.repo.sync()).processedCount, 0);
+    expect(s.fake.log, isEmpty);
+    await s.journal.patchTodo(s.journal.todos.single.id, text: '앱 수정');
+    expect((await s.repo.sync()).processedCount, 1);
+    expect(s.fake.events['x']!.title, '앱 수정');
+    expect(s.fake.log, ['update x']);
+    expect((await s.repo.sync()).processedCount, 0);
+  });
+
+  test('읽기 전용 일정 제목의 앞뒤 공백은 수정으로 판단하지 않는다', () async {
+    final s = await _setup();
+    await s.repo.enable(_cal);
+    await s.repo.setImportCalendars({'c3'});
+    final day = parseDateKey(_future(1));
+    s.fake.events['leading'] = _Ev('  앞 공백', day, calendarId: 'c3');
+    s.fake.events['trailing'] = _Ev('뒤 공백  ', day, calendarId: 'c3');
+    expect((await s.repo.sync()).status, CalendarSyncStatus.success);
+    expect(s.journal.todos.map((t) => t.text).toSet(), {'앞 공백', '뒤 공백'});
+    final result = await s.repo.sync();
+    expect(result.status, CalendarSyncStatus.success);
+    expect(result.processedCount, 0);
+    expect(result.failedCount, 0);
+    expect(s.fake.log, isEmpty);
+    expect((await s.repo.sync()).processedCount, 0);
+    final t = s.journal.todos.first;
+    await s.journal.patchTodo(t.id, text: '사용자 수정');
+    final edited = await s.repo.sync();
+    expect(edited.status, CalendarSyncStatus.failure);
+    expect(edited.failedCount, 1);
+    expect(s.fake.log, isEmpty);
+  });
+
   test('결과 저장 실패를 성공 시각으로 기록하지 않으며 재시도는 성공한다', () async {
     SharedPreferences.setMockInitialValues({});
     final store = _FailingStore(await SharedPreferences.getInstance());
